@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Body_Distribution_Studio.Views.Controls"
+             x:Class="Body_Distribution_Studio.Views.Controls.FilePathPickerControl"
+             x:DataType="controls:FilePathPickerControl">
+    <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0"
+                 Text="{Binding Text, RelativeSource={RelativeSource AncestorType=controls:FilePathPickerControl}}"
+                 PlaceholderText="{Binding PlaceholderText, RelativeSource={RelativeSource AncestorType=controls:FilePathPickerControl}}" />
+        <Button Grid.Column="1"
+                Content="{Binding BrowseButtonText, RelativeSource={RelativeSource AncestorType=controls:FilePathPickerControl}}"
+                Margin="8,0,0,0"
+                Click="OnBrowseClicked" />
+    </Grid>
+</UserControl>

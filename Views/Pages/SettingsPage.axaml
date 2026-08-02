@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             xmlns:controls="using:Body_Distribution_Studio.Views.Controls"
              x:Class="Body_Distribution_Studio.Views.Pages.SettingsPage"
              x:DataType="vm:SettingsViewModel">
 
@@ -21,43 +22,33 @@
                 <!-- Skyrim Data -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="Skyrim Data Folder" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding SkyrimDataFolder}"
-                                 PlaceholderText="Path to Skyrim Data folder…" />
-                        <Button Grid.Column="1"
-                                Content="Browse…"
-                                Margin="8,0,0,0"
-                                Click="OnBrowseSkyrimClicked" />
-                    </Grid>
+                    <controls:FilePathPickerControl Text="{Binding SkyrimDataFolder}"
+                                                    PickerTitle="Select Skyrim Data folder"
+                                                    PlaceholderText="Path to Skyrim Data folder…" />
                 </StackPanel>
 
                 <!-- Mods Folder -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="Mods Folder" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding ModsFolder}"
-                                 PlaceholderText="Path to mods folder or MO2 virtual Data source…" />
-                        <Button Grid.Column="1"
-                                Content="Browse…"
-                                Margin="8,0,0,0"
-                                Click="OnBrowseModsClicked" />
-                    </Grid>
+                    <controls:FilePathPickerControl Text="{Binding ModsFolder}"
+                                                    PickerTitle="Select Mods folder"
+                                                    PlaceholderText="Path to mods folder or MO2 virtual Data source…" />
                 </StackPanel>
 
                 <!-- BodySlide Presets -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="BodySlide Presets Folder" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding BodySlidePresetsFolder}"
-                                 PlaceholderText="Path to BodySlide slider preset folder…" />
-                        <Button Grid.Column="1"
-                                Content="Browse…"
-                                Margin="8,0,0,0"
-                                Click="OnBrowseBodySlideClicked" />
-                    </Grid>
+                    <controls:FilePathPickerControl Text="{Binding BodySlidePresetsFolder}"
+                                                    PickerTitle="Select BodySlide folder"
+                                                    PlaceholderText="Path to BodySlide slider preset folder…" />
+                </StackPanel>
+
+                <!-- RaceMenu Presets -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="RaceMenu Presets Folder" />
+                    <controls:FilePathPickerControl Text="{Binding RaceMenuPresetsFolder}"
+                                                    PickerTitle="Select RaceMenu presets folder"
+                                                    PlaceholderText="Path to RaceMenu preset folder…" />
                 </StackPanel>
             </StackPanel>
 
@@ -67,7 +58,8 @@
                         Classes="accent"
                         IsEnabled="False"
                         ToolTip.Tip="Asset scanning will be available in a future update." />
-                <Button Content="Save Settings" />
+                <Button Content="Save Settings"
+                        Command="{Binding SaveCommand}" />
             </StackPanel>
 
             <!-- ── Info Cards ── -->

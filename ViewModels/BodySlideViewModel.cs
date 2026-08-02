@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Body_Distribution_Studio.Models;
+using DBDStudio.Core.Interfaces;
 
 namespace Body_Distribution_Studio.ViewModels;
 
 public sealed class BodySlideViewModel : ViewModelBase
 {
+    private readonly IBodySlideService _bodySlideService;
     private string _searchText = string.Empty;
-    private readonly List<BodySlidePreset> _allPresets =
-    [
-        new() { Preset = "CBBE Curvy",    XmlFile = "CBBE.xml" },
-        new() { Preset = "BHUNP Slim",    XmlFile = "BHUNP.xml" },
-        new() { Preset = "CBBE 3BBB",     XmlFile = "CBBE3BBB.xml" },
-        new() { Preset = "UUNP Special",  XmlFile = "UUNP.xml" },
-    ];
 
     public ObservableCollection<BodySlidePreset> FilteredPresets { get; } = [];
 
@@ -29,19 +24,23 @@ public sealed class BodySlideViewModel : ViewModelBase
         }
     }
 
-    public BodySlideViewModel() => ApplyFilter();
+    public BodySlideViewModel(IBodySlideService bodySlideService)
+    {
+        _bodySlideService = bodySlideService;
+        ApplyFilter();
+    }
 
     private void ApplyFilter()
     {
         FilteredPresets.Clear();
 
         var source = string.IsNullOrWhiteSpace(_searchText)
-            ? _allPresets.AsEnumerable()
-            : _allPresets.Where(p =>
+            ? _bodySlideService.GetPresets().AsEnumerable()
+            : _bodySlideService.GetPresets().Where(p =>
                 p.Preset.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                p.XmlFile.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+                p.SourceXml.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
         foreach (var preset in source)
-            FilteredPresets.Add(preset);
+            FilteredPresets.Add(new BodySlidePreset { Preset = preset.Preset, XmlFile = preset.SourceXml });
     }
 }

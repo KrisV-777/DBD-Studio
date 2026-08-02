@@ -1,62 +1,54 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="Body_Distribution_Studio.Views.Pages.RulesPage"
              x:DataType="vm:RulesViewModel">
 
     <Grid ColumnDefinitions="210,4,*">
 
-        <!-- ── Left: Rule List ── -->
         <Border Grid.Column="0"
                 BorderThickness="0,0,1,0"
                 BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
-        <DockPanel>
+            <DockPanel>
+                <Border DockPanel.Dock="Bottom"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                        Padding="8">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Content="+ Add"
+                                Command="{Binding AddRuleCommand}" />
+                        <Button Content="Duplicate"
+                                Command="{Binding DuplicateRuleCommand}" />
+                        <Button Content="Delete"
+                                Command="{Binding DeleteRuleCommand}" />
+                    </StackPanel>
+                </Border>
 
-            <Border DockPanel.Dock="Bottom"
-                    BorderThickness="0,1,0,0"
-                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                    Padding="8">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                    <Button Content="+ Add"
-                            Command="{Binding AddRuleCommand}" />
-                    <Button Content="Duplicate"
-                            Command="{Binding DuplicateRuleCommand}" />
-                    <Button Content="Delete"
-                            Command="{Binding DeleteRuleCommand}" />
-                </StackPanel>
-            </Border>
-
-            <ListBox ItemsSource="{Binding Rules}"
-                     SelectedItem="{Binding SelectedRule}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}" Padding="4,2" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </DockPanel>
+                <ListBox ItemsSource="{Binding Rules}"
+                         SelectedItem="{Binding SelectedRule}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" Padding="4,2" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
         </Border>
 
-        <!-- ── Column Splitter ── -->
         <GridSplitter Grid.Column="1"
                       ResizeDirection="Columns"
                       ResizeBehavior="PreviousAndNext"
                       Background="Transparent" />
 
-        <!-- ── Right: Rule Editor ── -->
         <Grid Grid.Column="2">
-
-            <!-- Placeholder -->
             <TextBlock Text="Select a rule to view and edit its details."
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Opacity="0.45"
                        IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNull}}" />
 
-            <!-- Editor panel (only when a rule is selected) -->
             <DockPanel IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNotNull}}">
-
-                <!-- ── Conflict Panel (bottom) ── -->
                 <Border DockPanel.Dock="Bottom"
                         BorderThickness="0,1,0,0"
                         BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
@@ -80,7 +72,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ── Conditions Toolbar (bottom dock, above conflict) ── -->
                 <Border DockPanel.Dock="Bottom"
                         Padding="16,6,16,0">
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -97,34 +88,40 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ── Main editor content ── -->
                 <ScrollViewer Padding="16,12,16,0">
                     <StackPanel Spacing="16">
-
-                        <!-- Rule Name -->
                         <StackPanel Spacing="6">
                             <TextBlock Text="Rule Name" FontWeight="SemiBold" />
                             <TextBox Text="{Binding SelectedRule.Name}"
                                      PlaceholderText="Descriptive rule name…" />
                         </StackPanel>
 
-                        <!-- Texture Pack -->
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Texture Pack" FontWeight="SemiBold" />
+                            <TextBlock Text="Texture Assignment" FontWeight="SemiBold" />
                             <ComboBox ItemsSource="{Binding AvailableTexturePacks}"
                                       SelectedItem="{Binding SelectedRule.TexturePack}"
                                       HorizontalAlignment="Stretch" />
                         </StackPanel>
 
-                        <!-- BodySlide Preset -->
                         <StackPanel Spacing="6">
-                            <TextBlock Text="BodySlide Preset" FontWeight="SemiBold" />
+                            <TextBlock Text="BodySlide Assignment" FontWeight="SemiBold" />
                             <ComboBox ItemsSource="{Binding AvailableBodySlidePresets}"
                                       SelectedItem="{Binding SelectedRule.BodySlidePreset}"
                                       HorizontalAlignment="Stretch" />
                         </StackPanel>
 
-                        <!-- Priority Preview -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="RaceMenu Assignment" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding AvailableRaceMenuPresets}"
+                                      SelectedItem="{Binding SelectedRule.RaceMenuPreset}"
+                                      HorizontalAlignment="Stretch" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding RaceMenuAssignmentWarning}"
+                                   Foreground="{DynamicResource SystemErrorTextColor}"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding RaceMenuAssignmentWarning, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+
                         <StackPanel Spacing="6">
                             <TextBlock Text="Priority Preview" FontWeight="SemiBold" />
                             <TextBox Text="{Binding SelectedRule.PriorityPreview}"
@@ -132,7 +129,6 @@
                                      Opacity="0.7" />
                         </StackPanel>
 
-                        <!-- Conditions -->
                         <StackPanel Spacing="6">
                             <TextBlock Text="Conditions" FontWeight="SemiBold" />
                             <DataGrid ItemsSource="{Binding SelectedRule.Conditions}"
@@ -146,21 +142,26 @@
                                     <DataGridTextColumn Header="Type"
                                                         Binding="{Binding Type}"
                                                         Width="120" />
-                                    <DataGridTextColumn Header="Operator"
-                                                        Binding="{Binding Operator}"
-                                                        Width="90" />
+                                    <DataGridTemplateColumn Header="Operator" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableOperators}"
+                                                          SelectedItem="{Binding Operator}"
+                                                          IsEditable="True"
+                                                          IsTextSearchEnabled="True"
+                                                          HorizontalAlignment="Stretch" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Value"
                                                         Binding="{Binding Value}"
                                                         Width="*" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>
-
                     </StackPanel>
                 </ScrollViewer>
-
             </DockPanel>
         </Grid>
-
     </Grid>
 </UserControl>

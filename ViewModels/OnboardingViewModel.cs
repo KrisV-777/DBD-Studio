@@ -1,20 +1,26 @@
+using System;
 using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
 
 namespace Body_Distribution_Studio.ViewModels;
 
-public sealed class SettingsViewModel : ViewModelBase
+public sealed class OnboardingViewModel : ViewModelBase
 {
     private readonly ISettingsService _settingsService;
 
-    public SettingsViewModel(ISettingsService settingsService)
+    public OnboardingViewModel(ISettingsService settingsService)
     {
         _settingsService = settingsService;
-        _settingsService.Settings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
-        SaveCommand = new RelayCommand(Save);
+        ContinueCommand = new RelayCommand(Continue);
+        SkipCommand = new RelayCommand(Skip);
     }
 
-    public ICommand SaveCommand { get; }
+    public event Action? Completed;
+    public event Action? Skipped;
+
+    public ICommand ContinueCommand { get; }
+    public ICommand SkipCommand { get; }
 
     public string SkyrimDataFolder
     {
@@ -56,9 +62,11 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
-    public int TexturePacksFound => 4;
-    public int BodySlidePresetsFound => 3;
-    public string LastScanTime => "Ready for scan";
+    private void Continue()
+    {
+        _settingsService.Save();
+        Completed?.Invoke();
+    }
 
-    private void Save() => _settingsService.Save();
+    private void Skip() => Skipped?.Invoke();
 }

@@ -2,11 +2,13 @@ using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Body_Distribution_Studio.Models;
+using DBDStudio.Core.Interfaces;
 
 namespace Body_Distribution_Studio.ViewModels;
 
 public sealed class TexturePacksViewModel : ViewModelBase
 {
+    private readonly ITexturePackService _texturePackService;
     private TexturePack? _selectedPack;
     private TextureMapping? _selectedMapping;
 
@@ -35,48 +37,37 @@ public sealed class TexturePacksViewModel : ViewModelBase
     public ICommand RemoveMappingCommand { get; }
     public ICommand AutoPopulateCommand { get; }
 
-    public TexturePacksViewModel()
+    public TexturePacksViewModel(ITexturePackService texturePackService)
     {
+        _texturePackService = texturePackService;
         AddPackCommand = new RelayCommand(AddPack);
         DuplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
         DeletePackCommand = new RelayCommand(DeletePack, () => SelectedPack is not null);
         AddMappingCommand = new RelayCommand(AddMapping, () => SelectedPack is not null);
         RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
-        AutoPopulateCommand = new RelayCommand(() => { }); // Placeholder
+        AutoPopulateCommand = new RelayCommand(() => { });
 
-        var fairSkin = new TexturePack
+        foreach (var pack in _texturePackService.GetTexturePacks())
         {
-            Name = "Fair Skin",
-            Description = "High-quality fair skin texture pack for female characters."
-        };
-        fairSkin.Mappings.Add(new TextureMapping
-        {
-            VanillaTexture = "textures/actors/character/femalebody_1.dds",
-            ReplacementTexture = "textures/dbd/FairSkin/femalebody_1.dds"
-        });
-        fairSkin.Mappings.Add(new TextureMapping
-        {
-            VanillaTexture = "textures/actors/character/femalebody_msn.dds",
-            ReplacementTexture = "textures/dbd/FairSkin/femalebody_msn.dds"
-        });
+            var uiPack = new TexturePack
+            {
+                Name = pack.Name,
+                Description = pack.Description
+            };
 
-        var tempered = new TexturePack
-        {
-            Name = "Tempered",
-            Description = "Tempered skin textures with enhanced detail."
-        };
-        tempered.Mappings.Add(new TextureMapping
-        {
-            VanillaTexture = "textures/actors/character/femalebody_1.dds",
-            ReplacementTexture = "textures/dbd/Tempered/femalebody_1.dds"
-        });
+            foreach (var mapping in pack.Mappings)
+            {
+                uiPack.Mappings.Add(new TextureMapping
+                {
+                    VanillaTexture = mapping.VanillaTexture,
+                    ReplacementTexture = mapping.ReplacementTexture
+                });
+            }
 
-        var custom = new TexturePack { Name = "Custom", Description = "User-defined custom texture pack." };
+            Packs.Add(uiPack);
+        }
 
-        Packs.Add(fairSkin);
-        Packs.Add(tempered);
-        Packs.Add(custom);
-        SelectedPack = fairSkin;
+        SelectedPack = Packs.Count > 0 ? Packs[0] : null;
     }
 
     private void AddPack()

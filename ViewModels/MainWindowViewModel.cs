@@ -1,3 +1,5 @@
+using DBDStudio.Core.Interfaces;
+
 namespace Body_Distribution_Studio.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
@@ -5,11 +7,33 @@ public sealed class MainWindowViewModel : ViewModelBase
     private int _selectedPageIndex;
     private string _statusMessage = "Ready";
 
-    public SettingsViewModel Settings { get; } = new();
-    public TexturePacksViewModel TexturePacks { get; } = new();
-    public BodySlideViewModel BodySlide { get; } = new();
-    public RulesViewModel Rules { get; } = new();
-    public PreviewViewModel Preview { get; } = new();
+    public MainWindowViewModel(
+        ISettingsService settingsService,
+        ITexturePackService texturePackService,
+        IBodySlideService bodySlideService,
+        IRuleService ruleService,
+        IFormDatabaseService formDatabaseService,
+        ILoadOrderService loadOrderService,
+        IRaceMenuPresetService raceMenuPresetService)
+    {
+        Settings = new SettingsViewModel(settingsService);
+        TexturePacks = new TexturePacksViewModel(texturePackService);
+        BodySlide = new BodySlideViewModel(bodySlideService);
+        RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
+        Rules = new RulesViewModel(ruleService, raceMenuPresetService);
+        Preview = new PreviewViewModel();
+        RulePreview = new RulePreviewViewModel(formDatabaseService, ruleService);
+        LoadOrderExplorer = new LoadOrderExplorerViewModel(loadOrderService);
+    }
+
+    public SettingsViewModel Settings { get; }
+    public TexturePacksViewModel TexturePacks { get; }
+    public BodySlideViewModel BodySlide { get; }
+    public RaceMenuPresetsViewModel RaceMenuPresets { get; }
+    public RulesViewModel Rules { get; }
+    public PreviewViewModel Preview { get; }
+    public RulePreviewViewModel RulePreview { get; }
+    public LoadOrderExplorerViewModel LoadOrderExplorer { get; }
 
     public int SelectedPageIndex
     {
@@ -32,8 +56,11 @@ public sealed class MainWindowViewModel : ViewModelBase
         0 => Settings,
         1 => TexturePacks,
         2 => BodySlide,
-        3 => Rules,
-        4 => Preview,
+        3 => RaceMenuPresets,
+        4 => Rules,
+        5 => RulePreview,
+        6 => LoadOrderExplorer,
+        7 => Preview,
         _ => Settings
     };
 }

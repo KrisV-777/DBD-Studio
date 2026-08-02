@@ -20,8 +20,17 @@
         <DataTemplate DataType="{x:Type vm:BodySlideViewModel}">
             <pages:BodySlidePage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RaceMenuPresetsViewModel}">
+            <pages:RaceMenuPresetsPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:RulesViewModel}">
             <pages:RulesPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RulePreviewViewModel}">
+            <pages:RulePreviewPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LoadOrderExplorerViewModel}">
+            <pages:LoadOrderExplorerPage />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PreviewViewModel}">
             <pages:PreviewPage />
@@ -82,8 +91,11 @@
                         <ListBoxItem Padding="10,9" Content="Settings" />
                         <ListBoxItem Padding="10,9" Content="Texture Packs" />
                         <ListBoxItem Padding="10,9" Content="BodySlide Presets" />
-                        <ListBoxItem Padding="10,9" Content="Rules" />
-                        <ListBoxItem Padding="10,9" Content="Preview / Export" />
+                       <ListBoxItem Padding="10,9" Content="RaceMenu Presets" />
+                       <ListBoxItem Padding="10,9" Content="Rules" />
+                       <ListBoxItem Padding="10,9" Content="Rule Preview" />
+                       <ListBoxItem Padding="10,9" Content="Load Order Explorer" />
+                       <ListBoxItem Padding="10,9" Content="Preview / Export" />
                     </ListBox>
                 </DockPanel>
             </Border>

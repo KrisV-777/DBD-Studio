@@ -1,18 +1,25 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
-using Body_Distribution_Studio.Models;
+using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
 
 namespace Body_Distribution_Studio.ViewModels;
 
 public sealed class RulesViewModel : ViewModelBase
 {
+    private readonly IRuleService _ruleService;
+    private readonly IRaceMenuPresetService _raceMenuPresetService;
     private Rule? _selectedRule;
-    private RuleCondition? _selectedCondition;
+    private Condition? _selectedCondition;
+    private string _raceMenuAssignmentWarning = string.Empty;
 
     public ObservableCollection<Rule> Rules { get; } = [];
-    public ObservableCollection<string> AvailableTexturePacks { get; } = ["Fair Skin", "Tempered", "Custom"];
-    public ObservableCollection<string> AvailableBodySlidePresets { get; } = ["CBBE Curvy", "BHUNP Slim"];
+    public ObservableCollection<string> AvailableTexturePacks { get; } = ["Fair Skin", "Tempered", "Custom", "Player HD"];
+    public ObservableCollection<string> AvailableBodySlidePresets { get; } = ["CBBE Curvy", "BHUNP Slim", "UUNP Special"];
+    public ObservableCollection<string> AvailableRaceMenuPresets { get; } = [];
+    public ObservableCollection<string> AvailableOperators { get; } = ["<", "<=", "==", ">=", ">", "!="];
     public ObservableCollection<string> ConflictWarnings { get; } = [];
 
     public Rule? SelectedRule
@@ -20,15 +27,24 @@ public sealed class RulesViewModel : ViewModelBase
         get => _selectedRule;
         set
         {
-            if (SetField(ref _selectedRule, value))
-                SelectedCondition = null;
+           if (SetField(ref _selectedRule, value))
+           {
+               SelectedCondition = null;
+               UpdateRaceMenuWarning();
+           }
         }
     }
 
-    public RuleCondition? SelectedCondition
+    public Condition? SelectedCondition
     {
         get => _selectedCondition;
         set => SetField(ref _selectedCondition, value);
+    }
+
+    public string RaceMenuAssignmentWarning
+    {
+        get => _raceMenuAssignmentWarning;
+        private set => SetField(ref _raceMenuAssignmentWarning, value);
     }
 
     public ICommand AddRuleCommand { get; }
@@ -39,8 +55,10 @@ public sealed class RulesViewModel : ViewModelBase
     public ICommand MoveConditionUpCommand { get; }
     public ICommand MoveConditionDownCommand { get; }
 
-    public RulesViewModel()
+    public RulesViewModel(IRuleService ruleService, IRaceMenuPresetService raceMenuPresetService)
     {
+        _ruleService = ruleService;
+        _raceMenuPresetService = raceMenuPresetService;
         AddRuleCommand = new RelayCommand(AddRule);
         DuplicateRuleCommand = new RelayCommand(DuplicateRule, () => SelectedRule is not null);
         DeleteRuleCommand = new RelayCommand(DeleteRule, () => SelectedRule is not null);
@@ -49,41 +67,26 @@ public sealed class RulesViewModel : ViewModelBase
         MoveConditionUpCommand = new RelayCommand(MoveConditionUp, CanMoveConditionUp);
         MoveConditionDownCommand = new RelayCommand(MoveConditionDown, CanMoveConditionDown);
 
-        var nordFemales = new Rule
-        {
-            Name = "Nord Females",
-            TexturePack = "Fair Skin",
-            BodySlidePreset = "CBBE Curvy",
-            PriorityPreview = "Specific Reference"
-        };
-        nordFemales.Conditions.Add(new RuleCondition { Type = "Race",      Operator = "==", Value = "Nord" });
-        nordFemales.Conditions.Add(new RuleCondition { Type = "Faction",   Operator = "==", Value = "Companions" });
-        nordFemales.Conditions.Add(new RuleCondition { Type = "Sex",       Operator = "==", Value = "Female" });
-        nordFemales.Conditions.Add(new RuleCondition { Type = "Reference", Operator = "==", Value = "0x12345" });
+        foreach (var preset in raceMenuPresetService.GetPresets())
+           AvailableRaceMenuPresets.Add(preset.Name);
 
-        var bandits = new Rule
+        foreach (var rule in _ruleService.GetRules())
         {
-            Name = "Bandits",
-            TexturePack = "Tempered",
-            BodySlidePreset = "BHUNP Slim",
-            PriorityPreview = "Faction Match"
-        };
-        bandits.Conditions.Add(new RuleCondition { Type = "Faction", Operator = "==", Value = "Bandits" });
-        bandits.Conditions.Add(new RuleCondition { Type = "Sex",     Operator = "==", Value = "Female" });
+           var uiRule = new Rule
+           {
+               Name = rule.Name,
+               TexturePack = rule.TexturePack,
+               BodySlidePreset = rule.BodySlidePreset,
+               RaceMenuPreset = rule.RaceMenuPreset,
+               PriorityPreview = rule.PriorityPreview
+           };
+           foreach (var condition in rule.Conditions)
+               uiRule.Conditions.Add(new Condition { Type = condition.Type, Operator = condition.Operator, Value = condition.Value });
 
-        var fallback = new Rule
-        {
-            Name = "Fallback",
-            TexturePack = "Fair Skin",
-            BodySlidePreset = "CBBE Curvy",
-            PriorityPreview = "Generic Fallback"
-        };
-        fallback.Conditions.Add(new RuleCondition { Type = "Sex", Operator = "==", Value = "Female" });
+           Rules.Add(uiRule);
+        }
 
-        Rules.Add(nordFemales);
-        Rules.Add(bandits);
-        Rules.Add(fallback);
-        SelectedRule = nordFemales;
+        SelectedRule = Rules.Count > 0 ? Rules[0] : null;
 
         ConflictWarnings.Add("Conflicts with \"Bandits\" — overlapping conditions");
         ConflictWarnings.Add("Winning Rule: Specific NPC Assignment (higher priority)");
@@ -101,13 +104,14 @@ public sealed class RulesViewModel : ViewModelBase
         if (SelectedRule is null) return;
         var copy = new Rule
         {
-            Name = SelectedRule.Name + " (Copy)",
-            TexturePack = SelectedRule.TexturePack,
-            BodySlidePreset = SelectedRule.BodySlidePreset,
-            PriorityPreview = SelectedRule.PriorityPreview
+           Name = SelectedRule.Name + " (Copy)",
+           TexturePack = SelectedRule.TexturePack,
+           BodySlidePreset = SelectedRule.BodySlidePreset,
+           RaceMenuPreset = SelectedRule.RaceMenuPreset,
+           PriorityPreview = SelectedRule.PriorityPreview
         };
         foreach (var c in SelectedRule.Conditions)
-            copy.Conditions.Add(new RuleCondition { Type = c.Type, Operator = c.Operator, Value = c.Value });
+           copy.Conditions.Add(new Condition { Type = c.Type, Operator = c.Operator, Value = c.Value });
         Rules.Add(copy);
         SelectedRule = copy;
     }
@@ -123,7 +127,7 @@ public sealed class RulesViewModel : ViewModelBase
     private void AddCondition()
     {
         if (SelectedRule is null) return;
-        var cond = new RuleCondition { Type = "Race", Operator = "==", Value = "" };
+        var cond = new Condition { Type = "Race", Operator = "==", Value = string.Empty };
         SelectedRule.Conditions.Add(cond);
         SelectedCondition = cond;
     }
@@ -139,7 +143,12 @@ public sealed class RulesViewModel : ViewModelBase
     {
         if (SelectedRule is null || SelectedCondition is null) return;
         var i = SelectedRule.Conditions.IndexOf(SelectedCondition);
-        if (i > 0) SelectedRule.Conditions.Move(i, i - 1);
+        if (i > 0)
+        {
+           var current = SelectedRule.Conditions[i];
+           SelectedRule.Conditions[i] = SelectedRule.Conditions[i - 1];
+           SelectedRule.Conditions[i - 1] = current;
+        }
     }
 
     private void MoveConditionDown()
@@ -147,7 +156,11 @@ public sealed class RulesViewModel : ViewModelBase
         if (SelectedRule is null || SelectedCondition is null) return;
         var i = SelectedRule.Conditions.IndexOf(SelectedCondition);
         if (i < SelectedRule.Conditions.Count - 1)
-            SelectedRule.Conditions.Move(i, i + 1);
+        {
+           var current = SelectedRule.Conditions[i];
+           SelectedRule.Conditions[i] = SelectedRule.Conditions[i + 1];
+           SelectedRule.Conditions[i + 1] = current;
+        }
     }
 
     private bool CanMoveConditionUp()
@@ -157,4 +170,22 @@ public sealed class RulesViewModel : ViewModelBase
     private bool CanMoveConditionDown()
         => SelectedRule is not null && SelectedCondition is not null
            && SelectedRule.Conditions.IndexOf(SelectedCondition) < SelectedRule.Conditions.Count - 1;
+
+    private void UpdateRaceMenuWarning()
+    {
+        if (SelectedRule is null || SelectedRule.RaceMenuAssignment is null)
+        {
+           RaceMenuAssignmentWarning = string.Empty;
+           return;
+        }
+
+        var hasReferenceCondition = SelectedRule.Conditions.Any(c => c.Type.Equals("ReferenceID", StringComparison.OrdinalIgnoreCase));
+        var hasUniqueActorBaseCondition = SelectedRule.Conditions.Any(c =>
+           c.Type.Equals("ActorBase", StringComparison.OrdinalIgnoreCase) &&
+           c.Value.Contains("Unique", StringComparison.OrdinalIgnoreCase));
+
+        RaceMenuAssignmentWarning = hasReferenceCondition || hasUniqueActorBaseCondition
+           ? string.Empty
+           : "RaceMenu presets require either:\n- ReferenceID condition\n- Unique ActorBase condition";
+    }
 }
