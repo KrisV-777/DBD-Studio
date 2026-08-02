@@ -1,9 +1,104 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+        xmlns:pages="using:Body_Distribution_Studio.Views.Pages"
         x:Class="Body_Distribution_Studio.MainWindow"
-        Title="Body_Distribution_Studio">
-    Welcome to Avalonia!
+        x:DataType="vm:MainWindowViewModel"
+        Title="Formsmith"
+        Width="1200" Height="760"
+        MinWidth="900" MinHeight="580"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- DataTemplates map each ViewModel to its page View -->
+    <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <pages:SettingsPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TexturePacksViewModel}">
+            <pages:TexturePacksPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BodySlideViewModel}">
+            <pages:BodySlidePage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RulesViewModel}">
+            <pages:RulesPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PreviewViewModel}">
+            <pages:PreviewPage />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <DockPanel>
+
+        <!-- ── Menu Bar ── -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New"
+                          InputGesture="Ctrl+N" />
+                <MenuItem Header="_Open…"
+                          InputGesture="Ctrl+O" />
+                <MenuItem Header="_Save"
+                          InputGesture="Ctrl+S" />
+                <Separator />
+                <MenuItem Header="_Export…" />
+                <Separator />
+                <MenuItem Header="E_xit" />
+            </MenuItem>
+            <MenuItem Header="_Settings">
+                <MenuItem Header="_Preferences" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" />
+            </MenuItem>
+        </Menu>
+
+        <!-- ── Status Bar ── -->
+        <Border DockPanel.Dock="Bottom"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                Padding="12,5">
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+        </Border>
+
+        <!-- ── Navigation + Content ── -->
+        <Grid ColumnDefinitions="190,4,*">
+
+            <!-- Navigation Sidebar -->
+            <Border Grid.Column="0"
+                    BorderThickness="0,0,1,0"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="FORMSMITH"
+                               FontSize="10"
+                               FontWeight="Bold"
+                               LetterSpacing="2"
+                               Margin="14,14,14,8"
+                               Opacity="0.45" />
+                    <ListBox SelectedIndex="{Binding SelectedPageIndex}"
+                             Margin="4,0">
+                        <ListBoxItem Padding="10,9" Content="Settings" />
+                        <ListBoxItem Padding="10,9" Content="Texture Packs" />
+                        <ListBoxItem Padding="10,9" Content="BodySlide Presets" />
+                        <ListBoxItem Padding="10,9" Content="Rules" />
+                        <ListBoxItem Padding="10,9" Content="Preview / Export" />
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1"
+                          ResizeDirection="Columns"
+                          ResizeBehavior="PreviousAndNext"
+                          Background="Transparent" />
+
+            <!-- Active Page (resolved via DataTemplates above) -->
+            <ContentControl Grid.Column="2"
+                            Content="{Binding CurrentPage}" />
+        </Grid>
+
+    </DockPanel>
 </Window>
+

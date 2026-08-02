@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             x:Class="Body_Distribution_Studio.Views.Pages.PreviewPage"
+             x:DataType="vm:PreviewViewModel">
+
+    <DockPanel>
+
+        <!-- ── Toolbar ── -->
+        <Border DockPanel.Dock="Top"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                Padding="16,10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Generate"
+                        Classes="accent"
+                        Command="{Binding GenerateCommand}"
+                        IsEnabled="False"
+                        ToolTip.Tip="YAML generation will be available in a future update." />
+                <Button Content="Copy"
+                        Command="{Binding CopyCommand}" />
+                <Button Content="Save"
+                        Command="{Binding SaveCommand}" />
+                <Button Content="Export…"
+                        Command="{Binding ExportCommand}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ── YAML Editor ── -->
+        <TextBox Text="{Binding YamlContent}"
+                 IsReadOnly="True"
+                 FontFamily="Cascadia Mono,Consolas,Courier New,monospace"
+                 FontSize="13"
+                 AcceptsReturn="True"
+                 TextWrapping="NoWrap"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 Margin="0"
+                 CornerRadius="0" />
+
+    </DockPanel>
+</UserControl>

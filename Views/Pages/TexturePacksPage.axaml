@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             x:Class="Body_Distribution_Studio.Views.Pages.TexturePacksPage"
+             x:DataType="vm:TexturePacksViewModel">
+
+    <Grid ColumnDefinitions="220,4,*">
+
+        <!-- ── Left: Pack List ── -->
+        <Border Grid.Column="0"
+                BorderThickness="0,0,1,0"
+                BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
+        <DockPanel>
+
+            <!-- List action buttons -->
+            <Border DockPanel.Dock="Bottom"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    Padding="8">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button Content="+ Add"
+                            Command="{Binding AddPackCommand}" />
+                    <Button Content="Duplicate"
+                            Command="{Binding DuplicatePackCommand}" />
+                    <Button Content="Delete"
+                            Command="{Binding DeletePackCommand}" />
+                </StackPanel>
+            </Border>
+
+            <ListBox ItemsSource="{Binding Packs}"
+                     SelectedItem="{Binding SelectedPack}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" Padding="4,2" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+        </Border>
+
+        <!-- ── Column Splitter ── -->
+        <GridSplitter Grid.Column="1"
+                      ResizeDirection="Columns"
+                      ResizeBehavior="PreviousAndNext"
+                      Background="Transparent" />
+
+        <!-- ── Right: Pack Detail ── -->
+        <Grid Grid.Column="2">
+
+            <!-- Placeholder shown when nothing is selected -->
+            <TextBlock Text="Select a texture pack to view and edit its details."
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.45"
+                       IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNull}}" />
+
+            <!-- Detail panel -->
+            <DockPanel IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNotNull}}"
+                       Margin="16">
+
+                <!-- Mapping action buttons -->
+                <Border DockPanel.Dock="Bottom"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                        Padding="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Content="Add Mapping"
+                                Command="{Binding AddMappingCommand}" />
+                        <Button Content="Remove Mapping"
+                                Command="{Binding RemoveMappingCommand}" />
+                        <Button Content="Auto Populate"
+                                Command="{Binding AutoPopulateCommand}"
+                                IsEnabled="False"
+                                ToolTip.Tip="Auto-populate will be available in a future update." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Fields + grid -->
+                <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="0,0,0,16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Name" FontWeight="SemiBold" />
+                        <TextBox Text="{Binding SelectedPack.Name}"
+                                 PlaceholderText="Texture pack name…" />
+                    </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Description" FontWeight="SemiBold" />
+                        <TextBox Text="{Binding SelectedPack.Description}"
+                                 PlaceholderText="Short description…"
+                                 AcceptsReturn="True"
+                                 Height="60" />
+                    </StackPanel>
+                    <TextBlock Text="Mappings" FontWeight="SemiBold" />
+                </StackPanel>
+
+                <!-- Mappings DataGrid -->
+                <DataGrid ItemsSource="{Binding SelectedPack.Mappings}"
+                          SelectedItem="{Binding SelectedMapping}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="False"
+                          CanUserResizeColumns="True"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Vanilla Texture"
+                                            Binding="{Binding VanillaTexture}"
+                                            Width="*" />
+                        <DataGridTextColumn Header="Replacement Texture"
+                                            Binding="{Binding ReplacementTexture}"
+                                            Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+            </DockPanel>
+        </Grid>
+
+    </Grid>
+</UserControl>

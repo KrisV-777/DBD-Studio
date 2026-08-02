@@ -1,0 +1,133 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             x:Class="Body_Distribution_Studio.Views.Pages.SettingsPage"
+             x:DataType="vm:SettingsViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="28,20" Spacing="24" MaxWidth="680">
+
+            <TextBlock Text="Settings"
+                       FontSize="20"
+                       FontWeight="SemiBold" />
+
+            <!-- ── Asset Paths ── -->
+            <StackPanel Spacing="16">
+                <TextBlock Text="Asset Paths"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Opacity="0.65" />
+
+                <!-- Skyrim Data -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Skyrim Data Folder" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding SkyrimDataFolder}"
+                                 PlaceholderText="Path to Skyrim Data folder…" />
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Margin="8,0,0,0"
+                                Click="OnBrowseSkyrimClicked" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Mods Folder -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Mods Folder" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding ModsFolder}"
+                                 PlaceholderText="Path to mods folder or MO2 virtual Data source…" />
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Margin="8,0,0,0"
+                                Click="OnBrowseModsClicked" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- BodySlide Presets -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="BodySlide Presets Folder" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding BodySlidePresetsFolder}"
+                                 PlaceholderText="Path to BodySlide slider preset folder…" />
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Margin="8,0,0,0"
+                                Click="OnBrowseBodySlideClicked" />
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ── Action Buttons ── -->
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Scan Assets"
+                        Classes="accent"
+                        IsEnabled="False"
+                        ToolTip.Tip="Asset scanning will be available in a future update." />
+                <Button Content="Save Settings" />
+            </StackPanel>
+
+            <!-- ── Info Cards ── -->
+            <StackPanel Spacing="12">
+                <TextBlock Text="Asset Summary"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Opacity="0.65" />
+
+                <WrapPanel>
+                    <Border BorderThickness="1"
+                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                            CornerRadius="4"
+                            Padding="16,12"
+                            MinWidth="160"
+                            Margin="0,0,12,8">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding TexturePacksFound}"
+                                       FontSize="26"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="Texture Packs Found"
+                                       FontSize="12"
+                                       Opacity="0.6" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderThickness="1"
+                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                            CornerRadius="4"
+                            Padding="16,12"
+                            MinWidth="160"
+                            Margin="0,0,12,8">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding BodySlidePresetsFound}"
+                                       FontSize="26"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="BodySlide Presets Found"
+                                       FontSize="12"
+                                       Opacity="0.6" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderThickness="1"
+                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                            CornerRadius="4"
+                            Padding="16,12"
+                            MinWidth="160"
+                            Margin="0,0,12,8">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding LastScanTime}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="Last Scan Time"
+                                       FontSize="12"
+                                       Opacity="0.6" />
+                        </StackPanel>
+                    </Border>
+                </WrapPanel>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

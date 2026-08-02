@@ -1,0 +1,131 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+        x:Class="Body_Distribution_Studio.Views.SetupWizardWindow"
+        Title="Formsmith — First-Launch Setup"
+        Width="600" Height="460"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        x:DataType="vm:SetupWizardViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ── Header ── -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource SystemAccentColor}"
+                Padding="28,20">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Welcome to Formsmith"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="White" />
+                <TextBlock Text="{Binding StepTitle}"
+                           FontSize="12"
+                           Foreground="White"
+                           Opacity="0.8" />
+            </StackPanel>
+        </Border>
+
+        <!-- ── Step Content ── -->
+        <ScrollViewer Grid.Row="1" Padding="28,20">
+            <Grid>
+
+                <!-- Step 0 — Skyrim Data Folder -->
+                <StackPanel IsVisible="{Binding IsStep0}" Spacing="12">
+                    <TextBlock TextWrapping="Wrap" Opacity="0.65"
+                               Text="Point Formsmith to your Skyrim Special Edition Data folder so it can discover vanilla texture paths." />
+                    <TextBlock Text="Skyrim Data Folder" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding SkyrimDataFolder}"
+                                 PlaceholderText="e.g. C:\Steam\steamapps\common\Skyrim Special Edition\Data" />
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Margin="8,0,0,0"
+                                Click="OnBrowseSkyrimClicked" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Step 1 — Mods Folder -->
+                <StackPanel IsVisible="{Binding IsStep1}" Spacing="12">
+                    <TextBlock TextWrapping="Wrap" Opacity="0.65"
+                               Text="Select your Mods folder or the Mod Organizer 2 virtual Data source." />
+                    <TextBlock Text="Mods Folder" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding ModsFolder}"
+                                 PlaceholderText="e.g. C:\MO2\mods" />
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Margin="8,0,0,0"
+                                Click="OnBrowseModsClicked" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Step 2 — BodySlide Presets Folder -->
+                <StackPanel IsVisible="{Binding IsStep2}" Spacing="12">
+                    <TextBlock TextWrapping="Wrap" Opacity="0.65"
+                               Text="Choose the folder where your BodySlide slider preset XML files are stored." />
+                    <TextBlock Text="BodySlide Presets Folder" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding BodySlidePresetsFolder}"
+                                 PlaceholderText="e.g. C:\BodySlide\SliderPresets" />
+                        <Button Grid.Column="1"
+                                Content="Browse…"
+                                Margin="8,0,0,0"
+                                Click="OnBrowseBodySlideClicked" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Step 3 — Finish -->
+                <StackPanel IsVisible="{Binding IsStep3}" Spacing="16">
+                    <TextBlock TextWrapping="Wrap" Opacity="0.65"
+                               Text="All paths have been configured. You can optionally scan for assets now, or do it later from the Settings page." />
+                    <Button Content="Scan Assets"
+                            IsEnabled="False"
+                            HorizontalAlignment="Left"
+                            ToolTip.Tip="Asset scanning will be available in a future update." />
+                    <TextBlock Opacity="0.5"
+                               FontStyle="Italic"
+                               Text="Click Finish to open Formsmith." />
+                </StackPanel>
+
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ── Navigation Bar ── -->
+        <Border Grid.Row="2"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                Padding="28,14">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+
+                <Button Grid.Column="0"
+                        Content="← Back"
+                        Command="{Binding BackCommand}" />
+
+                <!-- Step progress indicator -->
+                <ProgressBar Grid.Column="1"
+                             Value="{Binding CurrentStep}"
+                             Minimum="0"
+                             Maximum="3"
+                             Margin="20,0"
+                             VerticalAlignment="Center"
+                             Height="4" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Next →"
+                            Command="{Binding NextCommand}"
+                            IsVisible="{Binding CanGoNext}" />
+                    <Button Content="Finish"
+                            Command="{Binding FinishCommand}"
+                            IsVisible="{Binding IsStep3}"
+                            Classes="accent" />
+                </StackPanel>
+
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>
