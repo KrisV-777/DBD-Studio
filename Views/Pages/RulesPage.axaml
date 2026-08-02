@@ -139,9 +139,17 @@
                                       GridLinesVisibility="Horizontal"
                                       MinHeight="140">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Type"
-                                                        Binding="{Binding Type}"
-                                                        Width="120" />
+                                    <DataGridTemplateColumn Header="Type" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableConditionTypes}"
+                                                          SelectedItem="{Binding Type}"
+                                                          IsEditable="True"
+                                                          IsTextSearchEnabled="True"
+                                                          HorizontalAlignment="Stretch" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Header="Operator" Width="90">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -156,6 +164,9 @@
                                     <DataGridTextColumn Header="Value"
                                                         Binding="{Binding Value}"
                                                         Width="*" />
+                                    <DataGridTextColumn Header="Group"
+                                                        Binding="{Binding Group}"
+                                                        Width="80" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>

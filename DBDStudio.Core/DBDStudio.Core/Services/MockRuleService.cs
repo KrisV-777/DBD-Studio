@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
@@ -6,68 +7,40 @@ namespace DBDStudio.Core.Services;
 
 public sealed class MockRuleService : IRuleService
 {
-    private readonly List<Rule> _rules =
-    [
-        new()
-        {
-            Name = "Bandits",
-            TexturePack = "Tempered",
-            BodySlidePreset = "BHUNP Slim",
-            RaceMenuPreset = "LydiaPreset",
-            PriorityPreview = "Faction Match",
-            Conditions =
-            {
-                new Condition { Type = "Faction", Operator = "==", Value = "Bandits" },
-                new Condition { Type = "Sex", Operator = "==", Value = "Female" }
-            }
-        },
-        new()
-        {
-            Name = "Companions",
-            TexturePack = "Fair Skin",
-            BodySlidePreset = "CBBE Curvy",
-            RaceMenuPreset = "WarriorMale",
-            PriorityPreview = "Specific NPC",
-            Conditions =
-            {
-                new Condition { Type = "Faction", Operator = "==", Value = "Companions" },
-                new Condition { Type = "Race", Operator = "==", Value = "Nord" }
-            }
-        },
-        new()
-        {
-            Name = "Unique NPC",
-            TexturePack = "Player HD",
-            BodySlidePreset = "UUNP Special",
-            PriorityPreview = "Reference Match",
-            Conditions =
-            {
-                new Condition { Type = "ReferenceID", Operator = "==", Value = "0x12345" }
-            }
-        },
-        new()
-        {
-            Name = "Fallback",
-            TexturePack = "Fair Skin",
-            BodySlidePreset = "CBBE Curvy",
-            PriorityPreview = "Generic Fallback",
-            Conditions =
-            {
-                new Condition { Type = "Sex", Operator = "==", Value = "Female" }
-            }
-        }
-    ];
+    private readonly IWorkspaceService _workspaceService;
 
-    public IReadOnlyList<Rule> GetRules() => _rules;
+    public MockRuleService(IWorkspaceService workspaceService)
+    {
+        _workspaceService = workspaceService;
+    }
 
-    public void Add(Rule rule) => _rules.Add(rule);
+    public IReadOnlyList<Rule> GetRules() => _workspaceService.Current.Rules;
+
+    public void Add(Rule rule) => _workspaceService.Current.Rules.Add(rule);
 
     public void Update(Rule rule)
     {
-        var index = _rules.FindIndex(x => x.Name == rule.Name);
-        if (index >= 0)
-            _rules[index] = rule;
+        var existing = _workspaceService.Current.Rules.FirstOrDefault(x => x.Name == rule.Name);
+        if (existing is null)
+            return;
+
+        existing.FileName = rule.FileName;
+        existing.TextureCandidates.Clear();
+        foreach (var item in rule.TextureCandidates)
+            existing.TextureCandidates.Add(item);
+
+        existing.BodySlideCandidates.Clear();
+        foreach (var item in rule.BodySlideCandidates)
+            existing.BodySlideCandidates.Add(item);
+
+        existing.RaceMenuCandidates.Clear();
+        foreach (var item in rule.RaceMenuCandidates)
+            existing.RaceMenuCandidates.Add(item);
+
+        existing.Conditions.Clear();
+        foreach (var condition in rule.Conditions)
+            existing.Conditions.Add(condition);
     }
 
-    public void Remove(Rule rule) => _rules.Remove(rule);
+    public void Remove(Rule rule) => _workspaceService.Current.Rules.Remove(rule);
 }

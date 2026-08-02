@@ -6,12 +6,12 @@ namespace DBDStudio.Core.Services;
 
 public sealed class MockBodySlideService : IBodySlideService
 {
-    private readonly List<BodySlidePreset> _presets =
-    [
-        new() { Preset = "CBBE Curvy", SourceXml = "CBBE.xml" },
-        new() { Preset = "BHUNP Slim", SourceXml = "BHUNP.xml" },
-        new() { Preset = "UUNP Special", SourceXml = "UUNP.xml" }
-    ];
+    private readonly IWorkspaceService _workspaceService;
 
-    public IReadOnlyList<BodySlidePreset> GetPresets() => _presets;
+    public MockBodySlideService(IWorkspaceService workspaceService)
+    {
+        _workspaceService = workspaceService;
+    }
+
+    public IReadOnlyList<BodySlidePreset> GetPresets() => _workspaceService.Current.BodySlidePresets;
 }

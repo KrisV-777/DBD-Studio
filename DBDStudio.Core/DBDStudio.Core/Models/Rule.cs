@@ -1,38 +1,40 @@
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace DBDStudio.Core.Models;
 
 public sealed class Rule
 {
     public string Name { get; set; } = string.Empty;
-    public Assignment? TextureAssignment { get; set; }
-    public Assignment? BodySlideAssignment { get; set; }
-    public Assignment? RaceMenuAssignment { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public ObservableCollection<string> TextureCandidates { get; } = [];
+    public ObservableCollection<string> BodySlideCandidates { get; } = [];
+    public ObservableCollection<string> RaceMenuCandidates { get; } = [];
 
     public string TexturePack
     {
-        get => TextureAssignment?.Value ?? string.Empty;
-        set => TextureAssignment = string.IsNullOrWhiteSpace(value)
-            ? null
-            : new Assignment { Category = AssignmentCategory.Texture, Value = value };
+        get => TextureCandidates.Count > 0 ? TextureCandidates[0] : string.Empty;
+        set => SetSingleCandidate(TextureCandidates, value);
     }
 
     public string BodySlidePreset
     {
-        get => BodySlideAssignment?.Value ?? string.Empty;
-        set => BodySlideAssignment = string.IsNullOrWhiteSpace(value)
-            ? null
-            : new Assignment { Category = AssignmentCategory.BodySlide, Value = value };
+        get => BodySlideCandidates.Count > 0 ? BodySlideCandidates[0] : string.Empty;
+        set => SetSingleCandidate(BodySlideCandidates, value);
     }
 
     public string RaceMenuPreset
     {
-        get => RaceMenuAssignment?.Value ?? string.Empty;
-        set => RaceMenuAssignment = string.IsNullOrWhiteSpace(value)
-            ? null
-            : new Assignment { Category = AssignmentCategory.RaceMenu, Value = value };
+        get => RaceMenuCandidates.Count > 0 ? RaceMenuCandidates[0] : string.Empty;
+        set => SetSingleCandidate(RaceMenuCandidates, value);
     }
 
     public string PriorityPreview { get; set; } = "Generic Match";
-    public List<Condition> Conditions { get; } = [];
+    public ObservableCollection<Condition> Conditions { get; } = [];
+
+    private static void SetSingleCandidate(ObservableCollection<string> candidates, string value)
+    {
+        candidates.Clear();
+        if (!string.IsNullOrWhiteSpace(value))
+            candidates.Add(value);
+    }
 }

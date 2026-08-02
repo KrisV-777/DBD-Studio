@@ -19,6 +19,12 @@
                            FontWeight="SemiBold"
                            Opacity="0.65" />
 
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Workspace File (.dbdproj)" />
+                    <TextBox Text="{Binding WorkspaceFilePath}"
+                             PlaceholderText="Path to workspace file, e.g. C:\Users\...\workspace.dbdproj" />
+                </StackPanel>
+
                 <!-- Skyrim Data -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="Skyrim Data Folder" />

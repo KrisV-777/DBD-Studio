@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
@@ -6,41 +7,28 @@ namespace DBDStudio.Core.Services;
 
 public sealed class MockRaceMenuPresetService : IRaceMenuPresetService
 {
-    private readonly List<RaceMenuPreset> _presets =
-    [
-        new()
-        {
-            Name = "LydiaPreset",
-            JsSlotFile = "LydiaPreset.jslot",
-            Sex = "Female",
-            NifFile = "LydiaPreset.nif",
-            DdsFile = "LydiaPreset.dds"
-        },
-        new()
-        {
-            Name = "WarriorMale",
-            JsSlotFile = "WarriorMale.jslot",
-            Sex = "Male",
-            NifFile = "WarriorMale.nif"
-        },
-        new()
-        {
-            Name = "CustomFemale",
-            JsSlotFile = "CustomFemale.jslot",
-            Sex = "Female"
-        }
-    ];
+    private readonly IWorkspaceService _workspaceService;
 
-    public IReadOnlyList<RaceMenuPreset> GetPresets() => _presets;
+    public MockRaceMenuPresetService(IWorkspaceService workspaceService)
+    {
+        _workspaceService = workspaceService;
+    }
 
-    public void Add(RaceMenuPreset preset) => _presets.Add(preset);
+    public IReadOnlyList<RaceMenuPreset> GetPresets() => _workspaceService.Current.RaceMenuPresets;
+
+    public void Add(RaceMenuPreset preset) => _workspaceService.Current.RaceMenuPresets.Add(preset);
 
     public void Update(RaceMenuPreset preset)
     {
-        var index = _presets.FindIndex(x => x.Name == preset.Name);
-        if (index >= 0)
-            _presets[index] = preset;
+        var existing = _workspaceService.Current.RaceMenuPresets.FirstOrDefault(x => x.Name == preset.Name);
+        if (existing is null)
+            return;
+
+        existing.JsSlotFile = preset.JsSlotFile;
+        existing.Sex = preset.Sex;
+        existing.NifFile = preset.NifFile;
+        existing.DdsFile = preset.DdsFile;
     }
 
-    public void Remove(RaceMenuPreset preset) => _presets.Remove(preset);
+    public void Remove(RaceMenuPreset preset) => _workspaceService.Current.RaceMenuPresets.Remove(preset);
 }

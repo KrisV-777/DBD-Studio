@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Body_Distribution_Studio.Models;
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
 
 namespace Body_Distribution_Studio.ViewModels;
 
@@ -41,6 +40,6 @@ public sealed class BodySlideViewModel : ViewModelBase
                 p.SourceXml.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
         foreach (var preset in source)
-            FilteredPresets.Add(new BodySlidePreset { Preset = preset.Preset, XmlFile = preset.SourceXml });
+            FilteredPresets.Add(preset);
     }
 }

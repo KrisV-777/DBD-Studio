@@ -1,557 +1,688 @@
-﻿# DBD Studio – Mutagen Integration Specification
+﻿# DBD Studio – Core Architecture & Domain Specification
 
-## Objective
+## Purpose
 
-Implement the backend foundation for Skyrim plugin inspection using Mutagen.
+This document defines the core architecture and domain model of **DBD Studio**.
 
-The goal is to create a fast, searchable, shared form database that can be used by:
+The UI prototype is considered complete.
 
-- Load Order Explorer
-- Form Search controls
-- Rule Editor
-- Rule Preview
-- Future validation systems
+This implementation phase establishes the backend architecture that all future features will build upon.
 
-This implementation replaces mock form data with real Skyrim data.
+The goals of this phase are:
 
----
+* Establish a shared domain model.
+* Replace mock form data with a Mutagen-backed implementation.
+* Create a fast searchable form database.
+* Prepare the rule engine.
+* Keep the UI completely independent from backend implementation details.
 
-# Supported Games
-
-DBD Studio exclusively supports:
-
-- Skyrim Special Edition
-- Skyrim Anniversary Edition
-- Skyrim VR
-
-No support is required for:
-
-- Skyrim Legendary Edition
-- Fallout games
-- Other Bethesda games
-
-The implementation should use Mutagen's Skyrim support.
+This document supersedes previous backend implementation notes where they conflict.
 
 ---
 
 # Design Principles
 
-## UI Responsiveness Is Highest Priority
+The following principles are mandatory.
 
-The database must be optimized for UI usage.
+## UI Independence
 
-Do not load every complete record into memory at startup.
+Avalonia Views and ViewModels must **never** depend directly on Mutagen types.
 
-The application will likely inspect thousands of records, but only a small fraction will ever be opened in detail.
+The UI should communicate exclusively through domain models and service interfaces.
 
-The system should therefore use:
-
-```
-Fast searchable index
-        +
-Lazy record resolution
-```
-
----
-
-# Architecture
-
-Mutagen must not be exposed directly to the UI.
-
-The architecture should be:
+Correct architecture:
 
 ```
-Avalonia UI
+Avalonia Views
 
-    ↓
+        ↓
 
 ViewModels
 
-    ↓
+        ↓
 
 Application Services
 
-    ↓
+        ↓
 
-DBD Studio Domain Models
+Domain Models
 
-    ↓
+        ↓
 
-Mutagen Implementation
-
-    ↓
-
-Skyrim Plugins
+Mutagen
 ```
 
-The UI must never directly access:
-
-- Mutagen record types
-- Plugin files
-- Load order APIs
+Mutagen must remain an implementation detail.
 
 ---
 
-# Required Services
+## MVVM
 
-Create interfaces in the Core project.
+Continue using MVVM.
 
----
-
-## ILoadOrderService
-
-Responsible for discovering the current Skyrim environment.
-
-Responsibilities:
-
-- Locate Skyrim Data folder
-- Locate installed plugins
-- Read load order
-- Create Mutagen load order
-
-Example API:
-
-```
-Initialize(gamePath)
-
-GetLoadedPlugins()
-
-Refresh()
-```
+Avoid code-behind except for unavoidable Avalonia-specific behavior.
 
 ---
 
-## IFormDatabaseService
+## Dependency Injection
 
-Primary interface used by the rest of the application.
+All services should be registered through dependency injection.
 
-Responsibilities:
+Avoid static classes.
 
-- Search forms
-- Resolve FormKeys
-- Retrieve metadata
-- Provide lazy record access
+Avoid global state.
 
-Example API:
+---
+
+## Shared Domain
+
+The application should expose a single shared domain model.
+
+Every ViewModel should operate on the same shared objects.
+
+The following pages should never duplicate data:
+
+* Load Order Explorer
+* Rule Editor
+* Rule Preview
+* Texture Packs
+* BodySlide Presets
+* RaceMenu Presets
+
+---
+
+# Solution Structure
+
+Recommended project layout:
 
 ```
-Search(query)
+DBDStudio.sln
 
-Get(FormKey)
+DBDStudio.Core
+    Models/
+    Interfaces/
+    Services/
 
-GetByEditorID(editorID)
+DBDStudio.Infrastructure
+    Mutagen/
+    AssetScanning/
+    Persistence/
 
-GetByFormID(formID)
+DBDStudio.UI
+    Views/
+    ViewModels/
+    Controls/
+```
+
+The Core project must not depend on Avalonia.
+
+Infrastructure contains all interaction with external libraries.
+
+The UI depends only on Core.
+
+---
+
+# Supported Games
+
+DBD Studio exclusively targets:
+
+* Skyrim Special Edition
+* Skyrim Anniversary Edition
+* Skyrim VR
+
+No support is required for other Bethesda titles.
+
+---
+
+# Skyrim Environment
+
+Users are expected to launch DBD Studio through Mod Organizer 2.
+
+The application should not attempt to detect or interface with MO2.
+
+The application should simply operate on the filesystem that is visible to the current process.
+
+Continue using user-configurable paths:
+
+* Skyrim Data Folder
+* Mods Folder
+* BodySlide Presets Folder
+* RaceMenu Presets Folder
+
+---
+
+# Domain Model
+
+## Workspace
+
+The workspace represents the editable project.
+
+Suggested model:
+
+```
+Workspace
+
+    Settings
+
+    TexturePacks
+
+    BodySlidePresets
+
+    RaceMenuPresets
+
+    Rules
+```
+
+The workspace contains editor-specific information.
+
+---
+
+## Workspace File
+
+The application should save its editable state inside a dedicated workspace file.
+
+Suggested extension:
+
+```
+*.dbdproj
+```
+
+The exact serialization format is flexible.
+
+The workspace should contain:
+
+* Settings
+* Registered texture packs
+* Imported assets
+* Rules
+* Editor state (optional)
+
+The workspace is intended for DBD Studio only.
+
+---
+
+# Export Model
+
+DBD does **not** consume workspace files.
+
+Export produces DBD-compatible YAML.
+
+Export output:
+
+```
+Data/
+
+    SKSE/
+
+        DBD/
+
+            Rules/
+
+                *.yaml
+```
+
+Each rule exports as one YAML file.
+
+Texture packs export independently.
+
+---
+
+# Texture Packs
+
+Texture packs are independent assets.
+
+Each texture pack has:
+
+```
+Name
+
+Mappings
+```
+
+A mapping consists of:
+
+```
+Vanilla Texture
+
+↓
+
+Replacement Texture
+```
+
+Mappings must be injective.
+
+Each vanilla texture may map to at most one replacement.
+
+---
+
+## Mapping Resolution
+
+When DBD loads a texture pack:
+
+If:
+
+```
+config.yaml
+```
+
+exists,
+
+explicit mappings are used.
+
+Otherwise,
+
+implicit mappings are generated:
+
+```
+textures/foo.dds
+
+↓
+
+textures/dbd/<TexturePack>/foo.dds
 ```
 
 ---
 
-# Form Database Design
+## Export
 
-The database must contain information about every record.
-
-However, records should be indexed minimally.
-
-The default database entry should contain:
-
-Required fields:
+DBD Studio should always generate:
 
 ```
-Display Name
+config.yaml
+```
 
-Editor ID
+inside each texture pack.
 
-Form ID
+The generated mapping should explicitly contain every texture mapping.
 
-Plugin
+---
 
-Form Type
+# BodySlide Presets
 
-FormKey
+BodySlide presets are opaque identifiers.
+
+DBD does not inspect preset contents.
+
+A preset is uniquely identified by:
+
+```
+XML File
+
++
+
+Preset Name
 ```
 
 Example:
 
 ```
-Name:
-Lydia
-
-EditorID:
-HousecarlWhiterunLydia
-
-FormID:
-000A2C8E
-
-Plugin:
-Skyrim.esm
-
-Type:
-NPC
+CBBE.xml:CBBECurvy
 ```
 
 ---
 
-# Form Identity
+# RaceMenu Presets
 
-Never store FormIDs without plugin context.
-
-Invalid:
-
-```
-000A2C8E
-```
-
-Correct:
-
-```
-Skyrim.esm | 000A2C8E
-```
-
-Use Mutagen's FormKey concept internally.
-
-The domain model should wrap this.
-
-Example:
-
-```
-FormReference
-
-    Plugin
-
-    FormID
-
-    EditorID
-
-    Type
-```
-
----
-
-# Indexing Strategy
-
-At startup:
-
-Do NOT fully parse every record.
-
-Instead:
-
-Create lightweight metadata entries.
-
-Example:
-
-```
-Load Plugin
-    |
-    |
-Enumerate Records
-    |
-    |
-Create FormIndexEntry
-    |
-    |
-Store searchable metadata
-```
-
----
-
-# Lazy Record Loading
-
-Full records should only be loaded when required.
-
-Examples:
-
-User opens:
-
-```
-Lydia
-```
-
-Then:
-
-```
-FormIndexEntry
-        |
-        |
-Resolve NPC record
-```
-
-Do not resolve every NPC during startup.
-
----
-
-# Important Record Types
-
-The database must support all record types.
-
-However, the following are especially important.
-
----
-
-## NPC_
-
-Required for:
-
-- ActorBase conditions
-- Unique NPC rules
-- Reference previews
-
-Store:
-
-- Name
-- EditorID
-- FormID
-- Plugin
-
----
-
-## RACE
-
-Required for:
-
-Conditions:
-
-```
-Race == Nord
-```
-
----
-
-## FACT
-
-Required for:
-
-Conditions:
-
-```
-Faction == Companions
-```
-
----
-
-## KYWD
-
-Required for:
-
-Keyword-based conditions.
-
----
-
-## All Other Records
-
-All record types should still be indexed.
-
-Examples:
-
-- Armor
-- Head Parts
-- Texture Sets
-- Weapons
-- Quests
-- Globals
-- Spells
-- etc.
-
-The system should not have a hardcoded limitation to only important types.
-
----
-
-# Search System
-
-Search must be optimized for interactive UI use.
-
-Supported search:
-
-- Display Name
-- Editor ID
-- Form ID
-- Plugin
-
-Examples:
-
-```
-Lydia
-
-HousecarlWhiterunLydia
-
-000A2C8E
-
-Skyrim.esm
-```
-
----
-
-# Search Result Model
-
-Do not return raw Mutagen records.
-
-Return domain objects.
-
-Example:
-
-```
-FormSearchResult
-
-    DisplayName
-
-    EditorID
-
-    FormID
-
-    Plugin
-
-    RecordType
-```
-
----
-
-# Load Order Handling
-
-Mutagen should use the currently visible Skyrim installation.
-
-Do not implement:
-
-- MO2 profile discovery
-- MO2 API integration
-- Virtual filesystem handling
-
-MO2 support is provided by launching DBD Studio through MO2.
-
-The application should behave like:
-
-```
-MO2
-
-    ↓
-
-DBD Studio.exe
-
-    ↓
-
-Mutagen scans visible Data folder
-```
-
-This matches the workflow used by tools such as BodySlide.
-
----
-
-# File Paths
-
-Continue using explicit user-configured paths.
-
-Required paths:
-
-```
-Skyrim Data Folder
-
-Mods Folder
-
-BodySlide Presets
-
-RaceMenu Presets
-```
-
-The Mutagen implementation should consume these paths.
-
-Do not attempt automatic discovery.
-
----
-
-# Caching
-
-The database should support caching.
-
-Goal:
-
-Avoid rescanning plugins unnecessarily.
-
-Possible cache invalidation:
-
-- Plugin timestamp changed
-- Plugin size changed
-- Load order changed
-
-The exact cache implementation is flexible.
-
----
-
-# Threading
-
-Database loading must not block the UI thread.
+RaceMenu presets are independent assets.
 
 Required:
 
 ```
-Application Start
+JSLOT
 
-        |
-
-Background Load
-
-        |
-
-Database Ready Event
-
-        |
-
-UI Updates
+Sex
 ```
 
-The UI should remain responsive while loading.
-
----
-
-# Error Handling
-
-Handle:
-
-Missing plugins
-
-Broken plugins
-
-Invalid paths
-
-Missing Skyrim installation
-
-Show useful errors.
-
-Do not crash the application.
-
----
-
-# Future Requirements
-
-The architecture should support future features:
-
-- Rule validation
-- Form conflict detection
-- YAML generation
-- Actor preview
-- Condition autocomplete
-- Asset dependency checking
-
----
-
-# Implementation Order
-
-Implement in this order:
-
-## Step 1
-
-Create domain models:
+Optional:
 
 ```
+DDS
+
+NIF
+```
+
+The preset identifier is the JSLOT filename.
+
+Sex is mandatory.
+
+DBD requires this information to prevent applying male presets to female actors and vice versa.
+
+---
+
+# Rules
+
+A Rule is the primary export unit.
+
+Each exported YAML file represents one Rule.
+
+A Rule contains:
+
+```
+Conditions
+
+Texture Candidates
+
+BodySlide Candidates
+
+RaceMenu Candidates
+```
+
+Each candidate list may contain:
+
+```
+0
+
+1
+
+many
+```
+
+entries.
+
+---
+
+# Assignments
+
+Texture Packs
+
+BodySlide Presets
+
+RaceMenu Presets
+
+are independent assignment categories.
+
+The rule engine must never assume one global winner.
+
+Instead implement three independent assignment pipelines.
+
+```
+Texture Resolver
+
+BodySlide Resolver
+
+RaceMenu Resolver
+```
+
+Each resolver evaluates the same conditions independently.
+
+---
+
+# Candidate Selection
+
+If a Rule wins for a category:
+
+and multiple candidates exist:
+
+```
+Texture A
+
+Texture B
+
+Texture C
+```
+
+DBD randomly selects one candidate.
+
+Randomization only occurs inside the winning Rule.
+
+Rules themselves are never selected randomly.
+
+---
+
+# Rule Evaluation
+
+Rules evaluate as:
+
+```
+Condition Groups
+
+AND
+
+Condition Groups
+
+AND
+
+...
+```
+
+Each group contains one or more OR-connected conditions.
+
+Example:
+
+```
+Condition A
+
+OR
+
+Condition B
+
+AND
+
+Condition C
+```
+
+evaluates as:
+
+```
+(A || B) && C
+```
+
+No additional expression syntax exists.
+
+No arbitrary nesting is required.
+
+---
+
+# Conditions
+
+A Condition contains:
+
+```
+Type
+
+Comparator
+
+Value
+```
+
+All Conditions evaluate to:
+
+```
+true
+
+false
+```
+
+---
+
+## Supported Conditions
+
+The implementation should support future conditions.
+
+Do not hardcode the UI around today's condition set.
+
+Current conditions:
+
+| Condition   | Priority | Value Type     |
+| ----------- | -------: | -------------- |
+| Race        |        0 | Form           |
+| Sex         |        0 | Boolean        |
+| Level       |        0 | Integer        |
+| Keyword     |        1 | Form           |
+| Faction     |        2 | Form           |
+| FactionRank |        3 | Form + Integer |
+| ActorBase   |        4 | Form           |
+| ReferenceID |        5 | Form           |
+
+---
+
+## Comparison Operators
+
+All conditions support the following operators:
+
+```
+<
+
+<=
+
+==
+
+>=
+
+>
+
+!=
+```
+
+No validation should prohibit operators that are not semantically meaningful.
+
+The UI should expose every operator uniformly.
+
+---
+
+# Condition Registry
+
+Introduce a Condition Registry.
+
+The application should not hardcode condition-specific UI logic.
+
+Suggested model:
+
+```
+ConditionDefinition
+
+Name
+
+DisplayName
+
+Priority
+
+ValueType
+
+EditorType
+
+UsesFormSearch
+```
+
+Examples:
+
+```
+Race
+
+Priority:
+0
+
+ValueType:
 FormReference
 
-FormSearchResult
+Editor:
+FormPicker
+```
 
-FormRecordMetadata
+```
+Level
+
+Priority:
+0
+
+ValueType:
+Integer
+
+Editor:
+IntegerEditor
+```
+
+The Rule Editor should construct condition editors dynamically from this registry.
+
+Adding a new condition in the future should require only:
+
+* Register definition
+* Implement evaluator
+
+No UI modifications.
+
+---
+
+# Rule Priority
+
+Rules do not explicitly store priority.
+
+Priority is derived.
+
+```
+Rule Priority
+
+=
+
+Maximum Condition Priority
+```
+
+Example:
+
+```
+Race
+
+Priority 0
+
+Faction
+
+Priority 2
+
+ReferenceID
+
+Priority 5
+```
+
+Rule priority becomes:
+
+```
+5
 ```
 
 ---
 
-## Step 2
+# Rule Resolution
 
-Create interfaces:
+Resolution for each assignment category:
+
+1. Evaluate matching Rules.
+2. Determine highest Rule priority.
+3. If multiple Rules share the same priority:
+
+   * Select the Rule whose filename is lexically last.
+4. If the winning Rule contains multiple candidates:
+
+   * Randomly select one candidate.
+
+This process is repeated independently for:
+
+* Texture Packs
+* BodySlide Presets
+* RaceMenu Presets
+
+---
+
+# Form Database
+
+Create a shared Form Database service.
+
+Every Form lookup should use this service.
+
+Consumers include:
+
+* Load Order Explorer
+* Rule Editor
+* Rule Preview
+* Validation
+* Future autocomplete
+
+---
+
+# Mutagen Integration
+
+Mutagen has already been added to the solution.
+
+Implement:
 
 ```
 ILoadOrderService
@@ -561,40 +692,135 @@ IFormDatabaseService
 
 ---
 
-## Step 3
+# Database Goals
 
-Implement Mutagen-backed services.
+The database should expose every record.
+
+However,
+
+startup performance and UI responsiveness take precedence.
+
+Do not fully materialize every record.
+
+Instead:
+
+```
+Load Plugins
+
+↓
+
+Create lightweight metadata index
+
+↓
+
+Resolve records lazily
+```
 
 ---
 
-## Step 4
+# Form Metadata
 
-Create indexing pipeline.
+Each indexed record should minimally expose:
+
+```
+Display Name
+
+EditorID
+
+FormID
+
+Plugin
+
+FormKey
+
+Record Type
+```
+
+This information should be sufficient for search results.
 
 ---
 
-## Step 5
+# Search
 
-Connect Load Order Explorer to the real database.
+Supported search fields:
+
+* Name
+* EditorID
+* FormID
+* Plugin
+
+Search must remain responsive on large load orders.
 
 ---
 
-## Step 6
+# Important Record Types
 
-Replace all mock Form Search controls.
+All records should be indexed.
+
+The following receive special attention because they are used by conditions:
+
+* NPC
+* Race
+* Faction
+* Keyword
+
+The architecture must not assume these are the only supported types.
 
 ---
 
-# Completion Criteria
+# Threading
 
-The implementation is complete when:
+Plugin loading and indexing must not block the UI thread.
 
-- DBD Studio can load a Skyrim SE/AE/VR installation
-- Plugins are discovered through configured paths
-- All records are searchable
-- Search is responsive
-- Form metadata is displayed correctly
-- Load Order Explorer uses real data
-- Form Search controls use the shared database
-- UI remains responsive during scanning
-- Mutagen types are isolated from the UI layer
+Expected workflow:
+
+```
+Application Startup
+
+↓
+
+Load Settings
+
+↓
+
+Background Plugin Scan
+
+↓
+
+Populate Shared Database
+
+↓
+
+Notify UI
+```
+
+---
+
+# Caching
+
+The database should be designed to support future caching.
+
+Potential cache invalidation:
+
+* Plugin timestamp changed
+* Plugin size changed
+* Load order changed
+
+Implementation is optional during this phase.
+
+The architecture should support it naturally.
+
+---
+
+# Future Development
+
+After completion of this phase, future implementation should proceed roughly as follows:
+
+1. Asset scanning
+2. Rule evaluation engine
+3. YAML serialization
+4. Workspace persistence
+5. Validation and conflict analysis
+6. Export pipeline
+
+The architecture created during this phase should require minimal refactoring to support those features.

@@ -56,6 +56,16 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
+    public string WorkspaceFilePath
+    {
+        get => _settingsService.Settings.WorkspaceFilePath;
+        set
+        {
+            _settingsService.Settings.WorkspaceFilePath = value;
+            OnPropertyChanged();
+        }
+    }
+
     public int TexturePacksFound => 4;
     public int BodySlidePresetsFound => 3;
     public string LastScanTime => "Ready for scan";

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -41,7 +42,7 @@ public sealed class TexturePack : INotifyPropertyChanged
         set => SetProperty(ref _randomPool, value);
     }
 
-    public List<TextureMapping> Mappings { get; } = [];
+    public ObservableCollection<TextureMapping> Mappings { get; } = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Body_Distribution_Studio.Models;
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
 
 namespace Body_Distribution_Studio.ViewModels;
 
@@ -48,24 +48,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
         AutoPopulateCommand = new RelayCommand(() => { });
 
         foreach (var pack in _texturePackService.GetTexturePacks())
-        {
-            var uiPack = new TexturePack
-            {
-                Name = pack.Name,
-                Description = pack.Description
-            };
-
-            foreach (var mapping in pack.Mappings)
-            {
-                uiPack.Mappings.Add(new TextureMapping
-                {
-                    VanillaTexture = mapping.VanillaTexture,
-                    ReplacementTexture = mapping.ReplacementTexture
-                });
-            }
-
-            Packs.Add(uiPack);
-        }
+            Packs.Add(pack);
 
         SelectedPack = Packs.Count > 0 ? Packs[0] : null;
     }
@@ -73,6 +56,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
     private void AddPack()
     {
         var pack = new TexturePack { Name = "New Pack" };
+        _texturePackService.Add(pack);
         Packs.Add(pack);
         SelectedPack = pack;
     }
@@ -87,12 +71,9 @@ public sealed class TexturePacksViewModel : ViewModelBase
             Description = SelectedPack.Description
         };
         foreach (var m in SelectedPack.Mappings)
-            copy.Mappings.Add(new TextureMapping
-            {
-                VanillaTexture = m.VanillaTexture,
-                ReplacementTexture = m.ReplacementTexture
-            });
+            copy.Mappings.Add(new TextureMapping { VanillaTexture = m.VanillaTexture, ReplacementTexture = m.ReplacementTexture, SourcePath = m.SourcePath });
 
+        _texturePackService.Add(copy);
         Packs.Add(copy);
         SelectedPack = copy;
     }
@@ -101,6 +82,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
     {
         if (SelectedPack is null) return;
         var index = Packs.IndexOf(SelectedPack);
+        _texturePackService.Remove(SelectedPack);
         Packs.Remove(SelectedPack);
         SelectedPack = Packs.Count > 0 ? Packs[Math.Max(0, index - 1)] : null;
     }

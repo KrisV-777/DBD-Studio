@@ -32,7 +32,7 @@
                                     Binding="{Binding Preset}"
                                     Width="*" />
                 <DataGridTextColumn Header="XML File"
-                                    Binding="{Binding XmlFile}"
+                                    Binding="{Binding SourceXml}"
                                     Width="220" />
             </DataGrid.Columns>
         </DataGrid>

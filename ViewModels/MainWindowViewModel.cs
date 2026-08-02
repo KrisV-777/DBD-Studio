@@ -12,6 +12,8 @@ public sealed class MainWindowViewModel : ViewModelBase
         ITexturePackService texturePackService,
         IBodySlideService bodySlideService,
         IRuleService ruleService,
+        IConditionRegistryService conditionRegistryService,
+        IRuleResolutionService ruleResolutionService,
         IFormDatabaseService formDatabaseService,
         ILoadOrderService loadOrderService,
         IRaceMenuPresetService raceMenuPresetService)
@@ -20,9 +22,9 @@ public sealed class MainWindowViewModel : ViewModelBase
         TexturePacks = new TexturePacksViewModel(texturePackService);
         BodySlide = new BodySlideViewModel(bodySlideService);
         RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
-        Rules = new RulesViewModel(ruleService, raceMenuPresetService);
+        Rules = new RulesViewModel(ruleService, raceMenuPresetService, conditionRegistryService, ruleResolutionService);
         Preview = new PreviewViewModel();
-        RulePreview = new RulePreviewViewModel(formDatabaseService, ruleService);
+        RulePreview = new RulePreviewViewModel(formDatabaseService, ruleService, ruleResolutionService);
         LoadOrderExplorer = new LoadOrderExplorerViewModel(loadOrderService);
     }
 

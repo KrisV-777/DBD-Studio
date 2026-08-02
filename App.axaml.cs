@@ -21,17 +21,23 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
+        services.AddSingleton<IWorkspaceService, InMemoryWorkspaceService>();
         services.AddSingleton<ISettingsService, MockSettingsService>();
         services.AddSingleton<ITexturePackService, MockTexturePackService>();
         services.AddSingleton<IBodySlideService, MockBodySlideService>();
         services.AddSingleton<IRuleService, MockRuleService>();
         services.AddSingleton<IRaceMenuPresetService, MockRaceMenuPresetService>();
+        services.AddSingleton<IConditionRegistryService, ConditionRegistryService>();
+        services.AddSingleton<IRuleResolutionService, RuleResolutionService>();
         services.AddSingleton<MutagenSkyrimService>();
         services.AddSingleton<IFormDatabaseService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
         services.AddSingleton<ILoadOrderService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
         services.AddTransient<OnboardingViewModel>();
         services.AddTransient<MainWindowViewModel>();
         Services = services.BuildServiceProvider();
+        var settingsService = Services.GetRequiredService<ISettingsService>();
+        settingsService.Load();
+        Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

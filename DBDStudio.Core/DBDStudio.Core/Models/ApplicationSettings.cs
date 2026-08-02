@@ -6,10 +6,17 @@ namespace DBDStudio.Core.Models;
 
 public sealed class ApplicationSettings : INotifyPropertyChanged
 {
+    private string _workspaceFilePath = string.Empty;
     private string _skyrimDataFolder = string.Empty;
     private string _modsFolder = string.Empty;
     private string _bodySlidePresetsFolder = string.Empty;
     private string _raceMenuPresetsFolder = string.Empty;
+
+    public string WorkspaceFilePath
+    {
+        get => _workspaceFilePath;
+        set => SetProperty(ref _workspaceFilePath, value);
+    }
 
     public string SkyrimDataFolder
     {
