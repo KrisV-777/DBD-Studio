@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="DBDStudio.Core\DBDStudio.Core\DBDStudio.Core.csproj" />
+    <ProjectReference Include="DBDStudio.Core\DBDStudio.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
