@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             xmlns:controls="using:Body_Distribution_Studio.Views.Controls"
+             x:Class="Body_Distribution_Studio.Views.Pages.RulePreviewPage"
+             x:DataType="vm:RulePreviewViewModel">
+    <ScrollViewer>
+        <StackPanel Margin="24" Spacing="18">
+            <TextBlock Text="Rule Preview"
+                       FontSize="20"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Inspect how the rule database would resolve a selected actor or form reference."
+                       Opacity="0.7"
+                       TextWrapping="Wrap" />
+
+            <Border Padding="16"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Reference Search" FontWeight="SemiBold" />
+                    <controls:FormSearchControl FormDatabaseService="{Binding FormDatabaseService}"
+                                                SelectedFormReference="{Binding SelectedReference}" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="16"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Resolved Assignments" FontWeight="SemiBold" />
+                    <TextBlock Text="Winning Rule" Opacity="0.6" />
+                    <TextBox Text="{Binding WinningRule.Name}" IsReadOnly="True" />
+                    <TextBlock Text="Priority" Opacity="0.6" />
+                    <TextBox Text="{Binding Priority}" IsReadOnly="True" />
+                    <TextBlock Text="Texture Pack" Opacity="0.6" />
+                    <TextBox Text="{Binding AssignedTexturePack}" IsReadOnly="True" />
+                    <TextBlock Text="BodySlide" Opacity="0.6" />
+                    <TextBox Text="{Binding AssignedBodySlidePreset}" IsReadOnly="True" />
+                    <TextBlock Text="RaceMenu" Opacity="0.6" />
+                    <TextBox Text="{Binding AssignedRaceMenuPreset}" IsReadOnly="True" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="16"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Matching Rules" FontWeight="SemiBold" />
+                    <ListBox ItemsSource="{Binding MatchingRules}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding PriorityPreview}" Opacity="0.7" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
