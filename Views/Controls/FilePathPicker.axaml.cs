@@ -8,7 +8,7 @@ namespace DBDStudio.Views.Controls;
 public partial class FilePathPickerControl : UserControl
 {
     public static readonly StyledProperty<string?> TextProperty =
-        AvaloniaProperty.Register<FilePathPickerControl, string?>(nameof(Text));
+        AvaloniaProperty.Register<FilePathPickerControl, string?>(nameof(Text), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<string> PickerTitleProperty =
         AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(PickerTitle), "Select Folder");
