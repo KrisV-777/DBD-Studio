@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public abstract class ViewModelBase : INotifyPropertyChanged
 {

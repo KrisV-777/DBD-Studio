@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Body_Distribution_Studio.Views.Pages;
+namespace DBDStudio.Views.Pages;
 
 public partial class RulePreviewPage : UserControl
 {

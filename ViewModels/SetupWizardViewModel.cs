@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public sealed class SetupWizardViewModel : ViewModelBase
 {
@@ -60,6 +60,8 @@ public sealed class SetupWizardViewModel : ViewModelBase
         get => _bodySlidePresetsFolder;
         set => SetField(ref _bodySlidePresetsFolder, value);
     }
+
+    public string RaceMenuPresetsFolder { get; set; } = string.Empty;
 
     public bool IsStep0 => _currentStep == 0;
     public bool IsStep1 => _currentStep == 1;

@@ -1,9 +1,7 @@
 ﻿using Avalonia;
-using System;
-using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Body_Distribution_Studio;
+namespace DBDStudio;
 
 class Program
 {
@@ -53,7 +51,7 @@ class Program
             NativeMethods.MessageBox(
                 IntPtr.Zero,
                 $"DBD Studio crashed on startup.\n\n{ex.GetType().Name}: {ex.Message}\n\nFull crash log: {logPath}",
-                "DBD Studio – Fatal Error",
+                "DBD Studio - Fatal Error",
                 0x10); // MB_ICONERROR
         }
         catch { /* ignore failures in the error handler itself */ }

@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
-             xmlns:controls="using:Body_Distribution_Studio.Views.Controls"
-             x:Class="Body_Distribution_Studio.Views.Pages.SettingsPage"
+             xmlns:vm="using:DBDStudio.ViewModels"
+             xmlns:controls="using:DBDStudio.Views.Controls"
+             x:Class="DBDStudio.Views.Pages.SettingsPage"
              x:DataType="vm:SettingsViewModel">
 
     <ScrollViewer>

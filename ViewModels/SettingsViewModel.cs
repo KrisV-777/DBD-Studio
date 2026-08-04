@@ -1,7 +1,7 @@
 using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public sealed class SettingsViewModel : ViewModelBase
 {

@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
-namespace Body_Distribution_Studio.Views.Controls;
+namespace DBDStudio.Views.Controls;
 
 public partial class FormSearchControl : UserControl
 {

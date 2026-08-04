@@ -1,7 +1,7 @@
 using Avalonia.Controls;
-using Body_Distribution_Studio.ViewModels;
+using DBDStudio.ViewModels;
 
-namespace Body_Distribution_Studio;
+namespace DBDStudio;
 
 public partial class MainWindow : Window
 {

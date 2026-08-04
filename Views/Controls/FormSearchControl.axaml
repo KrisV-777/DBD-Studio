@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="using:Body_Distribution_Studio.Views.Controls"
+             xmlns:controls="using:DBDStudio.Views.Controls"
              xmlns:models="using:DBDStudio.Core.Models"
-             x:Class="Body_Distribution_Studio.Views.Controls.FormSearchControl"
+             x:Class="DBDStudio.Views.Controls.FormSearchControl"
              x:DataType="controls:FormSearchControl">
     <StackPanel Spacing="8">
         <Grid ColumnDefinitions="*,Auto">

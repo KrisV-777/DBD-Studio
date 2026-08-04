@@ -1,10 +1,10 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Body_Distribution_Studio.ViewModels"
-        xmlns:pages="using:Body_Distribution_Studio.Views.Pages"
-        x:Class="Body_Distribution_Studio.MainWindow"
+        xmlns:vm="using:DBDStudio.ViewModels"
+        xmlns:pages="using:DBDStudio.Views.Pages"
+        x:Class="DBDStudio.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="Formsmith"
+        Title="Dynamic Body Distribution Studio"
         Width="1200" Height="760"
         MinWidth="900" MinHeight="580"
         WindowStartupLocation="CenterScreen">
@@ -80,7 +80,7 @@
                     BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top"
-                               Text="FORMSMITH"
+                               Text="DBD Studio"
                                FontSize="10"
                                FontWeight="Bold"
                                LetterSpacing="2"

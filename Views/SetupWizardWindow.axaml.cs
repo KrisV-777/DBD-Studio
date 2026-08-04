@@ -1,11 +1,9 @@
-using System;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Body_Distribution_Studio.ViewModels;
+using DBDStudio.ViewModels;
 
-namespace Body_Distribution_Studio.Views;
+namespace DBDStudio.Views;
 
 public partial class SetupWizardWindow : Window
 {
@@ -24,6 +22,10 @@ public partial class SetupWizardWindow : Window
 
     private async void OnBrowseBodySlideClicked(object? sender, RoutedEventArgs e)
         => await BrowseFolderAsync(path => ViewModel.BodySlidePresetsFolder = path);
+
+
+    private async void OnBrowseRaceMenuClicked(object? sender, RoutedEventArgs e)
+        => await BrowseFolderAsync(path => ViewModel.RaceMenuPresetsFolder = path);
 
     private async Task BrowseFolderAsync(Action<string> setter)
     {

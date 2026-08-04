@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
-             x:Class="Body_Distribution_Studio.Views.Pages.RaceMenuPresetsPage"
+             xmlns:vm="using:DBDStudio.ViewModels"
+             x:Class="DBDStudio.Views.Pages.RaceMenuPresetsPage"
              x:DataType="vm:RaceMenuPresetsViewModel">
     <Grid ColumnDefinitions="300,4,*" Margin="16">
         <Border Grid.Column="0"

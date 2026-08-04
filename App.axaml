@@ -1,6 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Body_Distribution_Studio.App"
+             x:Class="DBDStudio.App"
              RequestedThemeVariant="Default">
 
     <Application.Styles>

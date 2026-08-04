@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public sealed class RelayCommand : ICommand
 {

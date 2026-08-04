@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Body_Distribution_Studio.Views;
+namespace DBDStudio.Views;
 
 public partial class OnboardingWindow : Window
 {

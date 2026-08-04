@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="using:Body_Distribution_Studio.Views.Controls"
-             x:Class="Body_Distribution_Studio.Views.Controls.FilePathPickerControl"
+             xmlns:controls="using:DBDStudio.Views.Controls"
+             x:Class="DBDStudio.Views.Controls.FilePathPickerControl"
              x:DataType="controls:FilePathPickerControl">
     <Grid ColumnDefinitions="*,Auto">
         <TextBox Grid.Column="0"

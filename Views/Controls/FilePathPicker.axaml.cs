@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 
-namespace Body_Distribution_Studio.Views.Controls;
+namespace DBDStudio.Views.Controls;
 
 public partial class FilePathPickerControl : UserControl
 {

@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
-using Body_Distribution_Studio.ViewModels;
+using DBDStudio.ViewModels;
 
-namespace Body_Distribution_Studio.Models;
+namespace DBDStudio.Models;
 
 public sealed class TextureMapping : ViewModelBase
 {

@@ -1,4 +1,4 @@
-namespace Body_Distribution_Studio.Models;
+namespace DBDStudio.Models;
 
 public sealed class BodySlidePreset
 {

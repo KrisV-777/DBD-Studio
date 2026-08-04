@@ -1,13 +1,13 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Body_Distribution_Studio.ViewModels;
-using Body_Distribution_Studio.Views;
+using DBDStudio.ViewModels;
+using DBDStudio.Views;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Body_Distribution_Studio;
+namespace DBDStudio;
 
 public partial class App : Application
 {

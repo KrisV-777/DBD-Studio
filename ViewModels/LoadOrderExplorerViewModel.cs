@@ -4,7 +4,7 @@ using Avalonia.Threading;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public sealed class LoadOrderExplorerViewModel : ViewModelBase
 {

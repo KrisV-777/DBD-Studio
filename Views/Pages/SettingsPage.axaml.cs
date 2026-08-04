@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Body_Distribution_Studio.ViewModels;
+using DBDStudio.ViewModels;
 
-namespace Body_Distribution_Studio.Views.Pages;
+namespace DBDStudio.Views.Pages;
 
 public partial class SettingsPage : UserControl
 {

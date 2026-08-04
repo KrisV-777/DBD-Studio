@@ -6,7 +6,7 @@ using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public sealed class RulesViewModel : ViewModelBase
 {

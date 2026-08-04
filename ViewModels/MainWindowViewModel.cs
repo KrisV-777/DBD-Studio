@@ -1,6 +1,6 @@
 using DBDStudio.Core.Interfaces;
 
-namespace Body_Distribution_Studio.ViewModels;
+namespace DBDStudio.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {

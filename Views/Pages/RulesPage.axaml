@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:Body_Distribution_Studio.ViewModels"
+             xmlns:vm="using:DBDStudio.ViewModels"
              xmlns:conv="using:Avalonia.Data.Converters"
-             x:Class="Body_Distribution_Studio.Views.Pages.RulesPage"
+             x:Class="DBDStudio.Views.Pages.RulesPage"
              x:DataType="vm:RulesViewModel">
 
     <Grid ColumnDefinitions="210,4,*">
