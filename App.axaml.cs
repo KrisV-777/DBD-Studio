@@ -32,7 +32,6 @@ public partial class App : Application
         services.AddSingleton<MutagenSkyrimService>();
         services.AddSingleton<IFormDatabaseService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
         services.AddSingleton<ILoadOrderService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
-        services.AddTransient<OnboardingViewModel>();
         services.AddTransient<MainWindowViewModel>();
         Services = services.BuildServiceProvider();
         var settingsService = Services.GetRequiredService<ISettingsService>();
@@ -41,24 +40,8 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var onboardingViewModel = Services.GetRequiredService<OnboardingViewModel>();
-            var onboardingWindow = new OnboardingWindow { DataContext = onboardingViewModel };
-
-            onboardingViewModel.Completed += () =>
-            {
-                var mainWindow = new MainWindow(Services.GetRequiredService<MainWindowViewModel>());
-                mainWindow.Show();
-                onboardingWindow.Close();
-            };
-
-            onboardingViewModel.Skipped += () =>
-            {
-                var mainWindow = new MainWindow(Services.GetRequiredService<MainWindowViewModel>());
-                mainWindow.Show();
-                onboardingWindow.Close();
-            };
-
-            desktop.MainWindow = onboardingWindow;
+            var mainWindowViewModel = Services.GetRequiredService<MainWindowViewModel>();
+            desktop.MainWindow = new MainWindow(mainWindowViewModel);
         }
 
         base.OnFrameworkInitializationCompleted();
