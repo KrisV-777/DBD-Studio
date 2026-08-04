@@ -1,0 +1,29 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui">
+
+    <Style Selector="TextBlock.h1">
+        <Setter Property="FontSize"
+            Value="{DynamicResource H1FontSize}" />
+    </Style>
+
+    <Style Selector="TextBlock.h2">
+        <Setter Property="FontSize"
+            Value="{DynamicResource H2FontSize}" />
+    </Style>
+
+    <Style Selector="TextBlock.default">
+        <Setter Property="FontSize"
+            Value="{DynamicResource FontSize}" />
+    </Style>
+
+    <Style Selector="TextBlock.caption">
+        <Setter Property="FontSize"
+            Value="{DynamicResource CaptionFontSize}" />
+    </Style>
+
+    <Style Selector="TextBlock.tiny">
+        <Setter Property="FontSize"
+            Value="{DynamicResource TinyFontSize}" />
+    </Style>
+
+</Styles>

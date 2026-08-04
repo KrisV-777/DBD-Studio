@@ -164,6 +164,8 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
         target.Settings.ModsFolder = snapshot.Settings.ModsFolder;
         target.Settings.BodySlidePresetsFolder = snapshot.Settings.BodySlidePresetsFolder;
         target.Settings.RaceMenuPresetsFolder = snapshot.Settings.RaceMenuPresetsFolder;
+        target.Settings.BaseFontSize = snapshot.Settings.BaseFontSize;
+        target.Settings.Theme = snapshot.Settings.Theme;
 
         target.TexturePacks.Clear();
         foreach (var packSnapshot in snapshot.TexturePacks)
@@ -252,7 +254,9 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
                     SkyrimDataFolder = workspace.Settings.SkyrimDataFolder,
                     ModsFolder = workspace.Settings.ModsFolder,
                     BodySlidePresetsFolder = workspace.Settings.BodySlidePresetsFolder,
-                    RaceMenuPresetsFolder = workspace.Settings.RaceMenuPresetsFolder
+                    RaceMenuPresetsFolder = workspace.Settings.RaceMenuPresetsFolder,
+                    BaseFontSize = workspace.Settings.BaseFontSize,
+                    Theme = workspace.Settings.Theme,
                 },
                 TexturePacks = workspace.TexturePacks.Select(pack => new TexturePackSnapshot
                 {
@@ -306,6 +310,8 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
         public string ModsFolder { get; init; } = string.Empty;
         public string BodySlidePresetsFolder { get; init; } = string.Empty;
         public string RaceMenuPresetsFolder { get; init; } = string.Empty;
+        public double BaseFontSize { get; init; } = 14;
+        public string Theme { get; init; } = "System";
     }
 
     private sealed class TexturePackSnapshot

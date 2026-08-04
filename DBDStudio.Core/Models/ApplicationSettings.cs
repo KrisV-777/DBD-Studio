@@ -11,6 +11,8 @@ public sealed class ApplicationSettings : INotifyPropertyChanged
     private string _modsFolder = string.Empty;
     private string _bodySlidePresetsFolder = string.Empty;
     private string _raceMenuPresetsFolder = string.Empty;
+    private double _baseFontSize = 14;
+    private string _theme = "System";
 
     public string WorkspaceFilePath
     {
@@ -40,6 +42,18 @@ public sealed class ApplicationSettings : INotifyPropertyChanged
     {
         get => _raceMenuPresetsFolder;
         set => SetProperty(ref _raceMenuPresetsFolder, value);
+    }
+
+    public double BaseFontSize
+    {
+        get => _baseFontSize;
+        set => SetProperty(ref _baseFontSize, value);
+    }
+
+    public string Theme
+    {
+        get => _theme;
+        set => SetProperty(ref _theme, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DBDStudio.ViewModels;
-using DBDStudio.Views;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,9 +33,28 @@ public partial class App : Application
         services.AddSingleton<ILoadOrderService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
         services.AddTransient<MainWindowViewModel>();
         Services = services.BuildServiceProvider();
+        
         var settingsService = Services.GetRequiredService<ISettingsService>();
         settingsService.Load();
         Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
+
+        // Apply saved font sizes to application resources
+        var baseFontSize = settingsService.Settings.BaseFontSize;
+        Resources["FontSize"] = baseFontSize;
+        Resources["H1FontSize"] = baseFontSize * 1.6;
+        Resources["H2FontSize"] = baseFontSize * 1.3;
+        Resources["CaptionFontSize"] = baseFontSize * 0.85;
+        Resources["TinyFontSize"] = baseFontSize * 0.7;
+
+        // Apply saved theme
+        var theme = settingsService.Settings.Theme;
+        var themeVariant = theme switch
+        {
+            "Light" => Avalonia.Styling.ThemeVariant.Light,
+            "Dark" => Avalonia.Styling.ThemeVariant.Dark,
+            _ => Avalonia.Styling.ThemeVariant.Default
+        };
+        RequestedThemeVariant = themeVariant;
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

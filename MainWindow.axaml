@@ -39,35 +39,13 @@
 
     <DockPanel>
 
-        <!-- ── Menu Bar ── -->
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New"
-                          InputGesture="Ctrl+N" />
-                <MenuItem Header="_Open…"
-                          InputGesture="Ctrl+O" />
-                <MenuItem Header="_Save"
-                          InputGesture="Ctrl+S" />
-                <Separator />
-                <MenuItem Header="_Export…" />
-                <Separator />
-                <MenuItem Header="E_xit" />
-            </MenuItem>
-            <MenuItem Header="_Settings">
-                <MenuItem Header="_Preferences" />
-            </MenuItem>
-            <MenuItem Header="_Help">
-                <MenuItem Header="_About" />
-            </MenuItem>
-        </Menu>
-
         <!-- ── Status Bar ── -->
         <Border DockPanel.Dock="Bottom"
                 BorderThickness="0,1,0,0"
                 BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
                 Padding="12,5">
             <TextBlock Text="{Binding StatusMessage}"
-                       FontSize="12"
+                       Classes="caption"
                        VerticalAlignment="Center" />
         </Border>
 
@@ -81,7 +59,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top"
                                Text="DBD Studio"
-                               FontSize="10"
+                               Classes="tiny"
                                FontWeight="Bold"
                                LetterSpacing="2"
                                Margin="14,14,14,8"
@@ -109,8 +87,8 @@
             <!-- Active Page (resolved via DataTemplates above) -->
             <ContentControl Grid.Column="2"
                             Content="{Binding CurrentPage}" />
+
         </Grid>
 
     </DockPanel>
 </Window>
-

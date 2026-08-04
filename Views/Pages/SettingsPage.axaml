@@ -1,129 +1,252 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:DBDStudio.ViewModels"
-             xmlns:controls="using:DBDStudio.Views.Controls"
-             x:Class="DBDStudio.Views.Pages.SettingsPage"
-             x:DataType="vm:SettingsViewModel">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DBDStudio.ViewModels"
+    xmlns:controls="using:DBDStudio.Views.Controls"
+    xmlns:icons="using:FluentIcons.Avalonia"
+    xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Svg.Controls.Skia.Avalonia"
+    x:Class="DBDStudio.Views.Pages.SettingsPage"
+    x:DataType="vm:SettingsViewModel">
 
     <ScrollViewer>
+
         <StackPanel Margin="28,20" Spacing="24" MaxWidth="680">
 
+            <!-- Welcome -->
+
+            <Grid ColumnDefinitions="*,Auto"
+                RowDefinitions="Auto,Auto"
+                ColumnSpacing="24"
+                RowSpacing="12">
+
+                <!-- Title -->
+                <TextBlock Grid.Row="0"
+                    Grid.Column="0"
+                    Text="Welcome to DBD Studio"
+                    Classes="h1"
+                    FontWeight="SemiBold"
+                    VerticalAlignment="Center" />
+
+                <!-- Resource Links -->
+                <StackPanel Grid.Row="0"
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    VerticalAlignment="Top">
+
+                    <!-- Wiki -->
+                    <Button Command="{Binding CmdOpenWiki}"
+                        ToolTip.Tip="Open Documentation"
+                        Classes="icon">
+                        <icons:SymbolIcon Symbol="BookQuestionMark" FontSize="18" />
+                    </Button>
+
+                    <Separator Width="1"
+                        Margin="4,0"
+                        VerticalAlignment="Stretch" />
+
+                    <!-- GitHub -->
+                    <Button Command="{Binding CmdOpenGithub}"
+                        ToolTip.Tip="Open GitHub Repository"
+                        Classes="icon">
+                        <svg:Svg Width="22"
+                            Height="22"
+                            Path="{Binding GitHubIconPath}" />
+                    </Button>
+
+                    <!-- Nexus -->
+                    <Button Command="{Binding CmdOpenNexus}"
+                        ToolTip.Tip="Open Nexus Mods"
+                        Classes="icon">
+                        <svg:Svg Width="22"
+                            Height="22"
+                            Path="/Assets/Icons/NexusMods.svg" />
+                    </Button>
+
+                    <!-- Ko-fi -->
+                    <Button Command="{Binding CmdOpenKofi}"
+                        ToolTip.Tip="Support development on Ko-fi"
+                        Classes="icon">
+                        <svg:Svg Width="22"
+                            Height="22"
+                            Path="/Assets/Icons/KoFi.svg" />
+                    </Button>
+
+                </StackPanel>
+
+                <!-- Description -->
+                <TextBlock Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    TextWrapping="Wrap"
+                    Classes="default"
+                    Opacity="0.75"> DBD Studio is a graphical editor for <Run FontWeight="SemiBold">Dynamic
+                    Body Distribution</Run>. It helps create, edit and validate DBD configuration
+                    files without manually editing YAML files. Configure your workspace below before
+                    scanning assets. If you find this project useful, consider supporting its
+                    development using the links above. </TextBlock>
+
+            </Grid>
+
             <TextBlock Text="Settings"
-                       FontSize="20"
-                       FontWeight="SemiBold" />
+                Classes="h2"
+                FontWeight="SemiBold" />
 
             <!-- ── Asset Paths ── -->
             <StackPanel Spacing="16">
                 <TextBlock Text="Asset Paths"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           Opacity="0.65" />
-
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Workspace File (.dbdproj)" />
-                    <TextBox Text="{Binding WorkspaceFilePath}"
-                             PlaceholderText="Path to workspace file, e.g. C:\Users\...\workspace.dbdproj" />
-                </StackPanel>
+                    Classes="h2"
+                    FontWeight="SemiBold"
+                    Opacity="0.65" />
 
                 <!-- Skyrim Data -->
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Skyrim Data Folder" />
+                    <TextBlock Text="Skyrim Data Folder"
+                        Classes="default" />
                     <controls:FilePathPickerControl Text="{Binding SkyrimDataFolder}"
-                                                    PickerTitle="Select Skyrim Data folder"
-                                                    PlaceholderText="Path to Skyrim Data folder…" />
+                        PickerTitle="Select Skyrim Data folder"
+                        PlaceholderText="Path to Skyrim Data folder…" />
                 </StackPanel>
 
                 <!-- Mods Folder -->
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Mods Folder" />
+                    <TextBlock Text="Mods Folder"
+                        Classes="default" />
                     <controls:FilePathPickerControl Text="{Binding ModsFolder}"
-                                                    PickerTitle="Select Mods folder"
-                                                    PlaceholderText="Path to mods folder or MO2 virtual Data source…" />
+                        PickerTitle="Select Mods folder"
+                        PlaceholderText="Path to mods folder or MO2 virtual Data source…" />
                 </StackPanel>
 
                 <!-- BodySlide Presets -->
                 <StackPanel Spacing="6">
-                    <TextBlock Text="BodySlide Presets Folder" />
+                    <TextBlock Text="BodySlide Presets Folder"
+                        Classes="default" />
                     <controls:FilePathPickerControl Text="{Binding BodySlidePresetsFolder}"
-                                                    PickerTitle="Select BodySlide folder"
-                                                    PlaceholderText="Path to BodySlide slider preset folder…" />
+                        PickerTitle="Select BodySlide folder"
+                        PlaceholderText="Path to BodySlide slider preset folder…" />
                 </StackPanel>
 
                 <!-- RaceMenu Presets -->
                 <StackPanel Spacing="6">
-                    <TextBlock Text="RaceMenu Presets Folder" />
+                    <TextBlock Text="RaceMenu Presets Folder"
+                        Classes="default" />
                     <controls:FilePathPickerControl Text="{Binding RaceMenuPresetsFolder}"
-                                                    PickerTitle="Select RaceMenu presets folder"
-                                                    PlaceholderText="Path to RaceMenu preset folder…" />
+                        PickerTitle="Select RaceMenu presets folder"
+                        PlaceholderText="Path to RaceMenu preset folder…" />
                 </StackPanel>
-            </StackPanel>
-
-            <!-- ── Action Buttons ── -->
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Scan Assets"
-                        Classes="accent"
-                        IsEnabled="False"
-                        ToolTip.Tip="Asset scanning will be available in a future update." />
-                <Button Content="Save Settings"
-                        Command="{Binding SaveCommand}" />
             </StackPanel>
 
             <!-- ── Info Cards ── -->
             <StackPanel Spacing="12">
                 <TextBlock Text="Asset Summary"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           Opacity="0.65" />
+                    Classes="h2"
+                    FontWeight="SemiBold"
+                    Opacity="0.65" />
 
                 <WrapPanel>
                     <Border BorderThickness="1"
-                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                            CornerRadius="4"
-                            Padding="16,12"
-                            MinWidth="160"
-                            Margin="0,0,12,8">
+                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                        CornerRadius="4"
+                        Padding="16,12"
+                        MinWidth="160"
+                        Margin="0,0,12,8">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding TexturePacksFound}"
-                                       FontSize="26"
-                                       FontWeight="Bold" />
+                                FontSize="26"
+                                FontWeight="Bold" />
                             <TextBlock Text="Texture Packs Found"
-                                       FontSize="12"
-                                       Opacity="0.6" />
+                                Classes="caption"
+                                Opacity="0.6" />
                         </StackPanel>
                     </Border>
 
                     <Border BorderThickness="1"
-                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                            CornerRadius="4"
-                            Padding="16,12"
-                            MinWidth="160"
-                            Margin="0,0,12,8">
+                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                        CornerRadius="4"
+                        Padding="16,12"
+                        MinWidth="160"
+                        Margin="0,0,12,8">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding BodySlidePresetsFound}"
-                                       FontSize="26"
-                                       FontWeight="Bold" />
+                                FontSize="26"
+                                FontWeight="Bold" />
                             <TextBlock Text="BodySlide Presets Found"
-                                       FontSize="12"
-                                       Opacity="0.6" />
+                                Classes="caption"
+                                Opacity="0.6" />
                         </StackPanel>
                     </Border>
 
                     <Border BorderThickness="1"
-                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                            CornerRadius="4"
-                            Padding="16,12"
-                            MinWidth="160"
-                            Margin="0,0,12,8">
+                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                        CornerRadius="4"
+                        Padding="16,12"
+                        MinWidth="160"
+                        Margin="0,0,12,8">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="{Binding LastScanTime}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold" />
-                            <TextBlock Text="Last Scan Time"
-                                       FontSize="12"
-                                       Opacity="0.6" />
+                            <TextBlock Text="{Binding RaceMenuPresetsFound}"
+                                FontSize="26"
+                                FontWeight="Bold" />
+                            <TextBlock Text="RaceMenu Presets Found"
+                                Classes="caption"
+                                Opacity="0.6" />
                         </StackPanel>
                     </Border>
                 </WrapPanel>
+            </StackPanel>
+
+            <!-- Workspace Settings -->
+            <StackPanel Spacing="16">
+                <TextBlock Text="Workspace Settings"
+                    Classes="h2"
+                    FontWeight="SemiBold"
+                    Opacity="0.65" />
+
+                <!-- <StackPanel Spacing="6">
+                    <TextBlock Text="Workspace File (.dbdproj)"
+                        Classes="default" />
+                    <TextBox Text="{Binding WorkspaceFilePath}"
+                        IsEnabled="False"
+                        ToolTip.Tip="Location of the workspace file used to store project settings and asset information."
+                        PlaceholderText="Path to workspace file, e.g. C:\Users\...\workspace.dbdproj" />
+                </StackPanel> -->
+
+                <StackPanel Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <TextBlock Text="Base Font Size"
+                            Classes="default"
+                            VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                            Text="{Binding BaseFontSize, StringFormat='{}{0:F0}'}"
+                            Classes="caption"
+                            Opacity="0.75"
+                            VerticalAlignment="Center" />
+                    </Grid>
+                    <Slider Minimum="10"
+                        Maximum="24"
+                        TickFrequency="1"
+                        IsSnapToTickEnabled="True"
+                        Value="{Binding BaseFontSize}" />
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Application Theme"
+                        Classes="default" />
+                    <ComboBox SelectedItem="{Binding Theme}"
+                        ItemsSource="{Binding Source={x:Static vm:SettingsViewModel.ThemeOptions}}"
+                        Width="200" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ── Action Buttons ── -->
+            <StackPanel Orientation="Horizontal" 
+                HorizontalAlignment="Right" 
+                Spacing="8"
+                Margin="0,6,0,12">
+                <Button Content="Scan Assets"
+                    Classes="accent"
+                    IsEnabled="False"
+                    ToolTip.Tip="Asset scanning will be available in a future update." />
+                <Button Content="Save Settings"
+                    Command="{Binding SaveCommand}" />
             </StackPanel>
 
         </StackPanel>

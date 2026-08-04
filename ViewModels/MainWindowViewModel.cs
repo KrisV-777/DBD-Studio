@@ -6,6 +6,15 @@ public sealed class MainWindowViewModel : ViewModelBase
 {
     private int _selectedPageIndex;
     private string _statusMessage = "Ready";
+    private readonly ISettingsService _settingsService;
+    private readonly ITexturePackService _texturePackService;
+    private readonly IBodySlideService _bodySlideService;
+    private readonly IRuleService _ruleService;
+    private readonly IConditionRegistryService _conditionRegistryService;
+    private readonly IRuleResolutionService _ruleResolutionService;
+    private readonly IFormDatabaseService _formDatabaseService;
+    private readonly ILoadOrderService _loadOrderService;
+    private readonly IRaceMenuPresetService _raceMenuPresetService;
 
     public MainWindowViewModel(
         ISettingsService settingsService,
@@ -18,7 +27,18 @@ public sealed class MainWindowViewModel : ViewModelBase
         ILoadOrderService loadOrderService,
         IRaceMenuPresetService raceMenuPresetService)
     {
-        Settings = new SettingsViewModel(settingsService);
+        _settingsService = settingsService;
+        _texturePackService = texturePackService;
+        _bodySlideService = bodySlideService;
+        _ruleService = ruleService;
+        _conditionRegistryService = conditionRegistryService;
+        _ruleResolutionService = ruleResolutionService;
+        _formDatabaseService = formDatabaseService;
+        _loadOrderService = loadOrderService;
+        _raceMenuPresetService = raceMenuPresetService;
+
+        // Create SettingsViewModel with reference to this MainWindowViewModel
+        Settings = new SettingsViewModel(settingsService, texturePackService, bodySlideService, raceMenuPresetService, this);
         TexturePacks = new TexturePacksViewModel(texturePackService);
         BodySlide = new BodySlideViewModel(bodySlideService);
         RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);

@@ -1,20 +1,61 @@
 using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
+using System.Diagnostics;
+using Avalonia;
+using Avalonia.Styling;
 
 namespace DBDStudio.ViewModels;
 
 public sealed class SettingsViewModel : ViewModelBase
 {
     private readonly ISettingsService _settingsService;
+    private readonly ITexturePackService _texturePackService;
+    private readonly IBodySlideService _bodySlideService;
+    private readonly IRaceMenuPresetService _raceMenuPresetService;
+    private readonly MainWindowViewModel? _mainWindowViewModel;
 
-    public SettingsViewModel(ISettingsService settingsService)
+    public static readonly string[] ThemeOptions = ["Light", "Dark", "System"];
+
+    public SettingsViewModel(
+        ISettingsService settingsService,
+        ITexturePackService texturePackService,
+        IBodySlideService bodySlideService,
+        IRaceMenuPresetService raceMenuPresetService,
+        MainWindowViewModel? mainWindowViewModel = null)
     {
         _settingsService = settingsService;
+        _texturePackService = texturePackService;
+        _bodySlideService = bodySlideService;
+        _raceMenuPresetService = raceMenuPresetService;
+        _mainWindowViewModel = mainWindowViewModel;
+
         _settingsService.Settings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
-        SaveCommand = new RelayCommand(Save);
+
+        SaveCommand = new RelayCommand(() => _settingsService.Save());
+        CmdOpenGithub = new RelayCommand(() => OpenUrl("https://github.com/"));
+        CmdOpenWiki = new RelayCommand(() => OpenUrl("https://github.com/wiki"));
+        CmdOpenNexus = new RelayCommand(() => OpenUrl("https://www.nexusmods.com/"));
+        CmdOpenKofi = new RelayCommand(() => OpenUrl("https://ko-fi.com/"));
+    }
+
+    static private void OpenUrl(string url)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = url,
+            UseShellExecute = true
+        });
     }
 
     public ICommand SaveCommand { get; }
+    public ICommand CmdOpenGithub { get; }
+    public ICommand CmdOpenWiki { get; }
+    public ICommand CmdOpenNexus { get; }
+    public ICommand CmdOpenKofi { get; }
+
+    public string GitHubIconPath => (Application.Current?.ActualThemeVariant ?? ThemeVariant.Light) == ThemeVariant.Dark
+        ? "/Assets/Icons/GitHub_White.svg"
+        : "/Assets/Icons/GitHub_Black.svg";
 
     public string SkyrimDataFolder
     {
@@ -66,9 +107,48 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
-    public int TexturePacksFound => 4;
-    public int BodySlidePresetsFound => 3;
-    public string LastScanTime => "Ready for scan";
+    public int TexturePacksFound => _texturePackService.GetTexturePacks().Count;
+    public int BodySlidePresetsFound => _bodySlideService.GetPresets().Count;
 
-    private void Save() => _settingsService.Save();
+    public int RaceMenuPresetsFound => _raceMenuPresetService.GetPresets().Count;
+
+    public double BaseFontSize
+    {
+        get => _settingsService.Settings.BaseFontSize;
+        set
+        {
+            if (_settingsService.Settings.BaseFontSize == value)
+                return;
+
+            _settingsService.Settings.BaseFontSize = value;
+
+            Application.Current!.Resources["FontSize"] = value;
+            Application.Current.Resources["H1FontSize"] = value * 1.6;
+            Application.Current.Resources["H2FontSize"] = value * 1.3;
+            Application.Current.Resources["CaptionFontSize"] = value * 0.85;
+            Application.Current.Resources["TinyFontSize"] = value * 0.7;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string Theme
+    {
+        get => _settingsService.Settings.Theme;
+        set
+        {
+            if (_settingsService.Settings.Theme == value || Application.Current == null)
+                return;
+
+            _settingsService.Settings.Theme = value;
+            Application.Current.RequestedThemeVariant = value switch
+            {
+                "Light" => ThemeVariant.Light,
+                "Dark" => ThemeVariant.Dark,
+                _ => ThemeVariant.Default
+            };
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(GitHubIconPath)); 
+        }
+    }
 }
