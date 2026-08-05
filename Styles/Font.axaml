@@ -1,29 +1,67 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui">
 
+    <!-- TextBlock -->
+
     <Style Selector="TextBlock.h1">
         <Setter Property="FontSize"
             Value="{DynamicResource H1FontSize}" />
     </Style>
-
     <Style Selector="TextBlock.h2">
         <Setter Property="FontSize"
             Value="{DynamicResource H2FontSize}" />
     </Style>
-
     <Style Selector="TextBlock.default">
         <Setter Property="FontSize"
             Value="{DynamicResource FontSize}" />
     </Style>
-
     <Style Selector="TextBlock.caption">
         <Setter Property="FontSize"
             Value="{DynamicResource CaptionFontSize}" />
     </Style>
-
     <Style Selector="TextBlock.tiny">
         <Setter Property="FontSize"
             Value="{DynamicResource TinyFontSize}" />
+    </Style>
+
+    <!-- TextBox -->
+
+    <Style Selector="TextBox.h1">
+        <Setter Property="FontSize"
+            Value="{DynamicResource H1FontSize}" />
+    </Style>
+    <Style Selector="TextBox.h2">
+        <Setter Property="FontSize"
+            Value="{DynamicResource H2FontSize}" />
+    </Style>
+    <Style Selector="TextBox.default">
+        <Setter Property="FontSize"
+            Value="{DynamicResource FontSize}" />
+    </Style>
+    <Style Selector="TextBox.caption">
+        <Setter Property="FontSize"
+            Value="{DynamicResource CaptionFontSize}" />
+    </Style>
+    <Style Selector="TextBox.tiny">
+        <Setter Property="FontSize"
+            Value="{DynamicResource TinyFontSize}" />
+    </Style>
+
+    <!-- Tables -->
+
+    <Style Selector="DataGridColumnHeader">
+        <Setter Property="FontSize"
+            Value="{DynamicResource FontSize}" />
+        <Setter Property="FontWeight"
+            Value="SemiBold" />
+    </Style>
+    <Style Selector="DataGridCell TextBlock">
+        <Setter Property="FontSize"
+            Value="{DynamicResource FontSize}" />
+    </Style>
+    <Style Selector="DataGridCell TextBox">
+        <Setter Property="FontSize"
+            Value="{DynamicResource FontSize}" />
     </Style>
 
 </Styles>

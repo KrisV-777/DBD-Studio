@@ -19,7 +19,7 @@
                     Spacing="10">
 
                     <TextBlock Text="Texture Packs"
-                        Classes="subtitle" />
+                        Classes="h2" />
 
                     <StackPanel Orientation="Horizontal"
                         Spacing="6">
@@ -60,6 +60,7 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Name}"
+                                Classes="default"
                                 Padding="6,4" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -89,6 +90,7 @@
 
             <!-- Placeholder -->
             <TextBlock Text="Select a texture pack to begin editing."
+                Classes="default"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Opacity="0.45"
@@ -107,43 +109,33 @@
 
                     <StackPanel>
                         <TextBlock Text="Texture Pack"
-                            Classes="subtitle" />
+                            Classes="h1" />
 
                         <StackPanel Margin="0,12,0,0"
                             Spacing="10">
 
                             <StackPanel>
                                 <TextBlock Text="Name"
+                                    Classes="caption"
                                     FontWeight="SemiBold" />
 
                                 <TextBox Text="{Binding SelectedPack.Name}"
+                                    Classes="h2"
                                     PlaceholderText="Texture Pack Name" />
                             </StackPanel>
                             <StackPanel>
                                 <TextBlock Text="Description"
+                                    Classes="caption"
                                     FontWeight="SemiBold" />
 
                                 <TextBox Text="{Binding SelectedPack.Description}"
+                                    Classes="default"
                                     AcceptsReturn="True"
                                     Height="70"
                                     PlaceholderText="Description" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
-
-                    <!-- Export -->
-                    <Button Grid.Column="1"
-                        VerticalAlignment="Top"
-                        Command="{Binding ExportPackCommand}"
-                        Classes="accent">
-
-                        <StackPanel Orientation="Horizontal"
-                            Spacing="8">
-
-                            <fluent:SymbolIcon Symbol="Save" />
-                            <TextBlock Text="Export ZIP" />
-                        </StackPanel>
-                    </Button>
                 </Grid>
 
                 <DataGrid Grid.Row="1"
@@ -163,7 +155,7 @@
                             Width="*" />
 
                         <DataGridTemplateColumn Header=""
-                            Width="72">
+                            Width="80">
 
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -200,12 +192,27 @@
                     Padding="0,12,0,0">
 
                     <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right">
+                        HorizontalAlignment="Right"
+                        Spacing="6">
+
+                        <!-- Add Row -->
                         <Button Command="{Binding AddMappingCommand}">
                             <StackPanel Orientation="Horizontal"
                                 Spacing="8">
                                 <fluent:SymbolIcon Symbol="Add" />
-                                <TextBlock Text="Add Mapping" />
+                                <TextBlock Text="Add Mapping"
+                                    Classes="default" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Export -->
+                        <Button Command="{Binding ExportPackCommand}">
+                            <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+
+                                <fluent:SymbolIcon Symbol="Save" />
+                                <TextBlock Text="Export ZIP"
+                                    Classes="default" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
