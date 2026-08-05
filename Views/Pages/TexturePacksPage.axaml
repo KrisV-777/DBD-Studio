@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DBDStudio.ViewModels"
+             xmlns:fluent="using:FluentIcons.Avalonia"
              x:Class="DBDStudio.Views.Pages.TexturePacksPage"
              x:DataType="vm:TexturePacksViewModel">
 
@@ -17,13 +18,28 @@
                     BorderThickness="0,1,0,0"
                     BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
                     Padding="8">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                    <Button Content="+ Add"
-                            Command="{Binding AddPackCommand}" />
-                    <Button Content="Duplicate"
-                            Command="{Binding DuplicatePackCommand}" />
-                    <Button Content="Delete"
-                            Command="{Binding DeletePackCommand}" />
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Button Content="+ Add"
+                                Command="{Binding AddPackCommand}"
+                                Grid.Column="0" />
+                        <Button Click="OnAddPackFromFolderClick"
+                                ToolTip.Tip="Create pack from folder"
+                                Padding="8"
+                                Grid.Column="1">
+                            <fluent:SymbolIcon Symbol="FolderOpen" FontSize="16" />
+                        </Button>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*">
+                        <Button Content="Duplicate"
+                                Command="{Binding DuplicatePackCommand}"
+                                Grid.Column="0" />
+                        <Button Content="Delete"
+                                Command="{Binding DeletePackCommand}"
+                                Grid.Column="1" />
+                    </Grid>
+                    <Button Content="📦 Export"
+                            Command="{Binding ExportPackCommand}" />
                 </StackPanel>
             </Border>
 
@@ -64,10 +80,8 @@
                         BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
                         Padding="0,10,0,0">
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Content="Add Mapping"
+                        <Button Content="+ Add Mapping"
                                 Command="{Binding AddMappingCommand}" />
-                        <Button Content="Remove Mapping"
-                                Command="{Binding RemoveMappingCommand}" />
                         <Button Content="Auto Populate"
                                 Command="{Binding AutoPopulateCommand}"
                                 IsEnabled="False"
@@ -98,7 +112,8 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="False"
                           CanUserResizeColumns="True"
-                          GridLinesVisibility="Horizontal">
+                          GridLinesVisibility="Horizontal"
+                          Name="MappingsDataGrid">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Vanilla Texture"
                                             Binding="{Binding VanillaTexture}"
@@ -106,6 +121,28 @@
                         <DataGridTextColumn Header="Replacement Texture"
                                             Binding="{Binding ReplacementTexture}"
                                             Width="*" />
+                        <DataGridTemplateColumn Header="Actions" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="x:Object">
+                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                        <Button Tag="{Binding}"
+                                                Click="OnBrowseTextureClick"
+                                                ToolTip.Tip="Browse for replacement texture"
+                                                Padding="6,4"
+                                                Foreground="{DynamicResource SystemAccentColor}">
+                                            <fluent:SymbolIcon Symbol="FolderOpen" FontSize="14" />
+                                        </Button>
+                                        <Button Tag="{Binding}"
+                                                Click="OnDeleteMappingClick"
+                                                ToolTip.Tip="Delete this mapping"
+                                                Padding="6,4"
+                                                Foreground="#D13438">
+                                            <fluent:SymbolIcon Symbol="Delete" FontSize="14" />
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
 
