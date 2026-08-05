@@ -44,7 +44,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
     public ICommand DeleteMappingCommand { get; }
     public ICommand RemoveMappingCommand { get; }
     public ICommand BrowseTextureCommand { get; }
-    public ICommand AutoPopulateCommand { get; }
     public ICommand ExportPackCommand { get; }
 
     public TexturePacksViewModel(ITexturePackService texturePackService)
@@ -58,7 +57,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
         DeleteMappingCommand = new RelayCommand(DeleteMapping, () => SelectedPack is not null && SelectedMapping is not null);
         RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
         BrowseTextureCommand = new RelayCommand(BrowseTexture, () => SelectedPack is not null && SelectedMapping is not null);
-        AutoPopulateCommand = new RelayCommand(() => { });
         ExportPackCommand = new RelayCommand(ExportPack, () => SelectedPack is not null);
 
         foreach (var pack in _texturePackService.GetTexturePacks())

@@ -19,27 +19,26 @@
                     BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
                     Padding="8">
                 <StackPanel Orientation="Vertical" Spacing="4">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Button Content="+ Add"
-                                Command="{Binding AddPackCommand}"
-                                Grid.Column="0" />
-                        <Button Click="OnAddPackFromFolderClick"
-                                ToolTip.Tip="Create pack from folder"
-                                Padding="8"
-                                Grid.Column="1">
-                            <fluent:SymbolIcon Symbol="FolderOpen" FontSize="16" />
-                        </Button>
-                    </Grid>
-                    <Grid ColumnDefinitions="*,*">
+                    <Button Content="+ Add Pack"
+                            Command="{Binding AddPackCommand}" />
+                    <Button Click="OnAddPackFromFolderClick"
+                            ToolTip.Tip="Create pack from folder"
+                            Padding="8,6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <fluent:SymbolIcon Symbol="FolderOpen" FontSize="14" />
+                            <TextBlock Text="From Folder" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" Margin="0,4,0,0">
                         <Button Content="Duplicate"
                                 Command="{Binding DuplicatePackCommand}"
-                                Grid.Column="0" />
+                                Grid.Column="0"
+                                Margin="0,0,2,0" />
                         <Button Content="Delete"
                                 Command="{Binding DeletePackCommand}"
-                                Grid.Column="1" />
+                                Grid.Column="1"
+                                Margin="2,0,0,0" />
                     </Grid>
-                    <Button Content="📦 Export"
-                            Command="{Binding ExportPackCommand}" />
                 </StackPanel>
             </Border>
 
@@ -73,21 +72,6 @@
             <!-- Detail panel -->
             <DockPanel IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNotNull}}"
                        Margin="16">
-
-                <!-- Mapping action buttons -->
-                <Border DockPanel.Dock="Bottom"
-                        BorderThickness="0,1,0,0"
-                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                        Padding="0,10,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Content="+ Add Mapping"
-                                Command="{Binding AddMappingCommand}" />
-                        <Button Content="Auto Populate"
-                                Command="{Binding AutoPopulateCommand}"
-                                IsEnabled="False"
-                                ToolTip.Tip="Auto-populate will be available in a future update." />
-                    </StackPanel>
-                </Border>
 
                 <!-- Fields + grid -->
                 <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="0,0,0,16">
@@ -145,6 +129,26 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Mapping action buttons -->
+                <Border DockPanel.Dock="Bottom"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                        Padding="0,10,0,0">
+                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto" ColumnSpacing="8">
+                        <Rectangle Grid.Column="0" />
+                        <Button Content="+ Add Mapping"
+                                Command="{Binding AddMappingCommand}"
+                                Grid.Column="1" />
+                        <Button Grid.Column="2"
+                                Command="{Binding ExportPackCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <fluent:SymbolIcon Symbol="Save" FontSize="14" />
+                                <TextBlock Text="Export" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
 
             </DockPanel>
         </Grid>
