@@ -1,127 +1,191 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:DBDStudio.ViewModels"
-             xmlns:fluent="using:FluentIcons.Avalonia"
-             x:Class="DBDStudio.Views.Pages.TexturePacksPage"
-             x:DataType="vm:TexturePacksViewModel">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DBDStudio.ViewModels"
+    xmlns:fluent="using:FluentIcons.Avalonia"
+    x:Class="DBDStudio.Views.Pages.TexturePacksPage"
+    x:DataType="vm:TexturePacksViewModel">
 
-    <Grid ColumnDefinitions="220,4,*">
+    <Grid ColumnDefinitions="230,4,*">
 
-        <!-- ── Left: Pack List ── -->
         <Border Grid.Column="0"
-                BorderThickness="0,0,1,0"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
-        <DockPanel>
+            BorderThickness="0,0,1,0"
+            BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
 
-            <!-- List action buttons -->
-            <Border DockPanel.Dock="Bottom"
+            <Grid RowDefinitions="Auto,*,Auto">
+
+                <!-- Header + Toolbar -->
+                <StackPanel Grid.Row="0"
+                    Margin="12"
+                    Spacing="10">
+
+                    <TextBlock Text="Texture Packs"
+                        Classes="subtitle" />
+
+                    <StackPanel Orientation="Horizontal"
+                        Spacing="6">
+
+                        <Button Command="{Binding AddPackCommand}"
+                            ToolTip.Tip="Create new texture pack"
+                            Classes="icon">
+                            <fluent:SymbolIcon Symbol="Add" />
+                        </Button>
+
+                        <Button Click="OnAddPackFromFolderClick"
+                            ToolTip.Tip="Create pack from existing mod folder"
+                            Classes="icon">
+                            <fluent:SymbolIcon Symbol="FolderOpen" />
+                        </Button>
+
+                        <Button Command="{Binding DuplicatePackCommand}"
+                            ToolTip.Tip="Duplicate selected pack"
+                            Classes="icon">
+                            <fluent:SymbolIcon Symbol="Copy" />
+                        </Button>
+
+                        <Button Command="{Binding DeletePackCommand}"
+                            ToolTip.Tip="Delete selected pack"
+                            Classes="icon"
+                            Foreground="#D13438">
+                            <fluent:SymbolIcon Symbol="Delete" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Pack List -->
+                <ListBox Grid.Row="1"
+                    Margin="8,0"
+                    ItemsSource="{Binding Packs}"
+                    SelectedItem="{Binding SelectedPack}">
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"
+                                Padding="6,4" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Footer -->
+                <Border Grid.Row="2"
                     BorderThickness="0,1,0,0"
                     BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                    Padding="8">
-                <StackPanel Orientation="Vertical" Spacing="4">
-                    <Button Content="+ Add Pack"
-                            Command="{Binding AddPackCommand}" />
-                    <Button Click="OnAddPackFromFolderClick"
-                            ToolTip.Tip="Create pack from folder"
-                            Padding="8,6">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <fluent:SymbolIcon Symbol="FolderOpen" FontSize="14" />
-                            <TextBlock Text="From Folder" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto" Margin="0,4,0,0">
-                        <Button Content="Duplicate"
-                                Command="{Binding DuplicatePackCommand}"
-                                Grid.Column="0"
-                                Margin="0,0,2,0" />
-                        <Button Content="Delete"
-                                Command="{Binding DeletePackCommand}"
-                                Grid.Column="1"
-                                Margin="2,0,0,0" />
-                    </Grid>
-                </StackPanel>
-            </Border>
+                    Padding="12">
 
-            <ListBox ItemsSource="{Binding Packs}"
-                     SelectedItem="{Binding SelectedPack}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}" Padding="4,2" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </DockPanel>
+                    <TextBlock Text="{Binding Packs.Count, StringFormat='{}{0} texture packs'}"
+                        Opacity="0.6"
+                        HorizontalAlignment="Center" />
+
+                </Border>
+            </Grid>
         </Border>
 
-        <!-- ── Column Splitter ── -->
+        <!-- Splitter -->
         <GridSplitter Grid.Column="1"
-                      ResizeDirection="Columns"
-                      ResizeBehavior="PreviousAndNext"
-                      Background="Transparent" />
+            ResizeDirection="Columns"
+            ResizeBehavior="PreviousAndNext"
+            Background="Transparent" />
 
-        <!-- ── Right: Pack Detail ── -->
         <Grid Grid.Column="2">
 
-            <!-- Placeholder shown when nothing is selected -->
-            <TextBlock Text="Select a texture pack to view and edit its details."
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       Opacity="0.45"
-                       IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNull}}" />
+            <!-- Placeholder -->
+            <TextBlock Text="Select a texture pack to begin editing."
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Opacity="0.45"
+                IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNull}}" />
 
-            <!-- Detail panel -->
-            <DockPanel IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNotNull}}"
-                       Margin="16">
+            <!-- Editor -->
 
-                <!-- Fields + grid -->
-                <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="0,0,0,16">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Name" FontWeight="SemiBold" />
-                        <TextBox Text="{Binding SelectedPack.Name}"
-                                 PlaceholderText="Texture pack name…" />
+            <Grid
+                IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNotNull}}"
+                Margin="18"
+                RowDefinitions="Auto,*,Auto">
+
+                <Grid Grid.Row="0"
+                    ColumnDefinitions="*,Auto"
+                    Margin="0,0,0,18">
+
+                    <StackPanel>
+                        <TextBlock Text="Texture Pack"
+                            Classes="subtitle" />
+
+                        <StackPanel Margin="0,12,0,0"
+                            Spacing="10">
+
+                            <StackPanel>
+                                <TextBlock Text="Name"
+                                    FontWeight="SemiBold" />
+
+                                <TextBox Text="{Binding SelectedPack.Name}"
+                                    PlaceholderText="Texture Pack Name" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Description"
+                                    FontWeight="SemiBold" />
+
+                                <TextBox Text="{Binding SelectedPack.Description}"
+                                    AcceptsReturn="True"
+                                    Height="70"
+                                    PlaceholderText="Description" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Description" FontWeight="SemiBold" />
-                        <TextBox Text="{Binding SelectedPack.Description}"
-                                 PlaceholderText="Short description…"
-                                 AcceptsReturn="True"
-                                 Height="60" />
-                    </StackPanel>
-                    <TextBlock Text="Mappings" FontWeight="SemiBold" />
-                </StackPanel>
 
-                <!-- Mappings DataGrid -->
-                <DataGrid ItemsSource="{Binding SelectedPack.Mappings}"
-                          SelectedItem="{Binding SelectedMapping}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="False"
-                          CanUserResizeColumns="True"
-                          GridLinesVisibility="Horizontal"
-                          Name="MappingsDataGrid">
+                    <!-- Export -->
+                    <Button Grid.Column="1"
+                        VerticalAlignment="Top"
+                        Command="{Binding ExportPackCommand}"
+                        Classes="accent">
+
+                        <StackPanel Orientation="Horizontal"
+                            Spacing="8">
+
+                            <fluent:SymbolIcon Symbol="Save" />
+                            <TextBlock Text="Export ZIP" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <DataGrid Grid.Row="1"
+                    ItemsSource="{Binding SelectedPack.Mappings}"
+                    SelectedItem="{Binding SelectedMapping}"
+                    AutoGenerateColumns="False"
+                    CanUserResizeColumns="True"
+                    GridLinesVisibility="Horizontal">
+
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Vanilla Texture"
-                                            Binding="{Binding VanillaTexture}"
-                                            Width="*" />
+                            Binding="{Binding VanillaTexture}"
+                            Width="*" />
+
                         <DataGridTextColumn Header="Replacement Texture"
-                                            Binding="{Binding ReplacementTexture}"
-                                            Width="*" />
-                        <DataGridTemplateColumn Header="Actions" Width="120">
+                            Binding="{Binding ReplacementTexture}"
+                            Width="*" />
+
+                        <DataGridTemplateColumn Header=""
+                            Width="72">
+
                             <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="x:Object">
-                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Spacing="2">
+
                                         <Button Tag="{Binding}"
-                                                Click="OnBrowseTextureClick"
-                                                ToolTip.Tip="Browse for replacement texture"
-                                                Padding="6,4"
-                                                Foreground="{DynamicResource SystemAccentColor}">
-                                            <fluent:SymbolIcon Symbol="FolderOpen" FontSize="14" />
+                                            Click="OnBrowseTextureClick"
+                                            ToolTip.Tip="Browse"
+                                            Classes="icon">
+
+                                            <fluent:SymbolIcon Symbol="FolderOpen" />
                                         </Button>
+
                                         <Button Tag="{Binding}"
-                                                Click="OnDeleteMappingClick"
-                                                ToolTip.Tip="Delete this mapping"
-                                                Padding="6,4"
-                                                Foreground="#D13438">
-                                            <fluent:SymbolIcon Symbol="Delete" FontSize="14" />
+                                            Click="OnDeleteMappingClick"
+                                            ToolTip.Tip="Delete"
+                                            Classes="icon"
+                                            Foreground="#D13438">
+
+                                            <fluent:SymbolIcon Symbol="Delete" />
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>
@@ -130,28 +194,23 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <!-- Mapping action buttons -->
-                <Border DockPanel.Dock="Bottom"
-                        BorderThickness="0,1,0,0"
-                        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                        Padding="0,10,0,0">
-                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto" ColumnSpacing="8">
-                        <Rectangle Grid.Column="0" />
-                        <Button Content="+ Add Mapping"
-                                Command="{Binding AddMappingCommand}"
-                                Grid.Column="1" />
-                        <Button Grid.Column="2"
-                                Command="{Binding ExportPackCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <fluent:SymbolIcon Symbol="Save" FontSize="14" />
-                                <TextBlock Text="Export" VerticalAlignment="Center" />
+                <Border Grid.Row="2"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    Padding="0,12,0,0">
+
+                    <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                        <Button Command="{Binding AddMappingCommand}">
+                            <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+                                <fluent:SymbolIcon Symbol="Add" />
+                                <TextBlock Text="Add Mapping" />
                             </StackPanel>
                         </Button>
-                    </Grid>
+                    </StackPanel>
                 </Border>
-
-            </DockPanel>
+            </Grid>
         </Grid>
-
     </Grid>
 </UserControl>
