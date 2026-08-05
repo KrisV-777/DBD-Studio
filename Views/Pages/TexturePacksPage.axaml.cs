@@ -13,9 +13,14 @@ public partial class TexturePacksPage : UserControl
         InitializeComponent();
     }
 
+    /// <summary>
+    /// Handles the click event for adding a new texture pack from a selected folder.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void OnAddPackFromFolderClick(object? sender, RoutedEventArgs e)
     {
-        if (this.DataContext is not TexturePacksViewModel viewModel) return;
+        if (DataContext is not TexturePacksViewModel viewModel) return;
 
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel is null) return;
@@ -33,9 +38,14 @@ public partial class TexturePacksPage : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the click event for browsing and selecting a replacement texture file.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void OnBrowseTextureClick(object? sender, RoutedEventArgs e)
     {
-        if (this.DataContext is not TexturePacksViewModel viewModel) return;
+        if (DataContext is not TexturePacksViewModel viewModel) return;
         if (sender is not Button button) return;
         if (button.Tag is not TextureMapping mapping) return;
 
@@ -64,9 +74,14 @@ public partial class TexturePacksPage : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the click event for deleting a texture mapping.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void OnDeleteMappingClick(object? sender, RoutedEventArgs e)
     {
-        if (this.DataContext is not TexturePacksViewModel viewModel) return;
+        if (DataContext is not TexturePacksViewModel viewModel) return;
         if (sender is not Button button) return;
         if (button.Tag is not TextureMapping mapping) return;
 
