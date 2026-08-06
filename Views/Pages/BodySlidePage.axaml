@@ -33,7 +33,7 @@
                                     Width="*" />
                 <DataGridTextColumn Header="XML File"
                                     Binding="{Binding SourceXml}"
-                                    Width="220" />
+                                    Width="*" />
             </DataGrid.Columns>
         </DataGrid>
 
