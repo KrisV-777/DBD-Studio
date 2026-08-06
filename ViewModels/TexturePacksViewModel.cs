@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
+using DBDStudio.Interfaces;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -15,6 +16,7 @@ namespace DBDStudio.ViewModels;
 public sealed class TexturePacksViewModel : ViewModelBase
 {
     private readonly ITexturePackService _texturePackService;
+    private readonly MainWindowViewModel _mainWindowViewModel;
     private TexturePack? _selectedPack;
     private TextureMapping? _selectedMapping;
 
@@ -37,27 +39,22 @@ public sealed class TexturePacksViewModel : ViewModelBase
     }
 
     public ICommand AddPackCommand { get; }
-    public ICommand AddPackFromFolderCommand { get; }
     public ICommand DuplicatePackCommand { get; }
     public ICommand DeletePackCommand { get; }
     public ICommand AddMappingCommand { get; }
     public ICommand DeleteMappingCommand { get; }
     public ICommand RemoveMappingCommand { get; }
-    public ICommand BrowseTextureCommand { get; }
-    public ICommand ExportPackCommand { get; }
 
-    public TexturePacksViewModel(ITexturePackService texturePackService)
+    public TexturePacksViewModel(ITexturePackService texturePackService, MainWindowViewModel mainWindowViewModel)
     {
         _texturePackService = texturePackService;
-        AddPackCommand = new RelayCommand(AddPack);
-        AddPackFromFolderCommand = new RelayCommand(AddPackFromFolder);
+        _mainWindowViewModel = mainWindowViewModel;
+        AddPackCommand = new RelayCommand(() => AddPack(null));
         DuplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
         DeletePackCommand = new RelayCommand(DeletePack, () => SelectedPack is not null);
         AddMappingCommand = new RelayCommand(AddMapping, () => SelectedPack is not null);
         DeleteMappingCommand = new RelayCommand(DeleteMapping, () => SelectedPack is not null && SelectedMapping is not null);
         RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
-        BrowseTextureCommand = new RelayCommand(BrowseTexture, () => SelectedPack is not null && SelectedMapping is not null);
-        ExportPackCommand = new RelayCommand(ExportPack, () => SelectedPack is not null);
 
         foreach (var pack in _texturePackService.GetTexturePacks())
             Packs.Add(pack);
@@ -65,50 +62,89 @@ public sealed class TexturePacksViewModel : ViewModelBase
         SelectedPack = Packs.Count > 0 ? Packs[0] : null;
     }
 
-    private void AddPack()
+    private void DisplayMessage(string message)
     {
-        var pack = new TexturePack { Name = "New Pack" };
+        System.Diagnostics.Debug.WriteLine(message);
+        _mainWindowViewModel.StatusMessage = message;
+    }
+
+    private void RefreshCommandStates()
+    {
+        ((RelayCommand)AddPackCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)DuplicatePackCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)DeletePackCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)AddMappingCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)DeleteMappingCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)RemoveMappingCommand).RaiseCanExecuteChanged();
+    }
+
+    private void AddPack(TexturePack? pack = null)
+    {
+        pack ??= new TexturePack { Name = "New Pack" };
         _texturePackService.Add(pack);
         Packs.Add(pack);
         SelectedPack = pack;
+        RefreshCommandStates();
     }
 
-    private void AddPackFromFolder()
+    public void PopulatePackFromFolder(string folderPath, TexturePack? pack = null)
     {
-        // This will be handled with a file dialog from the UI
-        // For now, we'll create a placeholder that can be triggered from UI
-    }
-
-    public void PopulatePackFromFolder(string folderPath)
-    {
-        if (SelectedPack is null || !Directory.Exists(folderPath))
+        var rootDirectory = new DirectoryInfo(folderPath);
+        if (!rootDirectory.Exists)
             return;
 
+        // Validate that the textures subfolder exists - required folder structure is <folder>/textures/**
+        var texturesPath = Path.Combine(folderPath, "textures");
+        var texturesDirectory = new DirectoryInfo(texturesPath);
+        if (!texturesDirectory.Exists)
+        {
+            DisplayMessage($"Error: No 'textures' folder found in the selected directory. Expected structure: <folder>/textures/");
+            return;
+        }
+
+        var isAddingTextures = pack is not null;
+        pack ??= new TexturePack { Name = rootDirectory.Name, RootPath = folderPath };
         try
         {
-            var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
-            var baseCount = SelectedPack.Mappings.Count;
+            // Only search within the textures directory for performance (avoids scanning unrelated files in root)
+            var files = texturesDirectory.GetFiles("*.dds", SearchOption.AllDirectories);
+            var numMappings = pack.Mappings.Count;
+            var numAdded = 0;
+            var numReplaced = 0;
 
-            foreach (var filePath in files)
+            foreach (var file in files)
             {
-                var relativePath = Path.GetRelativePath(folderPath, filePath);
-                var texturePath = "textures/" + relativePath.Replace("\\", "/");
-                var replacementPath = "textures/dbd/" + relativePath.Replace("\\", "/");
+                var relativePath = Path.GetRelativePath(texturesDirectory.FullName, file.FullName);
+                var normalizedPath = relativePath.Replace("\\", "/");
 
                 var mapping = new TextureMapping
                 {
-                    VanillaTexture = texturePath,
-                    ReplacementTexture = replacementPath,
-                    SourcePath = filePath
+                    VanillaTexture = normalizedPath,
+                    ReplacementTexture = normalizedPath,
+                    SourcePath = file.FullName
                 };
-                SelectedPack.Mappings.Add(mapping);
+                pack.Mappings.Add(mapping);
+
+                if (numMappings != pack.Mappings.Count)
+                {
+                    numMappings++;
+                    numAdded++;
+                }
+                else
+                {
+                    numReplaced++;
+                }
             }
 
-            _texturePackService.Update(SelectedPack);
+            if (!isAddingTextures) {
+                AddPack(pack);
+            } else {
+                DisplayMessage($"Updated pack '{pack.Name}' with {numAdded} new mappings and {numReplaced} replaced mappings.");
+            }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error populating pack from folder: {ex.Message}");
+            DisplayMessage($"An error occurred while populating the texture pack from the folder: {ex.Message}");
         }
     }
 
@@ -124,9 +160,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
         foreach (var m in SelectedPack.Mappings)
             copy.Mappings.Add(new TextureMapping { VanillaTexture = m.VanillaTexture, ReplacementTexture = m.ReplacementTexture, SourcePath = m.SourcePath });
 
-        _texturePackService.Add(copy);
-        Packs.Add(copy);
-        SelectedPack = copy;
+        AddPack(copy);
     }
 
     private void DeletePack()
@@ -136,6 +170,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
         _texturePackService.Remove(SelectedPack);
         Packs.Remove(SelectedPack);
         SelectedPack = Packs.Count > 0 ? Packs[Math.Max(0, index - 1)] : null;
+        RefreshCommandStates();
     }
 
     private void AddMapping()
@@ -143,9 +178,14 @@ public sealed class TexturePacksViewModel : ViewModelBase
         if (SelectedPack is null) return;
         var mapping = new TextureMapping
         {
-            VanillaTexture = "textures/",
-            ReplacementTexture = "textures/dbd/"
+            VanillaTexture = "",
+            ReplacementTexture = ""
         };
+        if (SelectedPack.Mappings.Contains(mapping))
+        {
+            System.Diagnostics.Debug.WriteLine("Skipping default mapping addition because a mapping with the same VanillaTexture already exists.");
+            return;
+        }
         SelectedPack.Mappings.Add(mapping);
         SelectedMapping = mapping;
     }
@@ -164,39 +204,52 @@ public sealed class TexturePacksViewModel : ViewModelBase
         SelectedMapping = null;
     }
 
-    private void BrowseTexture()
+    public void SetSelectedMappingReplacementTexture(TextureMapping mapping, string filePath)
     {
-        // This will be handled with a file dialog from the UI
-        // For now, we'll create a placeholder that can be triggered from UI
-    }
-
-    public void SetSelectedMappingReplacementTexture(string filePath)
-    {
-        if (SelectedMapping is null || !File.Exists(filePath))
+        var texturesIndex = filePath.LastIndexOf(
+            $"{Path.DirectorySeparatorChar}textures{Path.DirectorySeparatorChar}",
+            StringComparison.OrdinalIgnoreCase);
+        if (texturesIndex == -1)
+        {
+            DisplayMessage($"Error: The selected texture file '{filePath}' is not located within a 'textures' folder. Expected structure: <folder>/textures/**");
             return;
+        }
+        // Move index to the character after "textures/"
+        texturesIndex += "textures".Length + 2;
 
-        var replacementPath = "textures/dbd/" + Path.GetFileName(filePath).Replace("\\", "/");
-        SelectedMapping.ReplacementTexture = replacementPath;
-        SelectedMapping.SourcePath = filePath;
+        var relativePath = filePath[texturesIndex..].Replace("\\", "/");
+        mapping.VanillaTexture = relativePath;
+        mapping.ReplacementTexture = relativePath;
+        mapping.SourcePath = filePath;
     }
 
-    private void ExportPack()
+    public void ExportPack(string outputZipPath)
     {
+        System.Diagnostics.Debug.Assert(!string.IsNullOrWhiteSpace(outputZipPath), "Selected pack must have a valid name for export.");
         if (SelectedPack is null || SelectedPack.Mappings.Count == 0)
             return;
 
         try
         {
-            var exportDir = GetExportDirectory();
+            if (!outputZipPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                outputZipPath += ".zip";
+
+            var exportDir = Path.GetDirectoryName(outputZipPath);
+            if (string.IsNullOrWhiteSpace(exportDir))
+            {
+                DisplayMessage("Error: Invalid export path.");
+                return;
+            }
+
             if (!Directory.Exists(exportDir))
                 Directory.CreateDirectory(exportDir);
 
-            var packZipPath = Path.Combine(exportDir, $"{SelectedPack.Name}.zip");
             var tempDir = Path.Combine(Path.GetTempPath(), $"TexturePack_{Guid.NewGuid()}");
+            var profileDir = Path.Combine(tempDir, "textures", "dbd", SelectedPack.Name);
 
             try
             {
-                Directory.CreateDirectory(tempDir);
+                Directory.CreateDirectory(profileDir);
 
                 // Create YAML config
                 var config = new
@@ -215,26 +268,25 @@ public sealed class TexturePacksViewModel : ViewModelBase
                     .Build();
 
                 var yaml = serializer.Serialize(config);
-                File.WriteAllText(Path.Combine(tempDir, "config.yml"), yaml);
+                File.WriteAllText(Path.Combine(profileDir, "config.yml"), yaml);
 
                 // Copy textures
                 foreach (var mapping in SelectedPack.Mappings)
                 {
                     if (!string.IsNullOrEmpty(mapping.SourcePath) && File.Exists(mapping.SourcePath))
                     {
-                        var textureDestRelative = mapping.ReplacementTexture.Replace("textures/", "");
-                        var textureDestPath = Path.Combine(tempDir, textureDestRelative.Replace("/", "\\"));
+                        var textureDestPath = Path.Combine(profileDir, mapping.ReplacementTexture);
                         Directory.CreateDirectory(Path.GetDirectoryName(textureDestPath)!);
                         File.Copy(mapping.SourcePath, textureDestPath, overwrite: true);
                     }
                 }
 
                 // Create ZIP
-                if (File.Exists(packZipPath))
-                    File.Delete(packZipPath);
-                ZipFile.CreateFromDirectory(tempDir, packZipPath);
+                if (File.Exists(outputZipPath))
+                    File.Delete(outputZipPath);
+                ZipFile.CreateFromDirectory(tempDir, outputZipPath);
 
-                System.Diagnostics.Debug.WriteLine($"Pack exported to: {packZipPath}");
+                DisplayMessage($"Pack exported to: {outputZipPath}");
             }
             finally
             {
@@ -244,7 +296,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error exporting pack: {ex.Message}");
+            DisplayMessage($"Error exporting pack: {ex.Message}");
         }
     }
 

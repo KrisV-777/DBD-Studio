@@ -29,6 +29,18 @@ public sealed class TextureMapping : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public override bool Equals(object? obj)
+    {
+        if (obj is not TextureMapping other)
+            return false;
+        return _vanillaTexture == other._vanillaTexture;
+    }
+
+    public override int GetHashCode()
+    {
+        return _vanillaTexture.GetHashCode();
+    }
+
     private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(field, value))

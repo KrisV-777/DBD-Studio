@@ -89,7 +89,7 @@
         <Grid Grid.Column="2">
 
             <!-- Placeholder -->
-            <TextBlock Text="Select a texture pack to begin editing."
+            <TextBlock Text="Select or create a texture pack to begin editing."
                 Classes="default"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
@@ -138,7 +138,8 @@
                     </StackPanel>
                 </Grid>
 
-                <DataGrid Grid.Row="1"
+                <DataGrid x:Name="MappingsDataGrid"
+                    Grid.Row="1"
                     ItemsSource="{Binding SelectedPack.Mappings}"
                     SelectedItem="{Binding SelectedMapping}"
                     AutoGenerateColumns="False"
@@ -146,13 +147,54 @@
                     GridLinesVisibility="Horizontal">
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Vanilla Texture"
-                            Binding="{Binding VanillaTexture}"
-                            Width="*" />
+                        <DataGridTemplateColumn Header="Vanilla Texture (textures/...)"
+                            Width="*">
 
-                        <DataGridTextColumn Header="Replacement Texture"
-                            Binding="{Binding ReplacementTexture}"
-                            Width="*" />
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Padding="8,0">
+                                        <TextBlock Text="{Binding VanillaTexture}"
+                                            VerticalAlignment="Center"
+                                            TextWrapping="NoWrap"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip.Tip="{Binding VanillaTexture}" />
+
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding VanillaTexture}"
+                                        Margin="4,2"
+                                        VerticalContentAlignment="Center" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Replacement Texture (textures/dbd/&lt;profile&gt;/...)"
+                            Width="*">
+
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Padding="8,0">
+                                        <TextBlock Text="{Binding ReplacementTexture}"
+                                            VerticalAlignment="Center"
+                                            TextWrapping="NoWrap"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip.Tip="{Binding ReplacementTexture}" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding ReplacementTexture}"
+                                        Margin="4,2"
+                                        VerticalContentAlignment="Center" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
 
                         <DataGridTemplateColumn Header=""
                             Width="80">
@@ -196,22 +238,37 @@
                         Spacing="6">
 
                         <!-- Add Row -->
-                        <Button Command="{Binding AddMappingCommand}">
+                        <Button Tag="{Binding}"
+                            Click="OnAddFolderClick">
+                            <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+                                <fluent:SymbolIcon Symbol="Add" />
+                                <TextBlock Text="Import Folder"
+                                    VerticalAlignment="Center"
+                                    Classes="default" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Add Row -->
+                        <Button Tag="{Binding}"
+                            Click="OnAddMappingClick">
                             <StackPanel Orientation="Horizontal"
                                 Spacing="8">
                                 <fluent:SymbolIcon Symbol="Add" />
                                 <TextBlock Text="Add Mapping"
+                                    VerticalAlignment="Center"
                                     Classes="default" />
                             </StackPanel>
                         </Button>
 
                         <!-- Export -->
-                        <Button Command="{Binding ExportPackCommand}">
+                        <Button Click="OnExportPackClick">
                             <StackPanel Orientation="Horizontal"
                                 Spacing="8">
 
                                 <fluent:SymbolIcon Symbol="Save" />
                                 <TextBlock Text="Export ZIP"
+                                    VerticalAlignment="Center"
                                     Classes="default" />
                             </StackPanel>
                         </Button>

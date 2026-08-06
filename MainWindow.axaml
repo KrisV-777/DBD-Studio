@@ -46,7 +46,8 @@
                 Padding="12,5">
             <TextBlock Text="{Binding StatusMessage}"
                        Classes="caption"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left" />
         </Border>
 
         <!-- ── Navigation + Content ── -->
@@ -59,21 +60,21 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top"
                                Text="DBD Studio"
-                               Classes="tiny"
+                               Classes="h2"
                                FontWeight="Bold"
                                LetterSpacing="2"
                                Margin="14,14,14,8"
                                Opacity="0.45" />
                     <ListBox SelectedIndex="{Binding SelectedPageIndex}"
                              Margin="4,0">
-                        <ListBoxItem Padding="10,9" Content="Settings" />
-                        <ListBoxItem Padding="10,9" Content="Texture Packs" />
-                        <ListBoxItem Padding="10,9" Content="BodySlide Presets" />
-                       <ListBoxItem Padding="10,9" Content="RaceMenu Presets" />
-                       <ListBoxItem Padding="10,9" Content="Rules" />
-                       <ListBoxItem Padding="10,9" Content="Rule Preview" />
-                       <ListBoxItem Padding="10,9" Content="Load Order Explorer" />
-                       <ListBoxItem Padding="10,9" Content="Preview / Export" />
+                        <ListBoxItem Padding="10,9" Content="Settings" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="Texture Packs" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="BodySlide Presets" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="RaceMenu Presets" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="Rules" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="Rule Preview" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="Load Order Explorer" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="Preview / Export" Classes="default" />
                     </ListBox>
                 </DockPanel>
             </Border>

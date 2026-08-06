@@ -1,4 +1,5 @@
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Interfaces;
 
 namespace DBDStudio.ViewModels;
 
@@ -39,7 +40,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
         // Create SettingsViewModel with reference to this MainWindowViewModel
         Settings = new SettingsViewModel(settingsService, texturePackService, bodySlideService, raceMenuPresetService, this);
-        TexturePacks = new TexturePacksViewModel(texturePackService);
+        TexturePacks = new TexturePacksViewModel(texturePackService, this);
         BodySlide = new BodySlideViewModel(bodySlideService);
         RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
         Rules = new RulesViewModel(ruleService, raceMenuPresetService, conditionRegistryService, ruleResolutionService);

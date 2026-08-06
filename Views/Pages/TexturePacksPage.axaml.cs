@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using DBDStudio.Core.Models;
 using DBDStudio.ViewModels;
 
@@ -56,22 +57,86 @@ public partial class TexturePacksPage : UserControl
         {
             Title = "Select Replacement Texture",
             AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
+            FileTypeFilter = [
                 new FilePickerFileType("Texture Files")
                 {
-                    Patterns = new[] { "*.dds", "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.tga" }
+                    Patterns = ["*.dds", "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.tga"]
                 },
-                new FilePickerFileType("All Files") { Patterns = new[] { "*" } }
-            }
+                new FilePickerFileType("All Files") { Patterns = ["*"] }
+            ]
+        });
+
+        if (result.Count <= 0)
+            return;
+
+        var selectedFile = result[0].Path.LocalPath;
+        viewModel.SetSelectedMappingReplacementTexture(mapping, selectedFile);
+    }
+
+    private async void OnAddFolderClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not TexturePacksViewModel viewModel) return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
+
+        var result = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select Texture Root Folder",
+            AllowMultiple = false
         });
 
         if (result.Count > 0)
         {
-            var selectedFile = result[0].Path.LocalPath;
-            mapping.ReplacementTexture = "textures/dbd/" + System.IO.Path.GetFileName(selectedFile).Replace("\\", "/");
-            mapping.SourcePath = selectedFile;
+            var selectedFolder = result[0].Path.LocalPath;
+            viewModel.PopulatePackFromFolder(selectedFolder, viewModel.SelectedPack);
         }
+    }
+
+    private async void OnAddMappingClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not TexturePacksViewModel viewModel) return;
+        viewModel.AddMappingCommand.Execute(null);
+
+        if (viewModel.SelectedMapping is null)
+            return;
+
+        // Wait for the grid to materialize the new row before requesting scroll.
+        await Dispatcher.UIThread.InvokeAsync(
+            () => MappingsDataGrid.ScrollIntoView(viewModel.SelectedMapping, null),
+            DispatcherPriority.Background);
+    }
+
+    private async void OnExportPackClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not TexturePacksViewModel viewModel) return;
+        if (viewModel.SelectedPack is null || viewModel.SelectedPack.Mappings.Count == 0) return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
+
+        var suggestedFileName = string.IsNullOrWhiteSpace(viewModel.SelectedPack.Name)
+            ? "TexturePack.zip"
+            : $"{viewModel.SelectedPack.Name}.zip";
+
+        var saveFile = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export Texture Pack",
+            SuggestedFileName = suggestedFileName,
+            DefaultExtension = "zip",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("ZIP Archive")
+                {
+                    Patterns = ["*.zip"]
+                }
+            ]
+        });
+
+        if (saveFile is null)
+            return;
+
+        viewModel.ExportPack(saveFile.Path.LocalPath);
     }
 
     /// <summary>

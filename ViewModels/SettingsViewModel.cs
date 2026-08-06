@@ -53,7 +53,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public ICommand CmdOpenNexus { get; }
     public ICommand CmdOpenKofi { get; }
 
-    public string GitHubIconPath => (Application.Current?.ActualThemeVariant ?? ThemeVariant.Light) == ThemeVariant.Dark
+    public static string GitHubIconPath => (Application.Current?.ActualThemeVariant ?? ThemeVariant.Light) == ThemeVariant.Dark
         ? "/Assets/Icons/GitHub_White.svg"
         : "/Assets/Icons/GitHub_Black.svg";
 
@@ -63,6 +63,8 @@ public sealed class SettingsViewModel : ViewModelBase
         set
         {
             _settingsService.Settings.SkyrimDataFolder = value;
+            // TODO: Reload Mutagen Database when this changes
+            // TODO: Reload Texture Packs when this changes
             OnPropertyChanged();
         }
     }
@@ -83,6 +85,7 @@ public sealed class SettingsViewModel : ViewModelBase
         set
         {
             _settingsService.Settings.BodySlidePresetsFolder = value;
+            // TODO: Scan for BodySlide presets when this changes
             OnPropertyChanged();
         }
     }
@@ -93,6 +96,7 @@ public sealed class SettingsViewModel : ViewModelBase
         set
         {
             _settingsService.Settings.RaceMenuPresetsFolder = value;
+            // TODO: Scan for RaceMenu presets when this changes
             OnPropertyChanged();
         }
     }

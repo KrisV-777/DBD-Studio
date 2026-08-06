@@ -47,6 +47,29 @@
             Value="{DynamicResource TinyFontSize}" />
     </Style>
 
+    <!-- ListBoxItem -->
+    
+    <Style Selector="ListBoxItem.h1">
+        <Setter Property="FontSize"
+            Value="{DynamicResource H1FontSize}" />
+    </Style>
+    <Style Selector="ListBoxItem.h2">
+        <Setter Property="FontSize"
+            Value="{DynamicResource H2FontSize}" />
+    </Style>
+    <Style Selector="ListBoxItem.default">
+        <Setter Property="FontSize"
+            Value="{DynamicResource FontSize}" />
+    </Style>
+    <Style Selector="ListBoxItem.caption">
+        <Setter Property="FontSize"
+            Value="{DynamicResource CaptionFontSize}" />
+    </Style>
+    <Style Selector="ListBoxItem.tiny">
+        <Setter Property="FontSize"
+            Value="{DynamicResource TinyFontSize}" />
+    </Style>
+
     <!-- Tables -->
 
     <Style Selector="DataGridColumnHeader">
