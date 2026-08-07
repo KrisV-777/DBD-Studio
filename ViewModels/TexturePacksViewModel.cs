@@ -89,7 +89,19 @@ public sealed class TexturePacksViewModel : ViewModelBase
 
     private void AddPack(TexturePack? pack = null)
     {
-        pack ??= new TexturePack { Name = "New Pack" };
+        pack ??= new TexturePack { Name = "New Pack", LastUpdatedUtc = DateTimeOffset.UtcNow };
+        var packname = pack.Name;
+        _texturePackService.GetTexturePacks().ToList().ForEach(existingPack =>
+        {
+            if (existingPack.Name.Equals(packname, StringComparison.OrdinalIgnoreCase))
+            {
+                var suffix = 1;
+                while (_texturePackService.GetTexturePacks().Any(p => p.Name.Equals($"{packname} ({suffix})", StringComparison.OrdinalIgnoreCase)))
+                    suffix++;
+                packname = $"{packname} ({suffix})";
+            }
+        });
+        pack.Name = packname;
         _texturePackService.Add(pack);
         SelectedPack = pack;
         RefreshCommandStates();
@@ -111,9 +123,10 @@ public sealed class TexturePacksViewModel : ViewModelBase
         }
 
         var isAddingTextures = pack is not null;
-        pack ??= new TexturePack { Name = rootDirectory.Name, RootPath = folderPath };
+        pack ??= new TexturePack { Name = rootDirectory.Name, LastUpdatedUtc = DateTimeOffset.UtcNow };
         try
         {
+            pack.LastUpdatedUtc = DateTimeOffset.UtcNow;
             // Only search within the textures directory for performance (avoids scanning unrelated files in root)
             var files = texturesDirectory.GetFiles("*.dds", SearchOption.AllDirectories);
             var numMappings = pack.Mappings.Count;
@@ -181,6 +194,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
     private void AddMapping()
     {
         if (SelectedPack is null) return;
+        SelectedPack.LastUpdatedUtc = DateTimeOffset.UtcNow;
         var mapping = new TextureMapping
         {
             VanillaTexture = "",
@@ -198,6 +212,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
     private void DeleteMapping()
     {
         if (SelectedPack is null || SelectedMapping is null) return;
+        SelectedPack.LastUpdatedUtc = DateTimeOffset.UtcNow;
         SelectedPack.Mappings.Remove(SelectedMapping);
         SelectedMapping = null;
     }
@@ -205,6 +220,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
     private void RemoveMapping()
     {
         if (SelectedPack is null || SelectedMapping is null) return;
+        SelectedPack.LastUpdatedUtc = DateTimeOffset.UtcNow;
         SelectedPack.Mappings.Remove(SelectedMapping);
         SelectedMapping = null;
     }
@@ -223,6 +239,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
         texturesIndex += "textures".Length + 2;
 
         var relativePath = filePath[texturesIndex..].Replace("\\", "/");
+        SelectedPack?.LastUpdatedUtc = DateTimeOffset.UtcNow;
         mapping.VanillaTexture = relativePath;
         mapping.ReplacementTexture = relativePath;
         mapping.SourcePath = filePath;
@@ -261,6 +278,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
                 {
                     name = SelectedPack.Name,
                     description = SelectedPack.Description,
+                    updatedUtc = SelectedPack.LastUpdatedUtc,
                     mappings = SelectedPack.Mappings.Select(m => new
                     {
                         vanilla = m.VanillaTexture,
@@ -303,13 +321,5 @@ public sealed class TexturePacksViewModel : ViewModelBase
         {
             DisplayMessage($"Error exporting pack: {ex.Message}");
         }
-    }
-
-    private static string GetExportDirectory()
-    {
-        // Try to find DBDS.exe location
-        var appDir = AppContext.BaseDirectory;
-        var exportDir = Path.Combine(appDir, "Export");
-        return exportDir;
     }
 }

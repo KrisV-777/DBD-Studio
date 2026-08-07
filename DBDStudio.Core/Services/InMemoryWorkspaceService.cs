@@ -78,6 +78,30 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
         target.Settings.BaseFontSize = snapshot.Settings.BaseFontSize;
         target.Settings.Theme = snapshot.Settings.Theme;
 
+        target.TexturePacks.Clear();
+        foreach (var texturePackSnapshot in snapshot.TexturePacks)
+        {
+            var pack = new TexturePack
+            {
+                Name = texturePackSnapshot.Name,
+                Description = texturePackSnapshot.Description,
+                Visibility = texturePackSnapshot.Visibility,
+                LastUpdatedUtc = texturePackSnapshot.LastUpdatedUtc
+            };
+
+            foreach (var mappingSnapshot in texturePackSnapshot.Mappings)
+            {
+                pack.Mappings.Add(new TextureMapping
+                {
+                    VanillaTexture = mappingSnapshot.VanillaTexture,
+                    ReplacementTexture = mappingSnapshot.ReplacementTexture,
+                    SourcePath = mappingSnapshot.SourcePath
+                });
+            }
+
+            target.TexturePacks.Add(pack);
+        }
+
         target.Rules.Clear();
         foreach (var ruleSnapshot in snapshot.Rules)
         {
@@ -110,6 +134,7 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
     private sealed class WorkspaceSnapshot
     {
         public SettingsSnapshot Settings { get; init; } = new();
+        public List<TexturePackSnapshot> TexturePacks { get; init; } = [];
         public List<RuleSnapshot> Rules { get; init; } = [];
 
         public static WorkspaceSnapshot From(Workspace workspace)
@@ -126,6 +151,19 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
                     BaseFontSize = workspace.Settings.BaseFontSize,
                     Theme = workspace.Settings.Theme,
                 },
+                TexturePacks = workspace.TexturePacks.Select(pack => new TexturePackSnapshot
+                {
+                    Name = pack.Name,
+                    Description = pack.Description,
+                    Visibility = pack.Visibility,
+                    LastUpdatedUtc = pack.LastUpdatedUtc,
+                    Mappings = pack.Mappings.Select(mapping => new TextureMappingSnapshot
+                    {
+                        VanillaTexture = mapping.VanillaTexture,
+                        ReplacementTexture = mapping.ReplacementTexture,
+                        SourcePath = mapping.SourcePath
+                    }).ToList()
+                }).ToList(),
                 Rules = workspace.Rules.Select(rule => new RuleSnapshot
                 {
                     Name = rule.Name,
@@ -143,6 +181,22 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
                 }).ToList()
             };
         }
+    }
+
+    private sealed class TexturePackSnapshot
+    {
+        public string Name { get; init; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
+        public TexturePackVisibility Visibility { get; init; }
+        public DateTimeOffset LastUpdatedUtc { get; init; } = DateTimeOffset.MinValue;
+        public List<TextureMappingSnapshot> Mappings { get; init; } = [];
+    }
+
+    private sealed class TextureMappingSnapshot
+    {
+        public string VanillaTexture { get; init; } = string.Empty;
+        public string ReplacementTexture { get; init; } = string.Empty;
+        public string SourcePath { get; init; } = string.Empty;
     }
 
     private sealed class SettingsSnapshot

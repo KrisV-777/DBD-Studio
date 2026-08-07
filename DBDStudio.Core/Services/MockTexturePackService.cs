@@ -1,9 +1,16 @@
 using System.Collections.Specialized;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 using YamlDotNet.Core;
+using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
+using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -58,7 +65,7 @@ public sealed class MockTexturePackService : ITexturePackService
 
         existing.Description = pack.Description;
         existing.Visibility = pack.Visibility;
-        existing.RandomPool = pack.RandomPool;
+        existing.LastUpdatedUtc = DateTimeOffset.UtcNow;
         existing.Mappings.Clear();
         foreach (var mapping in pack.Mappings)
             existing.Mappings.Add(mapping);
