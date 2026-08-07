@@ -30,6 +30,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _mainWindowViewModel = mainWindowViewModel;
 
         _settingsService.Settings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
+        _texturePackService.TexturePacksChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
 
         SaveCommand = new RelayCommand(() => _settingsService.Save());
         CmdOpenGithub = new RelayCommand(() => OpenUrl("https://github.com/"));

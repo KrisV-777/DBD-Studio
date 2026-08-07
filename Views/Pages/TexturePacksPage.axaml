@@ -59,9 +59,30 @@
 
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}"
-                                Classes="default"
-                                Padding="6,4" />
+                            <Grid ColumnDefinitions="Auto,*"
+                                Margin="4,2">
+
+                                <StackPanel Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+
+                                    <fluent:SymbolIcon
+                                        Symbol="Globe"
+                                        FontSize="{DynamicResource CaptionFontSize}"
+                                        IsVisible="{Binding !IsPrivate}" />
+
+                                    <fluent:SymbolIcon
+                                        Symbol="LockClosed"
+                                        FontSize="{DynamicResource CaptionFontSize}"
+                                        IsVisible="{Binding IsPrivate}" />
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="1"
+                                    Text="{Binding Name}"
+                                    Classes="default"
+                                    Padding="6,4"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -108,8 +129,20 @@
                     Margin="0,0,0,18">
 
                     <StackPanel>
-                        <TextBlock Text="Texture Pack"
-                            Classes="h1" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Texture Pack"
+                                Classes="h1" />
+
+                            <Border Margin="8,4,2,4"
+                                Padding="8,2"
+                                CornerRadius="10"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource SystemAccentColorLight2}">
+                                <TextBlock Text="{Binding SelectedPack.SourceLabel}"
+                                    Classes="caption"
+                                    FontWeight="SemiBold" />
+                            </Border>
+                        </StackPanel>
 
                         <StackPanel Margin="0,12,0,0"
                             Spacing="10">
@@ -134,6 +167,38 @@
                                     Height="70"
                                     PlaceholderText="Description" />
                             </StackPanel>
+
+                            <Grid ColumnDefinitions="Auto,*,Auto"
+                                VerticalAlignment="Center">
+
+                                <!-- Left -->
+                                <CheckBox Grid.Column="0"
+                                    IsChecked="{Binding SelectedPack.IsPrivate}"
+                                    Content="Private pack"
+                                    ToolTip.Tip="Private packs are excluded from random selection and are only used when explicitly added to a rule." />
+
+                                <!-- Spacer -->
+                                <Rectangle Grid.Column="1" />
+
+                                <!-- Right -->
+                                <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    Spacing="6"
+                                    VerticalAlignment="Center">
+
+                                    <TextBlock Text="Last Updated:"
+                                        Classes="caption"
+                                        FontWeight="SemiBold"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBlock
+                                        Text="{Binding SelectedPack.LastUpdatedLocal, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                                        Classes="caption"
+                                        VerticalAlignment="Center" />
+
+                                </StackPanel>
+
+                            </Grid>
                         </StackPanel>
                     </StackPanel>
                 </Grid>

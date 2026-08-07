@@ -37,6 +37,7 @@ public partial class App : Application
         var settingsService = Services.GetRequiredService<ISettingsService>();
         settingsService.Load();
         Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
+        Services.GetRequiredService<ITexturePackService>().RefreshFromConfiguredFolders();
 
         // Apply saved font sizes to application resources
         var baseFontSize = settingsService.Settings.BaseFontSize;
@@ -58,6 +59,7 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            desktop.Exit += (_, _) => settingsService.Save();
             var mainWindowViewModel = Services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow(mainWindowViewModel);
         }
