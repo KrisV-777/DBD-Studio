@@ -1,5 +1,11 @@
+using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
+using YamlDotNet.Core;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -14,8 +20,8 @@ public sealed class MockTexturePackService : ITexturePackService
 {
     private readonly IWorkspaceService _workspaceService;
     private readonly ISettingsService _settingsService;
+    private readonly List<TexturePack> _configuredFolderTexturePacks = [];
     private readonly List<TexturePack> _resolvedTexturePacks = [];
-
     private readonly IDeserializer _yamlDeserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
@@ -25,7 +31,13 @@ public sealed class MockTexturePackService : ITexturePackService
     {
         _workspaceService = workspaceService;
         _settingsService = settingsService;
+
+        _workspaceService.Current.TexturePacks.CollectionChanged += OnWorkspaceTexturePacksChanged;
+        foreach (var pack in _workspaceService.Current.TexturePacks)
+            SubscribeToPack(pack);
+
         _settingsService.Settings.PropertyChanged += OnSettingsPropertyChanged;
+        RebuildResolvedTexturePacks();
     }
 
     public event EventHandler? TexturePacksChanged;
@@ -34,41 +46,15 @@ public sealed class MockTexturePackService : ITexturePackService
 
     public void RefreshFromConfiguredFolders()
     {
-        var candidates = new List<DiscoveredPack>();
-        var sequence = 0;
-
-        foreach (var workspacePack in _workspaceService.Current.TexturePacks)
-        {
-            workspacePack.Source = TexturePackSource.Workspace;
-            candidates.Add(new DiscoveredPack(workspacePack.Name, workspacePack, TexturePackSource.Workspace, sequence++));
-        }
-
-        var modPacks = DiscoverExternalPacks(_settingsService.Settings.ModsFolder, TexturePackSource.ModsFolder);
-        foreach (var pack in modPacks)
-            candidates.Add(new DiscoveredPack(pack.Name, pack, TexturePackSource.ModsFolder, sequence++));
-
-        var gameDataPath = Path.Join(_settingsService.Settings.SkyrimDataFolder, "textures", "dbd");
-        var gameDataPacks = DiscoverExternalPacks(gameDataPath, TexturePackSource.GameDataFolder);
-        foreach (var pack in gameDataPacks)
-            candidates.Add(new DiscoveredPack(pack.Name, pack, TexturePackSource.GameDataFolder, sequence++));
-
-        var winners = ResolveConflicts(candidates)
-            .OrderBy(x => x.Source)
-            .ThenBy(x => x.Sequence)
-            .Select(x => x.Pack)
-            .ToList();
-
-        _resolvedTexturePacks.Clear();
-        _resolvedTexturePacks.AddRange(winners);
-        TexturePacksChanged?.Invoke(this, EventArgs.Empty);
+        _configuredFolderTexturePacks.Clear();
+        _configuredFolderTexturePacks.AddRange(DiscoverExternalPacks(_settingsService.Settings.ModsFolder));
+        _configuredFolderTexturePacks.AddRange(DiscoverExternalPacks(_settingsService.Settings.SkyrimDataFolder));
+        RebuildResolvedTexturePacks();
     }
 
     public void Add(TexturePack pack)
     {
-        pack.Source = TexturePackSource.Workspace;
-        pack.LastUpdatedUtc = DateTimeOffset.UtcNow;
         _workspaceService.Current.TexturePacks.Add(pack);
-        RefreshFromConfiguredFolders();
     }
 
     public void Update(TexturePack pack)
@@ -84,13 +70,29 @@ public sealed class MockTexturePackService : ITexturePackService
         foreach (var mapping in pack.Mappings)
             existing.Mappings.Add(mapping);
 
-        RefreshFromConfiguredFolders();
+        RebuildResolvedTexturePacks();
     }
 
     public void Remove(TexturePack pack)
     {
         _workspaceService.Current.TexturePacks.Remove(pack);
-        RefreshFromConfiguredFolders();
+    }
+
+    private void OnWorkspaceTexturePacksChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (var item in e.OldItems.OfType<TexturePack>())
+                UnsubscribeFromPack(item);
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (var item in e.NewItems.OfType<TexturePack>())
+                SubscribeToPack(item);
+        }
+
+        RebuildResolvedTexturePacks();
     }
 
     private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -99,57 +101,114 @@ public sealed class MockTexturePackService : ITexturePackService
             RefreshFromConfiguredFolders();
     }
 
-    private IEnumerable<TexturePack> DiscoverExternalPacks(string rootFolder, TexturePackSource source)
+    private void OnWorkspacePackPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(TexturePack.Name))
+            RebuildResolvedTexturePacks();
+    }
+
+    private void SubscribeToPack(TexturePack pack) => pack.PropertyChanged += OnWorkspacePackPropertyChanged;
+
+    private void UnsubscribeFromPack(TexturePack pack) => pack.PropertyChanged -= OnWorkspacePackPropertyChanged;
+
+    private void RebuildResolvedTexturePacks()
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        _resolvedTexturePacks.Clear();
+
+        AppendUniquePacks(_workspaceService.Current.TexturePacks, names);
+        AppendUniquePacks(_configuredFolderTexturePacks, names);
+
+        TexturePacksChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void AppendUniquePacks(IEnumerable<TexturePack> packs, HashSet<string> names)
+    {
+        foreach (var pack in packs)
+        {
+            var key = pack.Name.Trim();
+            if (!names.Add(key))
+                continue;
+
+            _resolvedTexturePacks.Add(pack);
+        }
+    }
+
+    private IEnumerable<TexturePack> DiscoverExternalPacks(string rootFolder)
     {
         if (string.IsNullOrWhiteSpace(rootFolder) || !Directory.Exists(rootFolder))
             yield break;
 
-        IEnumerable<string> configFiles;
+        IEnumerator<string>? configFiles = null;
         try
         {
-            configFiles = Directory.EnumerateFiles(rootFolder, "config.yml", SearchOption.AllDirectories);
+            configFiles = Directory.EnumerateFiles(rootFolder, "config.yml", SearchOption.AllDirectories).GetEnumerator();
         }
-        catch
+        catch (IOException ex)
         {
+            Debug.WriteLine($"Failed to scan texture packs in '{rootFolder}': {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Debug.WriteLine($"Failed to scan texture packs in '{rootFolder}': {ex.Message}");
+        }
+
+        if (configFiles is null)
             yield break;
-        }
 
-        foreach (var configPath in configFiles)
+        using (configFiles)
         {
-            if (!TryGetPackFolder(configPath, out var packFolder))
-                continue;
+            while (true)
+            {
+                bool moved;
+                try
+                {
+                    moved = configFiles.MoveNext();
+                }
+                catch (IOException ex)
+                {
+                    Debug.WriteLine($"Failed while scanning texture packs in '{rootFolder}': {ex.Message}");
+                    yield break;
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Debug.WriteLine($"Failed while scanning texture packs in '{rootFolder}': {ex.Message}");
+                    yield break;
+                }
 
-            var pack = TryReadPackFromConfig(packFolder!, configPath);
-            if (pack is null)
-                continue;
+                if (!moved)
+                    yield break;
 
-            pack.Source = source;
-            yield return pack;
+                var configPath = configFiles.Current;
+                if (!TryGetPackFolder(configPath, out var packFolder))
+                    continue;
+
+                var pack = TryReadPackFromConfig(packFolder, configPath);
+                if (pack is not null)
+                    yield return pack;
+            }
         }
     }
 
-    private static bool TryGetPackFolder(string configPath, out string? packFolder)
+    private static bool TryGetPackFolder(string configPath, out string packFolder)
     {
-        packFolder = null;
+        packFolder = string.Empty;
 
         var configFile = new FileInfo(configPath);
-        if (!configFile.Exists)
+        var packDirectory = configFile.Directory;
+        var dbdDirectory = packDirectory?.Parent;
+        var texturesDirectory = dbdDirectory?.Parent;
+
+        if (packDirectory is null || dbdDirectory is null || texturesDirectory is null)
             return false;
 
-        var parent = configFile.Directory;
-        var dbdFolder = parent?.Parent;
-        var texturesFolder = dbdFolder?.Parent;
-
-        if (parent is null || dbdFolder is null || texturesFolder is null)
+        if (!dbdDirectory.Name.Equals("dbd", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        if (!dbdFolder.Name.Equals("dbd", StringComparison.OrdinalIgnoreCase))
+        if (!texturesDirectory.Name.Equals("textures", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        if (!texturesFolder.Name.Equals("textures", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        packFolder = parent.FullName;
+        packFolder = packDirectory.FullName;
         return true;
     }
 
@@ -166,7 +225,7 @@ public sealed class MockTexturePackService : ITexturePackService
             {
                 Name = string.IsNullOrWhiteSpace(config.Name) ? Path.GetFileName(packFolder) : config.Name.Trim(),
                 Description = config.Description?.Trim() ?? string.Empty,
-                LastUpdatedUtc = ResolveTimestampUtc(config, configPath)
+                RootPath = packFolder
             };
 
             foreach (var mapping in config.Mappings)
@@ -174,73 +233,39 @@ public sealed class MockTexturePackService : ITexturePackService
                 if (string.IsNullOrWhiteSpace(mapping.Vanilla) || string.IsNullOrWhiteSpace(mapping.Replacement))
                     continue;
 
-                var replacement = NormalizePath(mapping.Replacement);
-                var sourcePath = Path.Combine(packFolder, replacement.Replace('/', Path.DirectorySeparatorChar));
-
+                var replacementPath = NormalizePath(mapping.Replacement);
                 pack.Mappings.Add(new TextureMapping
                 {
                     VanillaTexture = NormalizePath(mapping.Vanilla),
-                    ReplacementTexture = replacement,
-                    SourcePath = sourcePath
+                    ReplacementTexture = replacementPath,
+                    SourcePath = Path.Combine(packFolder, replacementPath.Replace('/', Path.DirectorySeparatorChar))
                 });
             }
 
             return pack;
         }
-        catch
+        catch (IOException ex)
         {
-            return null;
+            Debug.WriteLine($"Failed to read texture pack config '{configPath}': {ex.Message}");
         }
-    }
-
-    private static DateTimeOffset ResolveTimestampUtc(TexturePackConfig config, string configPath)
-    {
-        if (!string.IsNullOrWhiteSpace(config.UpdatedUtc)
-            && DateTimeOffset.TryParse(config.UpdatedUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
+        catch (UnauthorizedAccessException ex)
         {
-            return parsed.ToUniversalTime();
+            Debug.WriteLine($"Failed to read texture pack config '{configPath}': {ex.Message}");
         }
-
-        return File.GetLastWriteTimeUtc(configPath);
-    }
-
-    private static IReadOnlyList<DiscoveredPack> ResolveConflicts(IReadOnlyList<DiscoveredPack> candidates)
-    {
-        var winners = new Dictionary<string, DiscoveredPack>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var candidate in candidates)
+        catch (YamlException ex)
         {
-            if (!winners.TryGetValue(candidate.Key, out var current))
-            {
-                winners[candidate.Key] = candidate;
-                continue;
-            }
-
-            if (candidate.Pack.LastUpdatedUtc > current.Pack.LastUpdatedUtc)
-            {
-                winners[candidate.Key] = candidate;
-                continue;
-            }
-
-            if (candidate.Pack.LastUpdatedUtc == current.Pack.LastUpdatedUtc)
-            {
-                // Keep the existing winner when timestamps are equal.
-                continue;
-            }
+            Debug.WriteLine($"Failed to parse texture pack config '{configPath}': {ex.Message}");
         }
 
-        return winners.Values.ToList();
+        return null;
     }
 
-    private static string NormalizePath(string value) => value.Replace('\\', '/').Trim();
-
-    private sealed record DiscoveredPack(string Key, TexturePack Pack, TexturePackSource Source, int Sequence);
+    private static string NormalizePath(string path) => path.Replace('\\', '/').Trim();
 
     private sealed class TexturePackConfig
     {
         public string? Name { get; init; }
         public string? Description { get; init; }
-        public string? UpdatedUtc { get; init; }
         public List<TexturePackMappingConfig> Mappings { get; init; } = [];
     }
 

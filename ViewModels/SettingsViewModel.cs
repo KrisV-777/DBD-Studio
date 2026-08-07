@@ -32,7 +32,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _settingsService.Settings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
         _texturePackService.TexturePacksChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
 
-        SaveCommand = new RelayCommand(() => _settingsService.Save());
+        SaveCommand = new RelayCommand(SaveSettings);
         CmdOpenGithub = new RelayCommand(() => OpenUrl("https://github.com/"));
         CmdOpenWiki = new RelayCommand(() => OpenUrl("https://github.com/wiki"));
         CmdOpenNexus = new RelayCommand(() => OpenUrl("https://www.nexusmods.com/"));
@@ -46,6 +46,13 @@ public sealed class SettingsViewModel : ViewModelBase
             FileName = url,
             UseShellExecute = true
         });
+    }
+
+    private void SaveSettings()
+    {
+        _texturePackService.RefreshFromConfiguredFolders();
+        _settingsService.Save();
+        OnPropertyChanged(nameof(TexturePacksFound));
     }
 
     public ICommand SaveCommand { get; }

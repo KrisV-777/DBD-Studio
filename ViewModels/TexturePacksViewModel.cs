@@ -54,22 +54,18 @@ public sealed class TexturePacksViewModel : ViewModelBase
         _texturePackService.TexturePacksChanged += (_, _) => ReloadFromService();
 
         ReloadFromService();
-
-        SelectedPack = Packs.Count > 0 ? Packs[0] : null;
     }
 
     private void ReloadFromService()
     {
-        var selectedName = SelectedPack?.Name;
+        var selectedPackName = SelectedPack?.Name;
 
         Packs.Clear();
         foreach (var pack in _texturePackService.GetTexturePacks())
             Packs.Add(pack);
 
-        if (!string.IsNullOrWhiteSpace(selectedName))
-        {
-            SelectedPack = Packs.FirstOrDefault(pack => pack.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase));
-        }
+        if (!string.IsNullOrWhiteSpace(selectedPackName))
+            SelectedPack = Packs.FirstOrDefault(pack => string.Equals(pack.Name, selectedPackName, StringComparison.OrdinalIgnoreCase));
 
         SelectedPack ??= Packs.Count > 0 ? Packs[0] : null;
         RefreshCommandStates();
@@ -192,8 +188,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
     {
         if (SelectedPack is null) return;
         _texturePackService.Remove(SelectedPack);
-        ReloadFromService();
-        SelectedPack = Packs.Count > 0 ? Packs[Math.Max(0, Packs.Count - 1)] : null;
         RefreshCommandStates();
     }
 
