@@ -39,7 +39,7 @@ public sealed class MockTexturePackService : ITexturePackService
 
         foreach (var workspacePack in _workspaceService.Current.TexturePacks)
         {
-            workspacePack.Source = Models.TexturePackSource.Workspace;
+            workspacePack.Source = TexturePackSource.Workspace;
             candidates.Add(new DiscoveredPack(workspacePack.Name, workspacePack, TexturePackSource.Workspace, sequence++));
         }
 
@@ -47,7 +47,8 @@ public sealed class MockTexturePackService : ITexturePackService
         foreach (var pack in modPacks)
             candidates.Add(new DiscoveredPack(pack.Name, pack, TexturePackSource.ModsFolder, sequence++));
 
-        var gameDataPacks = DiscoverExternalPacks(_settingsService.Settings.SkyrimDataFolder, TexturePackSource.GameDataFolder);
+        var gameDataPath = Path.Join(_settingsService.Settings.SkyrimDataFolder, "textures", "dbd");
+        var gameDataPacks = DiscoverExternalPacks(gameDataPath, TexturePackSource.GameDataFolder);
         foreach (var pack in gameDataPacks)
             candidates.Add(new DiscoveredPack(pack.Name, pack, TexturePackSource.GameDataFolder, sequence++));
 
@@ -64,7 +65,7 @@ public sealed class MockTexturePackService : ITexturePackService
 
     public void Add(TexturePack pack)
     {
-        pack.Source = Models.TexturePackSource.Workspace;
+        pack.Source = TexturePackSource.Workspace;
         pack.LastUpdatedUtc = DateTimeOffset.UtcNow;
         _workspaceService.Current.TexturePacks.Add(pack);
         RefreshFromConfiguredFolders();
@@ -78,7 +79,6 @@ public sealed class MockTexturePackService : ITexturePackService
 
         existing.Description = pack.Description;
         existing.Visibility = pack.Visibility;
-        existing.RandomPool = pack.RandomPool;
         existing.LastUpdatedUtc = DateTimeOffset.UtcNow;
         existing.Mappings.Clear();
         foreach (var mapping in pack.Mappings)
@@ -123,10 +123,7 @@ public sealed class MockTexturePackService : ITexturePackService
             if (pack is null)
                 continue;
 
-            pack.Source = source == TexturePackSource.ModsFolder
-                ? Models.TexturePackSource.ModsFolder
-                : Models.TexturePackSource.GameDataFolder;
-
+            pack.Source = source;
             yield return pack;
         }
     }
@@ -236,13 +233,6 @@ public sealed class MockTexturePackService : ITexturePackService
     }
 
     private static string NormalizePath(string value) => value.Replace('\\', '/').Trim();
-
-    private enum TexturePackSource
-    {
-        Workspace = 0,
-        ModsFolder = 1,
-        GameDataFolder = 2
-    }
 
     private sealed record DiscoveredPack(string Key, TexturePack Pack, TexturePackSource Source, int Sequence);
 

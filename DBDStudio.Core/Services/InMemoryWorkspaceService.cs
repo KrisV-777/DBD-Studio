@@ -86,7 +86,6 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
                 Name = texturePackSnapshot.Name,
                 Description = texturePackSnapshot.Description,
                 Visibility = texturePackSnapshot.Visibility,
-                RandomPool = texturePackSnapshot.RandomPool,
                 LastUpdatedUtc = texturePackSnapshot.LastUpdatedUtc
             };
 
@@ -157,7 +156,6 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
                     Name = pack.Name,
                     Description = pack.Description,
                     Visibility = pack.Visibility,
-                    RandomPool = pack.RandomPool,
                     LastUpdatedUtc = pack.LastUpdatedUtc,
                     Mappings = pack.Mappings.Select(mapping => new TextureMappingSnapshot
                     {
@@ -190,7 +188,6 @@ public sealed class InMemoryWorkspaceService : IWorkspaceService
         public string Name { get; init; } = string.Empty;
         public string Description { get; init; } = string.Empty;
         public TexturePackVisibility Visibility { get; init; }
-        public bool RandomPool { get; init; }
         public DateTimeOffset LastUpdatedUtc { get; init; } = DateTimeOffset.MinValue;
         public List<TextureMappingSnapshot> Mappings { get; init; } = [];
     }
