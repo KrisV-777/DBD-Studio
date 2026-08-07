@@ -51,10 +51,24 @@ public sealed class TexturePacksViewModel : ViewModelBase
         DeleteMappingCommand = new RelayCommand(DeleteMapping, () => SelectedPack is not null && SelectedMapping is not null);
         RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
 
+        _texturePackService.TexturePacksChanged += (_, _) => ReloadFromService();
+
+        ReloadFromService();
+    }
+
+    private void ReloadFromService()
+    {
+        var selectedPackName = SelectedPack?.Name;
+
+        Packs.Clear();
         foreach (var pack in _texturePackService.GetTexturePacks())
             Packs.Add(pack);
 
-        SelectedPack = Packs.Count > 0 ? Packs[0] : null;
+        if (!string.IsNullOrWhiteSpace(selectedPackName))
+            SelectedPack = Packs.FirstOrDefault(pack => string.Equals(pack.Name, selectedPackName, StringComparison.OrdinalIgnoreCase));
+
+        SelectedPack ??= Packs.Count > 0 ? Packs[0] : null;
+        RefreshCommandStates();
     }
 
     private void DisplayMessage(string message)
@@ -77,7 +91,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
     {
         pack ??= new TexturePack { Name = "New Pack" };
         _texturePackService.Add(pack);
-        Packs.Add(pack);
         SelectedPack = pack;
         RefreshCommandStates();
     }
@@ -161,10 +174,7 @@ public sealed class TexturePacksViewModel : ViewModelBase
     private void DeletePack()
     {
         if (SelectedPack is null) return;
-        var index = Packs.IndexOf(SelectedPack);
         _texturePackService.Remove(SelectedPack);
-        Packs.Remove(SelectedPack);
-        SelectedPack = Packs.Count > 0 ? Packs[Math.Max(0, index - 1)] : null;
         RefreshCommandStates();
     }
 
