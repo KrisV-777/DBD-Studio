@@ -6,64 +6,65 @@ using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DBDStudio;
-
-public partial class App : Application
+namespace DBDStudio
 {
-    public IServiceProvider Services { get; private set; } = null!;
-
-    public override void Initialize()
+    public partial class App : Application
     {
-        AvaloniaXamlLoader.Load(this);
-    }
+        public IServiceProvider Services { get; private set; } = null!;
 
-    public override void OnFrameworkInitializationCompleted()
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton<IWorkspaceService, InMemoryWorkspaceService>();
-        services.AddSingleton<ISettingsService, MockSettingsService>();
-        services.AddSingleton<ITexturePackService, MockTexturePackService>();
-        services.AddSingleton<IBodySlideService, MockBodySlideService>();
-        services.AddSingleton<IRuleService, MockRuleService>();
-        services.AddSingleton<IRaceMenuPresetService, MockRaceMenuPresetService>();
-        services.AddSingleton<IConditionRegistryService, ConditionRegistryService>();
-        services.AddSingleton<IRuleResolutionService, RuleResolutionService>();
-        services.AddSingleton<MutagenSkyrimService>();
-        services.AddSingleton<IFormDatabaseService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
-        services.AddSingleton<ILoadOrderService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
-        services.AddTransient<MainWindowViewModel>();
-        Services = services.BuildServiceProvider();
-        
-        var settingsService = Services.GetRequiredService<ISettingsService>();
-        settingsService.Load();
-        Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
-        Services.GetRequiredService<ITexturePackService>().RefreshFromConfiguredFolders();
-
-        // Apply saved font sizes to application resources
-        var baseFontSize = settingsService.Settings.BaseFontSize;
-        Resources["FontSize"] = baseFontSize;
-        Resources["H1FontSize"] = baseFontSize * 1.6;
-        Resources["H2FontSize"] = baseFontSize * 1.3;
-        Resources["CaptionFontSize"] = baseFontSize * 0.85;
-        Resources["TinyFontSize"] = baseFontSize * 0.7;
-
-        // Apply saved theme
-        var theme = settingsService.Settings.Theme;
-        var themeVariant = theme switch
+        public override void Initialize()
         {
-            "Light" => Avalonia.Styling.ThemeVariant.Light,
-            "Dark" => Avalonia.Styling.ThemeVariant.Dark,
-            _ => Avalonia.Styling.ThemeVariant.Default
-        };
-        RequestedThemeVariant = themeVariant;
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.Exit += (_, _) => settingsService.Save();
-            var mainWindowViewModel = Services.GetRequiredService<MainWindowViewModel>();
-            desktop.MainWindow = new MainWindow(mainWindowViewModel);
+            AvaloniaXamlLoader.Load(this);
         }
 
-        base.OnFrameworkInitializationCompleted();
+        public override void OnFrameworkInitializationCompleted()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<IWorkspaceService, InMemoryWorkspaceService>();
+            services.AddSingleton<ISettingsService, MockSettingsService>();
+            services.AddSingleton<ITexturePackService, MockTexturePackService>();
+            services.AddSingleton<IBodySlideService, MockBodySlideService>();
+            services.AddSingleton<IRuleService, MockRuleService>();
+            services.AddSingleton<IRaceMenuPresetService, MockRaceMenuPresetService>();
+            services.AddSingleton<IConditionRegistryService, ConditionRegistryService>();
+            services.AddSingleton<IRuleResolutionService, RuleResolutionService>();
+            services.AddSingleton<MutagenSkyrimService>();
+            services.AddSingleton<IFormDatabaseService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
+            services.AddSingleton<ILoadOrderService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
+            services.AddTransient<MainWindowViewModel>();
+            Services = services.BuildServiceProvider();
+        
+            var settingsService = Services.GetRequiredService<ISettingsService>();
+            settingsService.Load();
+            Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
+            Services.GetRequiredService<ITexturePackService>().RefreshFromConfiguredFolders();
+
+            // Apply saved font sizes to application resources
+            var baseFontSize = settingsService.Settings.BaseFontSize;
+            Resources["FontSize"] = baseFontSize;
+            Resources["H1FontSize"] = baseFontSize * 1.6;
+            Resources["H2FontSize"] = baseFontSize * 1.3;
+            Resources["CaptionFontSize"] = baseFontSize * 0.85;
+            Resources["TinyFontSize"] = baseFontSize * 0.7;
+
+            // Apply saved theme
+            var theme = settingsService.Settings.Theme;
+            var themeVariant = theme switch
+            {
+                "Light" => Avalonia.Styling.ThemeVariant.Light,
+                "Dark" => Avalonia.Styling.ThemeVariant.Dark,
+                _ => Avalonia.Styling.ThemeVariant.Default
+            };
+            RequestedThemeVariant = themeVariant;
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.Exit += (_, _) => settingsService.Save();
+                var mainWindowViewModel = Services.GetRequiredService<MainWindowViewModel>();
+                desktop.MainWindow = new MainWindow(mainWindowViewModel);
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 }

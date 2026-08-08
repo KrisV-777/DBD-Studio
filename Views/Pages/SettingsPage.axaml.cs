@@ -5,35 +5,36 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using DBDStudio.ViewModels;
 
-namespace DBDStudio.Views.Pages;
-
-public partial class SettingsPage : UserControl
+namespace DBDStudio.Views.Pages
 {
-    private SettingsViewModel ViewModel => (SettingsViewModel)DataContext!;
-
-    public SettingsPage()
+    public partial class SettingsPage : UserControl
     {
-        InitializeComponent();
-    }
+        private SettingsViewModel ViewModel => (SettingsViewModel)DataContext!;
 
-    private async void OnBrowseSkyrimClicked(object? sender, RoutedEventArgs e)
-        => await BrowseFolderAsync(path => ViewModel.SkyrimDataFolder = path);
+        public SettingsPage()
+        {
+            InitializeComponent();
+        }
 
-    private async void OnBrowseModsClicked(object? sender, RoutedEventArgs e)
-        => await BrowseFolderAsync(path => ViewModel.ModsFolder = path);
+        private async void OnBrowseSkyrimClicked(object? sender, RoutedEventArgs e)
+            => await BrowseFolderAsync(path => ViewModel.SkyrimDataFolder = path);
 
-    private async void OnBrowseBodySlideClicked(object? sender, RoutedEventArgs e)
-        => await BrowseFolderAsync(path => ViewModel.BodySlidePresetsFolder = path);
+        private async void OnBrowseModsClicked(object? sender, RoutedEventArgs e)
+            => await BrowseFolderAsync(path => ViewModel.ModsFolder = path);
 
-    private async Task BrowseFolderAsync(Action<string> setter)
-    {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is null) return;
+        private async void OnBrowseBodySlideClicked(object? sender, RoutedEventArgs e)
+            => await BrowseFolderAsync(path => ViewModel.BodySlidePresetsFolder = path);
 
-        var result = await topLevel.StorageProvider.OpenFolderPickerAsync(
-            new FolderPickerOpenOptions { Title = "Select Folder", AllowMultiple = false });
+        private async Task BrowseFolderAsync(Action<string> setter)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is null) return;
 
-        if (result.Count > 0)
-            setter(result[0].Path.LocalPath);
+            var result = await topLevel.StorageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions { Title = "Select Folder", AllowMultiple = false });
+
+            if (result.Count > 0)
+                setter(result[0].Path.LocalPath);
+        }
     }
 }

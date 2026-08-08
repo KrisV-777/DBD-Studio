@@ -1,42 +1,43 @@
 using System.Collections.ObjectModel;
 using DBDStudio.ViewModels;
 
-namespace DBDStudio.Models;
-
-public sealed class TextureMapping : ViewModelBase
+namespace DBDStudio.Models
 {
-    private string _vanillaTexture = string.Empty;
-    private string _replacementTexture = string.Empty;
-
-    public string VanillaTexture
+    public sealed class TextureMapping : ViewModelBase
     {
-        get => _vanillaTexture;
-        set => SetField(ref _vanillaTexture, value);
+        private string _vanillaTexture = string.Empty;
+        private string _replacementTexture = string.Empty;
+
+        public string VanillaTexture
+        {
+            get => _vanillaTexture;
+            set => SetField(ref _vanillaTexture, value);
+        }
+
+        public string ReplacementTexture
+        {
+            get => _replacementTexture;
+            set => SetField(ref _replacementTexture, value);
+        }
     }
 
-    public string ReplacementTexture
+    public sealed class TexturePack : ViewModelBase
     {
-        get => _replacementTexture;
-        set => SetField(ref _replacementTexture, value);
+        private string _name = string.Empty;
+        private string _description = string.Empty;
+
+        public string Name
+        {
+            get => _name;
+            set => SetField(ref _name, value);
+        }
+
+        public string Description
+        {
+            get => _description;
+            set => SetField(ref _description, value);
+        }
+
+        public ObservableCollection<TextureMapping> Mappings { get; } = [];
     }
-}
-
-public sealed class TexturePack : ViewModelBase
-{
-    private string _name = string.Empty;
-    private string _description = string.Empty;
-
-    public string Name
-    {
-        get => _name;
-        set => SetField(ref _name, value);
-    }
-
-    public string Description
-    {
-        get => _description;
-        set => SetField(ref _description, value);
-    }
-
-    public ObservableCollection<TextureMapping> Mappings { get; } = [];
 }

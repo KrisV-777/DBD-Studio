@@ -3,61 +3,62 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 
-namespace DBDStudio.Views.Controls;
-
-public partial class FilePathPickerControl : UserControl
+namespace DBDStudio.Views.Controls
 {
-    public static readonly StyledProperty<string?> TextProperty =
-        AvaloniaProperty.Register<FilePathPickerControl, string?>(nameof(Text), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
-
-    public static readonly StyledProperty<string> PickerTitleProperty =
-        AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(PickerTitle), "Select Folder");
-
-    public static readonly StyledProperty<string> PlaceholderTextProperty =
-        AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(PlaceholderText), string.Empty);
-
-    public static readonly StyledProperty<string> BrowseButtonTextProperty =
-        AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(BrowseButtonText), "Browse…");
-
-    public FilePathPickerControl()
+    public partial class FilePathPickerControl : UserControl
     {
-        InitializeComponent();
-    }
+        public static readonly StyledProperty<string?> TextProperty =
+            AvaloniaProperty.Register<FilePathPickerControl, string?>(nameof(Text), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
-    public string? Text
-    {
-        get => GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
-    }
+        public static readonly StyledProperty<string> PickerTitleProperty =
+            AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(PickerTitle), "Select Folder");
 
-    public string PickerTitle
-    {
-        get => GetValue(PickerTitleProperty);
-        set => SetValue(PickerTitleProperty, value);
-    }
+        public static readonly StyledProperty<string> PlaceholderTextProperty =
+            AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(PlaceholderText), string.Empty);
 
-    public string PlaceholderText
-    {
-        get => GetValue(PlaceholderTextProperty);
-        set => SetValue(PlaceholderTextProperty, value);
-    }
+        public static readonly StyledProperty<string> BrowseButtonTextProperty =
+            AvaloniaProperty.Register<FilePathPickerControl, string>(nameof(BrowseButtonText), "Browse…");
 
-    public string BrowseButtonText
-    {
-        get => GetValue(BrowseButtonTextProperty);
-        set => SetValue(BrowseButtonTextProperty, value);
-    }
+        public FilePathPickerControl()
+        {
+            InitializeComponent();
+        }
 
-    private async void OnBrowseClicked(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is null)
-            return;
+        public string? Text
+        {
+            get => GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
+        }
 
-        var result = await topLevel.StorageProvider.OpenFolderPickerAsync(
-            new FolderPickerOpenOptions { Title = PickerTitle, AllowMultiple = false });
+        public string PickerTitle
+        {
+            get => GetValue(PickerTitleProperty);
+            set => SetValue(PickerTitleProperty, value);
+        }
 
-        if (result.Count > 0)
-            Text = result[0].Path.LocalPath;
+        public string PlaceholderText
+        {
+            get => GetValue(PlaceholderTextProperty);
+            set => SetValue(PlaceholderTextProperty, value);
+        }
+
+        public string BrowseButtonText
+        {
+            get => GetValue(BrowseButtonTextProperty);
+            set => SetValue(BrowseButtonTextProperty, value);
+        }
+
+        private async void OnBrowseClicked(object? sender, RoutedEventArgs e)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is null)
+                return;
+
+            var result = await topLevel.StorageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions { Title = PickerTitle, AllowMultiple = false });
+
+            if (result.Count > 0)
+                Text = result[0].Path.LocalPath;
+        }
     }
 }

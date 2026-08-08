@@ -1,11 +1,12 @@
 using Avalonia.Controls;
 
-namespace DBDStudio.Views.Pages;
-
-public partial class RaceMenuPresetsPage : UserControl
+namespace DBDStudio.Views.Pages
 {
-    public RaceMenuPresetsPage()
+    public partial class RaceMenuPresetsPage : UserControl
     {
-        InitializeComponent();
+        public RaceMenuPresetsPage()
+        {
+            InitializeComponent();
+        }
     }
 }

@@ -1,11 +1,12 @@
 using Avalonia.Controls;
 
-namespace DBDStudio.Views.Pages;
-
-public partial class LoadOrderExplorerPage : UserControl
+namespace DBDStudio.Views.Pages
 {
-    public LoadOrderExplorerPage()
+    public partial class LoadOrderExplorerPage : UserControl
     {
-        InitializeComponent();
+        public LoadOrderExplorerPage()
+        {
+            InitializeComponent();
+        }
     }
 }

@@ -4,77 +4,78 @@ using Avalonia.Threading;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
-namespace DBDStudio.ViewModels;
-
-public sealed class LoadOrderExplorerViewModel : ViewModelBase
+namespace DBDStudio.ViewModels
 {
-    private readonly ILoadOrderService _loadOrderService;
-    private string _searchText = string.Empty;
-    private FormRecord? _selectedRecord;
-
-    public LoadOrderExplorerViewModel(ILoadOrderService loadOrderService)
+    public sealed class LoadOrderExplorerViewModel : ViewModelBase
     {
-        _loadOrderService = loadOrderService;
-        loadOrderService.StatusChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(Refresh);
-        CopyEditorIdCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
-        CopyFormIdCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
-        CopyFormKeyCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
-        UseInRuleCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
-        RefreshCommand = new RelayCommand(Refresh);
-        Refresh();
-    }
+        private readonly ILoadOrderService _loadOrderService;
+        private string _searchText = string.Empty;
+        private FormRecord? _selectedRecord;
 
-    public ICommand CopyEditorIdCommand { get; }
-    public ICommand CopyFormIdCommand { get; }
-    public ICommand CopyFormKeyCommand { get; }
-    public ICommand UseInRuleCommand { get; }
-    public ICommand RefreshCommand { get; }
-
-    public string SearchText
-    {
-        get => _searchText;
-        set
+        public LoadOrderExplorerViewModel(ILoadOrderService loadOrderService)
         {
-            if (SetField(ref _searchText, value))
-                Refresh();
+            _loadOrderService = loadOrderService;
+            loadOrderService.StatusChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(Refresh);
+            CopyEditorIdCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
+            CopyFormIdCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
+            CopyFormKeyCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
+            UseInRuleCommand = new RelayCommand(() => { }, () => SelectedRecord is not null);
+            RefreshCommand = new RelayCommand(Refresh);
+            Refresh();
         }
-    }
 
-    public FormRecord? SelectedRecord
-    {
-        get => _selectedRecord;
-        set
+        public ICommand CopyEditorIdCommand { get; }
+        public ICommand CopyFormIdCommand { get; }
+        public ICommand CopyFormKeyCommand { get; }
+        public ICommand UseInRuleCommand { get; }
+        public ICommand RefreshCommand { get; }
+
+        public string SearchText
         {
-            if (SetField(ref _selectedRecord, value))
+            get => _searchText;
+            set
             {
-                OnPropertyChanged(nameof(DetailName));
-                OnPropertyChanged(nameof(DetailEditorId));
-                OnPropertyChanged(nameof(DetailFormId));
-                OnPropertyChanged(nameof(DetailPlugin));
-                OnPropertyChanged(nameof(DetailRecordType));
+                if (SetField(ref _searchText, value))
+                    Refresh();
             }
         }
-    }
 
-    public ObservableCollection<FormRecord> Records { get; } = [];
+        public FormRecord? SelectedRecord
+        {
+            get => _selectedRecord;
+            set
+            {
+                if (SetField(ref _selectedRecord, value))
+                {
+                    OnPropertyChanged(nameof(DetailName));
+                    OnPropertyChanged(nameof(DetailEditorId));
+                    OnPropertyChanged(nameof(DetailFormId));
+                    OnPropertyChanged(nameof(DetailPlugin));
+                    OnPropertyChanged(nameof(DetailRecordType));
+                }
+            }
+        }
 
-    public string DetailName => SelectedRecord?.DisplayName ?? "—";
-    public string DetailEditorId => SelectedRecord?.EditorId ?? "—";
-    public string DetailFormId => SelectedRecord?.FormId ?? "—";
-    public string DetailPlugin => SelectedRecord?.Plugin ?? "—";
-    public string DetailRecordType => SelectedRecord?.RecordType ?? "—";
+        public ObservableCollection<FormRecord> Records { get; } = [];
 
-    private void Refresh()
-    {
-        Records.Clear();
-        foreach (var record in _loadOrderService.Search(SearchText))
-            Records.Add(record);
+        public string DetailName => SelectedRecord?.DisplayName ?? "—";
+        public string DetailEditorId => SelectedRecord?.EditorId ?? "—";
+        public string DetailFormId => SelectedRecord?.FormId ?? "—";
+        public string DetailPlugin => SelectedRecord?.Plugin ?? "—";
+        public string DetailRecordType => SelectedRecord?.RecordType ?? "—";
 
-        SelectedRecord ??= Records.Count > 0 ? Records[0] : null;
-        OnPropertyChanged(nameof(DetailName));
-        OnPropertyChanged(nameof(DetailEditorId));
-        OnPropertyChanged(nameof(DetailFormId));
-        OnPropertyChanged(nameof(DetailPlugin));
-        OnPropertyChanged(nameof(DetailRecordType));
+        private void Refresh()
+        {
+            Records.Clear();
+            foreach (var record in _loadOrderService.Search(SearchText))
+                Records.Add(record);
+
+            SelectedRecord ??= Records.Count > 0 ? Records[0] : null;
+            OnPropertyChanged(nameof(DetailName));
+            OnPropertyChanged(nameof(DetailEditorId));
+            OnPropertyChanged(nameof(DetailFormId));
+            OnPropertyChanged(nameof(DetailPlugin));
+            OnPropertyChanged(nameof(DetailRecordType));
+        }
     }
 }

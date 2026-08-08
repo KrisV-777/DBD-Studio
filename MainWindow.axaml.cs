@@ -1,18 +1,19 @@
 using Avalonia.Controls;
 using DBDStudio.ViewModels;
 
-namespace DBDStudio;
-
-public partial class MainWindow : Window
+namespace DBDStudio
 {
-    public MainWindow()
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
-    }
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
 
-    public MainWindow(MainWindowViewModel viewModel)
-    {
-        InitializeComponent();
-        DataContext = viewModel;
+        public MainWindow(MainWindowViewModel viewModel)
+        {
+            InitializeComponent();
+            DataContext = viewModel;
+        }
     }
 }

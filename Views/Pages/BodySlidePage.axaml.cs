@@ -1,11 +1,12 @@
 using Avalonia.Controls;
 
-namespace DBDStudio.Views.Pages;
-
-public partial class BodySlidePage : UserControl
+namespace DBDStudio.Views.Pages
 {
-    public BodySlidePage()
+    public partial class BodySlidePage : UserControl
     {
-        InitializeComponent();
+        public BodySlidePage()
+        {
+            InitializeComponent();
+        }
     }
 }

@@ -1,11 +1,12 @@
 using Avalonia.Controls;
 
-namespace DBDStudio.Views.Pages;
-
-public partial class RulesPage : UserControl
+namespace DBDStudio.Views.Pages
 {
-    public RulesPage()
+    public partial class RulesPage : UserControl
     {
-        InitializeComponent();
+        public RulesPage()
+        {
+            InitializeComponent();
+        }
     }
 }
