@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
+using DynamicData;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -13,7 +14,7 @@ namespace DBDStudio.Core.Services
     {
         private readonly IWorkspaceService _workspaceService;
         private readonly ISettingsService _settingsService;
-        private readonly List<TexturePack> _configuredFolderTexturePacks = [];
+        private readonly HashSet<TexturePack> _configuredFolderTexturePacks = [];
         private readonly List<TexturePack> _resolvedTexturePacks = [];
         private readonly IDeserializer _yamlDeserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -38,56 +39,77 @@ namespace DBDStudio.Core.Services
         {
             _configuredFolderTexturePacks.Clear();
 
-            var folderSkyrim = _settingsService.Settings.SkyrimDataFolder;
-            try {
-                _configuredFolderTexturePacks.AddRange(
-                    DiscoverExternalPacks(folderSkyrim, TexturePackOrigin.GameDataFolder)
-                );
-            } catch (Exception ex) {
-                Debug.WriteLine($"Failed to discover texture packs in Skyrim data folder '{folderSkyrim}': {ex.Message}");
-            }
-
-            var folderMods = _settingsService.Settings.ModsFolder;
-            try {
-                _configuredFolderTexturePacks.AddRange(
-                    DiscoverExternalPacks(folderMods, TexturePackOrigin.ModsFolder)
-                );
-            } catch (Exception ex) {
-                Debug.WriteLine($"Failed to discover texture packs in mods folder '{folderMods}': {ex.Message}");
-            }
+            var populateFilePacks = (string folder) =>
+            {
+                try {
+                    foreach (var pack in DiscoverExternalPacks(folder)) {
+                        _configuredFolderTexturePacks.Add(pack);
+                    }
+                } catch (Exception ex) {
+                    Debug.WriteLine($"Failed to discover texture packs in folder '{folder}': {ex.Message}");
+                }
+            };
+            populateFilePacks(_settingsService.Settings.SkyrimDataFolder);
+            populateFilePacks(_settingsService.Settings.ModsFolder);
 
             RebuildResolvedTexturePacks();
         }
 
+        /// <summary>
+        /// Adds a new texture pack to the workspace. If a texture pack with the same name already exists,
+        /// it appends a numeric suffix to the name to ensure uniqueness.
+        /// </summary>
+        /// <param name="pack">The texture pack to add.</param>
         public void Add(TexturePack pack)
         {
-            var packSnapshot = GetTexturePacks().ToList();
-            var packname = pack.Name;
+            // Strip a trailing " (N)" suffix, if present.
+            var baseName = System.Text.RegularExpressions.Regex.Replace(pack.Name, @"\s*\(\d+\)$", string.Empty);
+            var regex = new System.Text.RegularExpressions.Regex(
+                $@"^{System.Text.RegularExpressions.Regex.Escape(baseName)}\s\((\d+)\)$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-            // Check if packname already exists
-            if (packSnapshot.Any(p => p.Name.Equals(packname, StringComparison.OrdinalIgnoreCase))) {
-                // find the highest existing suffix in packname (n) format
-                var regex = new System.Text.RegularExpressions.Regex(
-                    $@"^{System.Text.RegularExpressions.Regex.Escape(packname)}\s*\((\d+)\)$",
-                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            var hasBaseName = _resolvedTexturePacks.Any(existingPack =>
+                existingPack.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase));
 
-                var maxSuffix = 0;
-                foreach (var existingPack in packSnapshot) {
-                    var match = regex.Match(existingPack.Name);
-                    if (match.Success && int.TryParse(match.Groups[1].Value, out var suffix)) {
-                        maxSuffix = Math.Max(maxSuffix, suffix);
-                    }
-                }
-                packname = $"{packname} ({maxSuffix + 1})";
-            }
+            var maxSuffix = _resolvedTexturePacks
+                .Select(existingPack => regex.Match(existingPack.Name))
+                .Where(match => match.Success)
+                .Select(match => int.Parse(match.Groups[1].Value))
+                .DefaultIfEmpty(hasBaseName ? 0 : -1)
+                .Max();
 
-            pack.Name = packname;
+            if (maxSuffix > -1)
+                pack.Name = $"{baseName} ({maxSuffix + 1})";
+            else
+                pack.Name = baseName;
 
             _workspaceService.Current.TexturePacks.Add(pack);
         }
 
-        public void Remove(TexturePack pack)
+        public void TryAdd(TexturePack pack)
         {
+            if (_workspaceService.Current.TexturePacks.Contains(pack)) {
+                return;
+            }
+            _workspaceService.Current.TexturePacks.Add(pack);
+        }
+
+        public void Remove(TexturePack pack) => _workspaceService.Current.TexturePacks.Remove(pack);
+
+        public TexturePackState GetTexturePackState(TexturePack pack)
+        {
+            var success = _configuredFolderTexturePacks.TryGetValue(pack, out var originalPack);
+            if (!success || originalPack is null)
+                return TexturePackState.Ephemeral;
+            if (pack.LastUpdatedUtc != originalPack.LastUpdatedUtc)
+                return TexturePackState.DiskEdited;
+            return TexturePackState.Disk;
+        }
+
+        public void ResetToDiskState(TexturePack pack)
+        {
+            if (!_configuredFolderTexturePacks.Contains(pack))
+                return;
             _workspaceService.Current.TexturePacks.Remove(pack);
         }
 
@@ -105,22 +127,21 @@ namespace DBDStudio.Core.Services
             var uids = new HashSet<Guid>();
             _resolvedTexturePacks.Clear();
 
-            AppendUniquePacks(_workspaceService.Current.TexturePacks, uids);
-            AppendUniquePacks(_configuredFolderTexturePacks, uids);
+            var appendUniquePacks = (IEnumerable<TexturePack> packs) =>
+            {
+                foreach (var pack in packs) {
+                    var key = pack.Uid;
+                    if (!uids.Add(key))
+                        continue;
+                    _resolvedTexturePacks.Add(pack);
+                }
+            };
+            appendUniquePacks(_workspaceService.Current.TexturePacks);
+            appendUniquePacks(_configuredFolderTexturePacks.Select(pack => pack.Clone()));
+
+            _resolvedTexturePacks.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
 
             TexturePacksChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void AppendUniquePacks(IEnumerable<TexturePack> packs, HashSet<Guid> uids)
-        {
-            foreach (var pack in packs) {
-                var key = pack.Uid;
-                if (!uids.Add(key)) {
-                    continue;
-                }
-
-                _resolvedTexturePacks.Add(pack);
-            }
         }
 
         /// <summary>
@@ -130,14 +151,14 @@ namespace DBDStudio.Core.Services
         /// <param name="origin">The origin of the texture packs.</param>
         /// <returns>An enumerable of TexturePack instances discovered in the root folder.</returns>
         /// <remarks>Exceptions are forwarded to the caller. The method does not handle exceptions internally.</remarks>
-        private IEnumerable<TexturePack> DiscoverExternalPacks(string rootFolder, TexturePackOrigin origin)
+        private IEnumerable<TexturePack> DiscoverExternalPacks(string rootFolder)
         {
             if (string.IsNullOrWhiteSpace(rootFolder) || !Directory.Exists(rootFolder)) {
                 yield break;
             }
 
             foreach (var configFile in EnumerateConfigFiles(rootFolder)) {
-                var pack = TryReadPackFromConfig(configFile, origin);
+                var pack = TryReadPackFromConfig(configFile);
                 if (pack is not null) {
                     yield return pack;
                 }
@@ -164,7 +185,6 @@ namespace DBDStudio.Core.Services
                     }
                 }
             }
-
             // Pattern 2: rootFolder/*/textures/dbd/*/config.yml
             foreach (var subdir in Directory.EnumerateDirectories(rootFolder)) {
                 var texturesDbdSub = Path.Combine(subdir, "textures", "dbd");
@@ -186,7 +206,7 @@ namespace DBDStudio.Core.Services
         /// <param name="configFile">The configuration file to read the texture pack from.</param>
         /// <param name="origin">The origin of the texture pack.</param>
         /// <returns>A TexturePack instance if successful; otherwise, null.</returns>
-        private TexturePack? TryReadPackFromConfig(FileInfo configFile, TexturePackOrigin origin)
+        private TexturePack? TryReadPackFromConfig(FileInfo configFile)
         {
             try {
                 var configDirectory = configFile.Directory?.FullName;
@@ -201,7 +221,7 @@ namespace DBDStudio.Core.Services
                 }
 
                 var uid = config.Uid is not null && Guid.TryParse(config.Uid, out var guid) ? guid : Guid.NewGuid();
-                var pack = new TexturePack(guid: uid, origin: origin) {
+                var pack = new TexturePack(guid: uid) {
                     Name = config.Name?.Trim() ?? "???",
                     Description = config.Description?.Trim() ?? string.Empty,
                 };
@@ -230,6 +250,8 @@ namespace DBDStudio.Core.Services
             return null;
         }
 
+        // TODO: See if this can be simplified. Currently we have TexturePack.cs, this struct here and the Mirror in Workspace Settings
+        // Look into using a single source of truth for the config file and the in-memory representation of a texture pack.
         private sealed class TexturePackConfig
         {
             public string? Uid { get; init; }

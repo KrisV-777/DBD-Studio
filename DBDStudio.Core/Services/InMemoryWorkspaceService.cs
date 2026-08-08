@@ -85,12 +85,12 @@ namespace DBDStudio.Core.Services
             target.TexturePacks.Clear();
             foreach (var texturePackSnapshot in snapshot.TexturePacks)
             {
-                var pack = new TexturePack(guid: texturePackSnapshot.Uid, origin: TexturePackOrigin.Workspace)
+                var pack = new TexturePack(guid: texturePackSnapshot.Uid)
                 {
                     Name = texturePackSnapshot.Name,
                     Description = texturePackSnapshot.Description,
                     Visibility = texturePackSnapshot.Visibility,
-                    LastUpdatedUtc = texturePackSnapshot.LastUpdatedUtc
+                    // LastUpdatedUtc = texturePackSnapshot.LastUpdatedUtc
                 };
 
                 foreach (var mappingSnapshot in texturePackSnapshot.Mappings)
@@ -167,7 +167,7 @@ namespace DBDStudio.Core.Services
                         Name = pack.Name,
                         Description = pack.Description,
                         Visibility = pack.Visibility,
-                        LastUpdatedUtc = pack.LastUpdatedUtc,
+                        // LastUpdatedUtc = pack.LastUpdatedUtc,
                         Mappings = pack.Mappings.Select(mapping => new TextureMappingSnapshot
                         {
                             VanillaTexture = mapping.VanillaTexture,
@@ -200,7 +200,7 @@ namespace DBDStudio.Core.Services
             public string Name { get; init; } = string.Empty;
             public string Description { get; init; } = string.Empty;
             public TexturePackVisibility Visibility { get; init; }
-            public DateTimeOffset LastUpdatedUtc { get; init; } = DateTimeOffset.MinValue;
+            // public DateTimeOffset LastUpdatedUtc { get; init; } = DateTimeOffset.MinValue;
             public List<TextureMappingSnapshot> Mappings { get; init; } = [];
         }
 

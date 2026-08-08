@@ -208,8 +208,10 @@ namespace DBDStudio.ViewModels
                 return;
             }
 
-            var hasReferenceCondition = SelectedRule.Conditions.Any(c => c.Type.Equals("ReferenceID", StringComparison.OrdinalIgnoreCase));
-            var hasActorBaseCondition = SelectedRule.Conditions.Any(c => c.Type.Equals("ActorBase", StringComparison.OrdinalIgnoreCase));
+            var hasReferenceCondition = SelectedRule.Conditions.Any(c =>
+                string.Equals(c?.Type, "ReferenceID", StringComparison.OrdinalIgnoreCase));
+            var hasActorBaseCondition = SelectedRule.Conditions.Any(c =>
+                string.Equals(c?.Type, "ActorBase", StringComparison.OrdinalIgnoreCase));
             RaceMenuAssignmentWarning = hasReferenceCondition || hasActorBaseCondition
                 ? string.Empty
                 : "RaceMenu presets require either:\n- ReferenceID condition\n- ActorBase condition";

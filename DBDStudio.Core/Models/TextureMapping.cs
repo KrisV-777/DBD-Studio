@@ -30,6 +30,7 @@ namespace DBDStudio.Core.Models
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public TextureMapping Clone() => (TextureMapping)MemberwiseClone();
+
         public override bool Equals(object? obj)
         {
             if (obj is not TextureMapping other) {
@@ -39,10 +40,7 @@ namespace DBDStudio.Core.Models
             return _vanillaTexture == other._vanillaTexture;
         }
 
-        public override int GetHashCode()
-        {
-            return _vanillaTexture.GetHashCode();
-        }
+        public override int GetHashCode() => _vanillaTexture.GetHashCode();
 
         private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {

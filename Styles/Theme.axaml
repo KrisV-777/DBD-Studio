@@ -1,0 +1,81 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="/Styles/Theme/Light.axaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="/Styles/Theme/Dark.axaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Default">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="/Styles/Theme/Dark.axaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- State background in pack list items -->
+    <Style Selector="Border.pack-state.disk">
+        <Setter Property="Background" Value="{DynamicResource TexturePackDiskListBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.pack-state.diskedited">
+        <Setter Property="Background" Value="{DynamicResource TexturePackDiskEditedListBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.pack-state.ephemeral">
+        <Setter Property="Background" Value="{DynamicResource TexturePackEphemeralListBackgroundBrush}" />
+    </Style>
+
+    <!-- State dot in pack list items -->
+    <Style Selector="Ellipse.pack-state.disk">
+        <Setter Property="Fill" Value="{DynamicResource TexturePackDiskAccentBrush}" />
+    </Style>
+
+    <Style Selector="Ellipse.pack-state.diskedited">
+        <Setter Property="Fill" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
+    </Style>
+
+    <Style Selector="Ellipse.pack-state.ephemeral">
+        <Setter Property="Fill" Value="{DynamicResource TexturePackEphemeralAccentBrush}" />
+    </Style>
+
+    <!-- Selected pack badge -->
+    <Style Selector="Border#PackStateBadge.pack-state.disk">
+        <Setter Property="Background" Value="{DynamicResource TexturePackDiskBadgeBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border#PackStateBadge.pack-state.diskedited">
+        <Setter Property="Background" Value="{DynamicResource TexturePackDiskEditedBadgeBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border#PackStateBadge.pack-state.ephemeral">
+        <Setter Property="Background" Value="{DynamicResource TexturePackEphemeralBadgeBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#PackStateLabel.pack-state.disk">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#PackStateLabel.pack-state.diskedited">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#PackStateLabel.pack-state.ephemeral">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackEphemeralAccentBrush}" />
+    </Style>
+
+    <!-- Reset icon color for edited packs -->
+    <Style Selector="Button#ResetSelectedPackButton.pack-state.diskedited">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
+    </Style>
+</Styles>

@@ -1,0 +1,77 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================================================
+         General application colors
+         ============================================================ -->
+
+    <SolidColorBrush x:Key="AppBackgroundBrush"
+        Color="#1E1E1E" />
+
+    <SolidColorBrush x:Key="PanelBackgroundBrush"
+        Color="#252526" />
+
+    <SolidColorBrush x:Key="PanelBorderBrush"
+        Color="#3F3F46" />
+
+    <SolidColorBrush x:Key="PrimaryTextBrush"
+        Color="#F1F1F1" />
+
+    <SolidColorBrush x:Key="SecondaryTextBrush"
+        Color="#B8B8B8" />
+
+    <SolidColorBrush x:Key="MutedTextBrush"
+        Color="#858585" />
+
+    <!-- ============================================================
+         Status colors
+         ============================================================ -->
+
+    <SolidColorBrush x:Key="ErrorBrush"
+        Color="#F48771" />
+
+    <SolidColorBrush x:Key="WarningBrush"
+        Color="#E3A34A" />
+
+    <SolidColorBrush x:Key="SuccessBrush"
+        Color="#70C477" />
+
+
+    <!-- ============================================================
+         Texture pack states
+         ============================================================ -->
+
+        <!-- Normal pack loaded from disk -->
+        <SolidColorBrush x:Key="TexturePackDiskAccentBrush"
+            Color="#2D6FA8" />
+
+        <SolidColorBrush x:Key="TexturePackDiskListBackgroundBrush"
+            Color="#1465A9DD" />
+
+        <SolidColorBrush x:Key="TexturePackDiskBadgeBackgroundBrush"
+            Color="#243D8FD9" />
+
+
+        <!-- Pack modified in the workspace -->
+        <SolidColorBrush x:Key="TexturePackDiskEditedAccentBrush"
+            Color="#2E7D32" />
+
+        <SolidColorBrush x:Key="TexturePackDiskEditedListBackgroundBrush"
+            Color="#1470C477" />
+
+        <SolidColorBrush x:Key="TexturePackDiskEditedBadgeBackgroundBrush"
+            Color="#2438A169" />
+
+
+        <!-- Pack that only exists in the workspace -->
+        <SolidColorBrush x:Key="TexturePackEphemeralAccentBrush"
+            Color="#C67A16" />
+
+        <SolidColorBrush x:Key="TexturePackEphemeralListBackgroundBrush"
+            Color="#14E3A34A" />
+
+        <SolidColorBrush x:Key="TexturePackEphemeralBadgeBackgroundBrush"
+            Color="#24D2891F" />
+
+</ResourceDictionary>

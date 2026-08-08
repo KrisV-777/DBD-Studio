@@ -1,14 +1,16 @@
 <Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:icons="using:FluentIcons.Avalonia"
-             x:Class="DBDStudio.App"
-             RequestedThemeVariant="Default">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icons="using:FluentIcons.Avalonia"
+    xmlns:converters="using:DBDStudio.Converters"
+    x:Class="DBDStudio.App"
+    RequestedThemeVariant="Default">
 
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
         <StyleInclude Source="/Styles/Icon.axaml" />
         <StyleInclude Source="/Styles/Font.axaml" />
+        <StyleInclude Source="/Styles/Theme.axaml" />
     </Application.Styles>
 
     <Application.Resources>
@@ -17,5 +19,7 @@
         <x:Double x:Key="H2FontSize">18</x:Double>
         <x:Double x:Key="CaptionFontSize">12</x:Double>
         <x:Double x:Key="TinyFontSize">10</x:Double>
+
+        <converters:TexturePackStateClassConverter x:Key="TexturePackStateClassConverter" />
     </Application.Resources>
 </Application>

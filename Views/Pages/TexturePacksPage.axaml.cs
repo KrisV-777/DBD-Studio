@@ -1,7 +1,11 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 using DBDStudio.ViewModels;
 
@@ -152,6 +156,105 @@ namespace DBDStudio.Views.Pages
 
             viewModel.SelectedMapping = mapping;
             viewModel.DeleteMappingCommand.Execute(null);
+        }
+
+        private async void OnDeleteSelectedPackClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
+            var selectedPack = viewModel.SelectedPack;
+
+            System.Diagnostics.Debug.Assert(selectedPack is not null);
+            System.Diagnostics.Debug.Assert(viewModel.SelectedPackState == TexturePackState.Ephemeral);
+
+            if (selectedPack.Mappings.Count > 0) {
+                var shouldDelete = await ShowConfirmationDialogAsync(
+                    "Delete Texture Pack",
+                    $"'{selectedPack.Name}' contains {selectedPack.Mappings.Count} mapping(s).\n\nDelete this workspace pack anyway?",
+                    "Delete",
+                    "Cancel");
+
+                if (!shouldDelete) {
+                    return;
+                }
+            }
+
+            viewModel.DeletePackCommand.Execute(null);
+        }
+
+        private void OnResetSelectedPackClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not TexturePacksViewModel viewModel) return;
+            System.Diagnostics.Debug.Assert(viewModel.SelectedPack is not null);
+            System.Diagnostics.Debug.Assert(viewModel.SelectedPackState == TexturePackState.DiskEdited);
+
+            viewModel.ResetPackCommand.Execute(null);
+        }
+
+        private async Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText, string cancelText)
+        {
+            var owner = TopLevel.GetTopLevel(this) as Window;
+            if (owner is null) {
+                return false;
+            }
+
+            var cancelButton = new Button
+            {
+                Content = cancelText,
+                MinWidth = 90,
+                IsDefault = true
+            };
+
+            var confirmButton = new Button
+            {
+                Content = confirmText,
+                MinWidth = 90,
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.Parse("#D13438"))
+            };
+
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 420,
+                CanResize = false,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false,
+                WindowDecorations = WindowDecorations.BorderOnly,
+                Content = new Border
+                {
+                    Padding = new Thickness(18),
+                    Child = new StackPanel
+                    {
+                        Spacing = 16,
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = message,
+                                TextWrapping = TextWrapping.Wrap,
+                                FontSize = 14
+                            },
+                            new StackPanel
+                            {
+                                Orientation = Orientation.Horizontal,
+                                HorizontalAlignment = HorizontalAlignment.Right,
+                                Spacing = 8,
+                                Children =
+                                {
+                                    cancelButton,
+                                    confirmButton
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            cancelButton.Click += (_, _) => dialog.Close(false);
+            confirmButton.Click += (_, _) => dialog.Close(true);
+
+            return await dialog.ShowDialog<bool>(owner);
         }
     }
 

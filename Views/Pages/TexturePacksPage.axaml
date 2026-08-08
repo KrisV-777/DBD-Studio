@@ -42,16 +42,36 @@
                             <fluent:SymbolIcon Symbol="Copy" />
                         </Button>
 
-                        <Button Command="{Binding DeletePackCommand}"
+                        <Button Click="OnDeleteSelectedPackClick"
+                            IsVisible="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
                             ToolTip.Tip="Delete selected pack"
                             Classes="icon"
                             Foreground="#D13438">
                             <fluent:SymbolIcon Symbol="Delete" />
                         </Button>
+
+                        <Button IsVisible="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                            ToolTip.Tip="File packs are read-only and cannot be deleted"
+                            IsEnabled="False"
+                            Classes="icon"
+                            Opacity="0.45">
+                            <fluent:SymbolIcon Symbol="ArrowUndo" />
+                        </Button>
+
+                        <Button Click="OnResetSelectedPackClick"
+                            IsVisible="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                            ToolTip.Tip="Reset edited pack to its original file state"
+                            Classes.icon="True"
+                            Classes.pack-state="True"
+                            Classes.ephemeral="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                            Classes.disk="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                            Classes.diskedited="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                            Name="ResetSelectedPackButton">
+                            <fluent:SymbolIcon Symbol="ArrowUndo" />
+                        </Button>
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Pack List -->
                 <ListBox Grid.Row="1"
                     Margin="8,0"
                     ItemsSource="{Binding Packs}"
@@ -59,30 +79,51 @@
 
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="Auto,*"
-                                Margin="4,2">
 
-                                <StackPanel Grid.Column="0"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center">
+                            <Border Margin="4,2"
+                                Padding="6,4"
+                                CornerRadius="6"
+                                Classes.pack-state="True"
+                                Classes.ephemeral="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                                Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}">
 
-                                    <fluent:SymbolIcon
-                                        Symbol="Globe"
-                                        FontSize="{DynamicResource CaptionFontSize}"
-                                        IsVisible="{Binding !IsPrivate}" />
+                                <Grid ColumnDefinitions="Auto,*,Auto">
 
-                                    <fluent:SymbolIcon
-                                        Symbol="LockClosed"
-                                        FontSize="{DynamicResource CaptionFontSize}"
-                                        IsVisible="{Binding IsPrivate}" />
-                                </StackPanel>
+                                    <StackPanel Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,6,0">
 
-                                <TextBlock Grid.Column="1"
-                                    Text="{Binding Name}"
-                                    Classes="default"
-                                    Padding="6,4"
-                                    TextTrimming="CharacterEllipsis" />
-                            </Grid>
+                                        <fluent:SymbolIcon Symbol="Globe"
+                                            FontSize="{DynamicResource CaptionFontSize}"
+                                            IsVisible="{Binding !IsPrivate}" />
+
+                                        <fluent:SymbolIcon Symbol="LockClosed"
+                                            FontSize="{DynamicResource CaptionFontSize}"
+                                            IsVisible="{Binding IsPrivate}" />
+
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="1"
+                                        Text="{Binding Name}"
+                                        Classes="default"
+                                        Padding="0,2"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <Ellipse Grid.Column="2"
+                                        Width="8"
+                                        Height="8"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,0,0"
+                                        Classes.pack-state="True"
+                                        Classes.ephemeral="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                        Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                                        Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                                        IsVisible="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=!is-disk}" />
+
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -137,9 +178,18 @@
                                 Padding="8,2"
                                 CornerRadius="10"
                                 VerticalAlignment="Center"
-                                Background="{DynamicResource SystemAccentColorLight2}">
-                                <TextBlock Text="{Binding SelectedPack.OriginLabel}"
-                                    Classes="caption"
+                                Name="PackStateBadge"
+                                Classes.pack-state="True"
+                                Classes.ephemeral="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                                Classes.diskedited="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}">
+                                <TextBlock Text="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=label}"
+                                    Name="PackStateLabel"
+                                    Classes.pack-state="True"
+                                    Classes.ephemeral="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                    Classes.disk="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                                    Classes.diskedited="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                                    FontSize="{DynamicResource CaptionFontSize}"
                                     FontWeight="SemiBold" />
                             </Border>
                         </StackPanel>
@@ -237,7 +287,8 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Replacement Texture (textures/dbd/&lt;profile&gt;/...)"
+                        <DataGridTemplateColumn
+                            Header="Replacement Texture (textures/dbd/&lt;profile&gt;/...)"
                             Width="*">
 
                             <DataGridTemplateColumn.CellTemplate>

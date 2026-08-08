@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using DBDStudio.Core.Collections;
@@ -13,27 +14,14 @@ namespace DBDStudio.Core.Models
         Public,
         /// <summary>The texture pack is hidden and excluded from random selection.</summary>
         Private
-    }
-
-    /// <summary>
-    /// Defines the origin or storage location of a texture pack.
-    /// </summary>
-    public enum TexturePackOrigin
-    {
-        /// <summary>The texture pack is stored in the workspace.</summary>
-        Workspace,
-        /// <summary>The texture pack is sourced from the mods folder.</summary>
-        ModsFolder,
-        /// <summary>The texture pack is sourced from the game data folder.</summary>
-        GameDataFolder,
-    }
+    } // TODO: remove ^^^^^^^^^
 
     /// <summary>
     /// Represents a texture pack containing texture mappings and metadata.
     /// </summary>
     /// <remarks>
-    /// This class automatically tracks modifications by updating <see cref="LastUpdatedUtc"/> and marking the <see cref="Origin"/> as <see cref="TexturePackOrigin.Workspace"/>
-    /// whenever any user-editable property changes. Computed properties (e.g., <see cref="IsPrivate"/>, <see cref="LastUpdatedLocal"/>) are automatically notified
+    /// This class automatically tracks modifications by updating <see cref="LastUpdatedUtc"/> whenever any user-editable property changes.
+    /// Computed properties (e.g., <see cref="IsPrivate"/>, <see cref="LastUpdatedLocal"/>) are automatically notified
     /// when their dependencies change, ensuring UI bindings remain in sync.
     /// </remarks>
     public sealed class TexturePack : INotifyPropertyChanged, IEquatable<TexturePack>
@@ -43,9 +31,8 @@ namespace DBDStudio.Core.Models
 
         private string _name = string.Empty;
         private string _description = string.Empty;
-        private TexturePackVisibility _visibility;
+        private TexturePackVisibility _visibility; // TODO: Remove this, just replace with a single boolean
         private DateTimeOffset _lastUpdatedUtc = DateTimeOffset.MinValue;
-        private readonly TexturePackOrigin _origin = TexturePackOrigin.Workspace;
 
         #endregion
 
@@ -60,7 +47,6 @@ namespace DBDStudio.Core.Models
         /// <summary>
         /// Gets or sets the name of the texture pack.
         /// </summary>
-        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackOrigin.Workspace"/>.</remarks>
         public string Name
         {
             get => _name;
@@ -70,7 +56,6 @@ namespace DBDStudio.Core.Models
         /// <summary>
         /// Gets or sets the description of the texture pack.
         /// </summary>
-        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackOrigin.Workspace"/>.</remarks>
         public string Description
         {
             get => _description;
@@ -80,8 +65,7 @@ namespace DBDStudio.Core.Models
         /// <summary>
         /// Gets or sets the visibility level of the texture pack.
         /// </summary>
-        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackOrigin.Workspace"/>.
-        /// Changing this value also triggers notifications for <see cref="IsPrivate"/> and <see cref="AllowRandomSelection"/>.</remarks>
+        /// <remarks>Changing this value also updates <see cref="IsPrivate"/> and <see cref="AllowRandomSelection"/>.</remarks>
         public TexturePackVisibility Visibility
         {
             get => _visibility;
@@ -98,11 +82,9 @@ namespace DBDStudio.Core.Models
             set
             {
                 var newVisibility = value ? TexturePackVisibility.Private : TexturePackVisibility.Public;
-                if (Visibility == newVisibility) {
-                    return;
+                if (Visibility != newVisibility) {
+                    Visibility = newVisibility;
                 }
-
-                Visibility = newVisibility;
             }
         }
 
@@ -117,33 +99,13 @@ namespace DBDStudio.Core.Models
         /// </summary>
         /// <remarks>This property is automatically updated whenever any other property changes.
         /// Setting this property directly also triggers a notification for <see cref="LastUpdatedLocal"/>.</remarks>
-        public DateTimeOffset LastUpdatedUtc
-        {
-            get => _lastUpdatedUtc;
-            set => SetProperty(ref _lastUpdatedUtc, value);
-        }
+        public DateTimeOffset LastUpdatedUtc => _lastUpdatedUtc;
 
         /// <summary>
         /// Gets the date and time when the texture pack was last updated, converted to local time.
         /// </summary>
         /// <remarks>This is a computed property derived from <see cref="LastUpdatedUtc"/>.</remarks>
         public DateTimeOffset LastUpdatedLocal => LastUpdatedUtc.ToLocalTime();
-
-        /// <summary>
-        /// Gets or sets the origin of the texture pack.
-        /// </summary>
-        public TexturePackOrigin Origin => _origin;
-
-        /// <summary>
-        /// Gets a human-readable label for the current <see cref="Origin"/>.
-        /// </summary>
-        public string OriginLabel => Origin switch
-        {
-            TexturePackOrigin.Workspace => "Workspace",
-            TexturePackOrigin.ModsFolder => "Mods Folder",
-            TexturePackOrigin.GameDataFolder => "Game Data",
-            _ => "Unknown"
-        };
 
         /// <summary>
         /// Gets the collection of texture mappings contained within this texture pack.
@@ -167,31 +129,42 @@ namespace DBDStudio.Core.Models
         /// Initializes a new instance of the <see cref="TexturePack"/> class.
         /// </summary>
         /// <param name="guid"> An optional unique identifier (GUID) for the texture pack. If omitted, a new GUID is generated.</param>
-        /// <param name="origin">The optional origin of the texture pack. Defaults to <see cref="TexturePackOrigin.Workspace"/>.</param>
         /// <remarks>Subscribes to the <see cref="PropertyChanged"/> event to handle automatic updates of timestamp and source tracking.</remarks>
-        public TexturePack(Guid? guid = null, TexturePackOrigin? origin = null)
+        public TexturePack(Guid? guid = null)
         {
             _uid = guid ?? Guid.NewGuid();
-            _origin = origin ?? TexturePackOrigin.Workspace;
             PropertyChanged += OnPropertyChanged;
+            Mappings.CollectionChanged += OnPackMappingsCollectionChanged;
         }
-
-        #endregion
-
-        #region Public Methods
 
         /// <summary>
-        /// Creates a deep copy of the current <see cref="TexturePack"/> instance, including all texture mappings.
+        /// Copy constructor that creates a new <see cref="TexturePack"/> instance by copying the properties and mappings from an existing instance.
+        /// </summary>
+        /// <param name="source">The source <see cref="TexturePack"/> instance to copy from.</param>
+        private TexturePack(TexturePack source, Guid? guid = null) : this(guid ?? source._uid)
+        {
+            _name = source._name;
+            _description = source._description;
+            _visibility = source._visibility;
+
+            foreach (var mapping in source.Mappings)
+                Mappings.Add(mapping.Clone());
+
+            // Must be last: Mappings.Add fires PropertyChanged which overwrites _lastUpdatedUtc
+            _lastUpdatedUtc = source._lastUpdatedUtc;
+        }
+        
+        /// <summary>
+        /// Creates a deep copy of the current <see cref="TexturePack"/> instance, including all properties and mappings.
         /// </summary>
         /// <returns>A new <see cref="TexturePack"/> instance that is a deep copy of the current instance.</returns>
-        public TexturePack Clone()
-        {
-            var clone = (TexturePack)MemberwiseClone();
-            foreach (var mapping in Mappings) {
-                clone.Mappings.Add(mapping.Clone());
-            }
-            return clone;
-        }
+        public TexturePack Clone() => new(this);
+
+        /// <summary>
+        /// Creates a copy of the current <see cref="TexturePack"/> instance with a new unique identifier (GUID).
+        /// </summary>
+        /// <returns>A new <see cref="TexturePack"/> instance that is a copy of the current instance with a new unique identifier (GUID).</returns>
+        public TexturePack Copy() => new(this, Guid.NewGuid());
 
         #endregion
 
@@ -229,33 +202,34 @@ namespace DBDStudio.Core.Models
         /// <param name="e">The event arguments containing the name of the property that changed.</param>
         private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            switch (e.PropertyName)
-            {
-                // Notify computed properties when their dependencies change
-                case nameof(Visibility):
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPrivate)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AllowRandomSelection)));
-                    return;
+            switch (e.PropertyName) {
+            // Notify computed properties when their dependencies change
+            case nameof(Visibility):
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPrivate)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AllowRandomSelection)));
+                break;
 
-                case nameof(LastUpdatedUtc):
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastUpdatedLocal)));
-                    return;
+            // Return after UTC timestamp changes to avoid running into infinite recursion
+            case nameof(LastUpdatedUtc):
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastUpdatedLocal)));
+                return;
 
-                case nameof(Origin):
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OriginLabel)));
-                    return;
-
-                // Skip computed properties to avoid triggering auto-update logic
-                case nameof(IsPrivate):
-                case nameof(AllowRandomSelection):
-                case nameof(LastUpdatedLocal):
-                case nameof(OriginLabel):
-                    return;
+            case nameof(IsPrivate):
+            case nameof(AllowRandomSelection):
+            case nameof(LastUpdatedLocal):
+                return;
             }
 
             // Auto-update LastUpdatedUtc and Source when any user-editable property changes
             _lastUpdatedUtc = DateTimeOffset.UtcNow;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastUpdatedUtc)));
+        }
+
+        private void OnPackMappingsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            e.OldItems?.OfType<TextureMapping>().ToList().ForEach(mapping => mapping.PropertyChanged -= OnPropertyChanged);
+            e.NewItems?.OfType<TextureMapping>().ToList().ForEach(mapping => mapping.PropertyChanged += OnPropertyChanged);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Mappings)));
         }
 
         #endregion

@@ -1,6 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO.Compression;
 using System.Windows.Input;
+using DBDStudio.Core.Collections;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 using YamlDotNet.Serialization;
@@ -22,9 +25,19 @@ namespace DBDStudio.ViewModels
             get => _selectedPack;
             set
             {
-                if (!SetField(ref _selectedPack, value))
+                if (ReferenceEquals(_selectedPack, value))
                     return;
+                _selectedPack?.PropertyChanged -= OnPackPropertyChanged;
+                var prev = _selectedPack;
+                _selectedPack = value;
+                _selectedPack?.PropertyChanged += OnPackPropertyChanged;
+                if (Equals(prev, value)) {
+                    // Same Uid, different instance: subscription updated, no UI change needed
+                    return;
+                }
+                OnPropertyChanged(nameof(SelectedPack));
                 SelectedMapping = null;
+                RefreshCommandStates();
             }
         }
 
@@ -34,9 +47,13 @@ namespace DBDStudio.ViewModels
             set => SetField(ref _selectedMapping, value);
         }
 
+        public TexturePackState SelectedPackState => SelectedPack is not null ? _texturePackService.GetTexturePackState(SelectedPack) : TexturePackState.None;
+
+
         public ICommand AddPackCommand { get; }
         public ICommand DuplicatePackCommand { get; }
         public ICommand DeletePackCommand { get; }
+        public ICommand ResetPackCommand { get; }
         public ICommand AddMappingCommand { get; }
         public ICommand DeleteMappingCommand { get; }
         public ICommand RemoveMappingCommand { get; }
@@ -47,7 +64,8 @@ namespace DBDStudio.ViewModels
             _mainWindowViewModel = mainWindowViewModel;
             AddPackCommand = new RelayCommand(() => AddPack(null));
             DuplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
-            DeletePackCommand = new RelayCommand(DeletePack, () => SelectedPack is not null);
+            DeletePackCommand = new RelayCommand(DeletePack, () => SelectedPackState == TexturePackState.Ephemeral);
+            ResetPackCommand = new RelayCommand(ResetPack, () => SelectedPackState == TexturePackState.DiskEdited);
             AddMappingCommand = new RelayCommand(AddMapping, () => SelectedPack is not null);
             DeleteMappingCommand = new RelayCommand(DeleteMapping, () => SelectedPack is not null && SelectedMapping is not null);
             RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
@@ -59,14 +77,14 @@ namespace DBDStudio.ViewModels
 
         private void ReloadFromService()
         {
-            var selectedPackName = SelectedPack?.Name;
+            var selectedPackUid = SelectedPack?.Uid;
 
             Packs.Clear();
             foreach (var pack in _texturePackService.GetTexturePacks())
                 Packs.Add(pack);
 
-            if (!string.IsNullOrWhiteSpace(selectedPackName))
-                SelectedPack = Packs.FirstOrDefault(pack => string.Equals(pack.Name, selectedPackName, StringComparison.OrdinalIgnoreCase));
+            if (selectedPackUid is not null)
+                SelectedPack = Packs.FirstOrDefault(pack => pack.Uid == selectedPackUid);
             SelectedPack ??= Packs.Count > 0 ? Packs[0] : null;
             RefreshCommandStates();
         }
@@ -82,17 +100,19 @@ namespace DBDStudio.ViewModels
             ((RelayCommand)AddPackCommand).RaiseCanExecuteChanged();
             ((RelayCommand)DuplicatePackCommand).RaiseCanExecuteChanged();
             ((RelayCommand)DeletePackCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)ResetPackCommand).RaiseCanExecuteChanged();
             ((RelayCommand)AddMappingCommand).RaiseCanExecuteChanged();
             ((RelayCommand)DeleteMappingCommand).RaiseCanExecuteChanged();
             ((RelayCommand)RemoveMappingCommand).RaiseCanExecuteChanged();
+
+            OnPropertyChanged(nameof(SelectedPackState));
         }
 
         private void AddPack(TexturePack? pack = null)
         {
-            pack ??= new TexturePack { Name = "New Pack", LastUpdatedUtc = DateTimeOffset.UtcNow };
+            pack ??= new TexturePack { Name = "New Pack" };
             _texturePackService.Add(pack);
             SelectedPack = pack;
-            RefreshCommandStates();
         }
 
         public void PopulatePackFromFolder(string folderPath, TexturePack? pack = null)
@@ -110,9 +130,9 @@ namespace DBDStudio.ViewModels
             }
 
             var isAddingTextures = pack is not null;
-            pack ??= new TexturePack { Name = rootDirectory.Name, LastUpdatedUtc = DateTimeOffset.UtcNow };
+            pack ??= new TexturePack { Name = rootDirectory.Name };
             try {
-                pack.LastUpdatedUtc = DateTimeOffset.UtcNow;
+                // pack.LastUpdatedUtc = DateTimeOffset.UtcNow;
                 // Only search within the textures directory for performance (avoids scanning unrelated files in root)
                 var files = texturesDirectory.GetFiles("*.dds", SearchOption.AllDirectories);
                 var numMappings = pack.Mappings.Count;
@@ -152,28 +172,37 @@ namespace DBDStudio.ViewModels
         {
             if (SelectedPack is null)
                 return;
-
-            var clone = SelectedPack.Clone();
-            AddPack(clone);
+            AddPack(SelectedPack.Copy());
         }
 
         private void DeletePack()
         {
-            if (SelectedPack is null)
-                return;
+            System.Diagnostics.Debug.Assert(SelectedPack is not null);
+            System.Diagnostics.Debug.Assert(SelectedPackState == TexturePackState.Ephemeral);
+
             var currentIndex = Packs.IndexOf(SelectedPack);
             _texturePackService.Remove(SelectedPack);
             SelectedPack = Packs.Count > 0 ? Packs[Math.Clamp(currentIndex, 0, Packs.Count - 1)] : null;
+        }
+
+        private void ResetPack()
+        {
+            System.Diagnostics.Debug.Assert(SelectedPack is not null);
+            System.Diagnostics.Debug.Assert(SelectedPackState == TexturePackState.DiskEdited);
+
+            var uid = SelectedPack.Uid;
+            _texturePackService.ResetToDiskState(SelectedPack);
+            SelectedPack = Packs.FirstOrDefault(pack => pack.Uid == uid);
         }
 
         private void AddMapping()
         {
             if (SelectedPack is null)
                 return;
-            SelectedPack.LastUpdatedUtc = DateTimeOffset.UtcNow;
             var mapping = new TextureMapping {
                 VanillaTexture = "",
-                ReplacementTexture = ""
+                ReplacementTexture = "",
+                SourcePath = ""
             };
             if (SelectedPack.Mappings.Contains(mapping)) {
                 System.Diagnostics.Debug.WriteLine("Skipping default mapping addition because a mapping with the same VanillaTexture already exists.");
@@ -187,7 +216,6 @@ namespace DBDStudio.ViewModels
         {
             if (SelectedPack is null || SelectedMapping is null)
                 return;
-            SelectedPack.LastUpdatedUtc = DateTimeOffset.UtcNow;
             SelectedPack.Mappings.Remove(SelectedMapping);
             SelectedMapping = null;
         }
@@ -196,7 +224,6 @@ namespace DBDStudio.ViewModels
         {
             if (SelectedPack is null || SelectedMapping is null)
                 return;
-            SelectedPack.LastUpdatedUtc = DateTimeOffset.UtcNow;
             SelectedPack.Mappings.Remove(SelectedMapping);
             SelectedMapping = null;
         }
@@ -214,10 +241,17 @@ namespace DBDStudio.ViewModels
             texturesIndex += "textures".Length + 2;
 
             var relativePath = filePath[texturesIndex..].Replace("\\", "/");
-            SelectedPack?.LastUpdatedUtc = DateTimeOffset.UtcNow;
             mapping.VanillaTexture = relativePath;
             mapping.ReplacementTexture = relativePath;
             mapping.SourcePath = filePath;
+        }
+
+        private void OnPackPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not TexturePack pack || string.IsNullOrWhiteSpace(e.PropertyName))
+                return;
+            _texturePackService.TryAdd(pack);
+            RefreshCommandStates();
         }
 
         public void ExportPack(string outputZipPath)
