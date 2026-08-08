@@ -57,6 +57,9 @@ csharp_style_expression_bodied_indexers = when_on_single_line:suggestion
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
-csharp_prefer_braces = true:suggestion
+csharp_prefer_braces = when_multiline:suggestion
 csharp_style_namespace_declarations = block_scoped:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+
+# IDE0039: Use local function
+csharp_style_prefer_local_over_anonymous_function = false
