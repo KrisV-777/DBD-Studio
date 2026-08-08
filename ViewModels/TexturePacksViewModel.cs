@@ -13,7 +13,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
     private readonly ITexturePackService _texturePackService;
     private readonly MainWindowViewModel _mainWindowViewModel;
     private TexturePack? _selectedPack;
-    private int? _selectedPackIndex;
     private TextureMapping? _selectedMapping;
 
     public ObservableCollection<TexturePack> Packs { get; } = [];
@@ -25,7 +24,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
         {
             if (!SetField(ref _selectedPack, value))
                 return;
-            _selectedPackIndex = null;
             SelectedMapping = null;
         }
     }
@@ -69,9 +67,6 @@ public sealed class TexturePacksViewModel : ViewModelBase
 
         if (!string.IsNullOrWhiteSpace(selectedPackName))
             SelectedPack = Packs.FirstOrDefault(pack => string.Equals(pack.Name, selectedPackName, StringComparison.OrdinalIgnoreCase));
-        if (_selectedPackIndex != null && _selectedPackIndex < Packs.Count) {
-            SelectedPack = Packs[_selectedPackIndex.Value];
-        }
         SelectedPack ??= Packs.Count > 0 ? Packs[0] : null;
         RefreshCommandStates();
     }
@@ -158,24 +153,17 @@ public sealed class TexturePacksViewModel : ViewModelBase
         if (SelectedPack is null)
             return;
 
-        var copy = new TexturePack {
-            Name = SelectedPack.Name + " (Copy)",
-            Description = SelectedPack.Description
-        };
-        foreach (var m in SelectedPack.Mappings)
-            copy.Mappings.Add(new TextureMapping { VanillaTexture = m.VanillaTexture, ReplacementTexture = m.ReplacementTexture, SourcePath = m.SourcePath });
-
-        AddPack(copy);
+        var clone = SelectedPack.Clone();
+        AddPack(clone);
     }
 
     private void DeletePack()
     {
         if (SelectedPack is null)
             return;
-        // If possible, select previous index to not completetly lose context of the current selection when deleting a pack
-        _selectedPackIndex = _selectedPackIndex > 0 ? _selectedPackIndex - 1 : null;
+        var currentIndex = Packs.IndexOf(SelectedPack);
         _texturePackService.Remove(SelectedPack);
-        RefreshCommandStates();
+        SelectedPack = Packs.Count > 0 ? Packs[Math.Clamp(currentIndex, 0, Packs.Count - 1)] : null;
     }
 
     private void AddMapping()

@@ -18,7 +18,7 @@ namespace DBDStudio.Core.Models
     /// <summary>
     /// Defines the origin or storage location of a texture pack.
     /// </summary>
-    public enum TexturePackSource
+    public enum TexturePackOrigin
     {
         /// <summary>The texture pack is stored in the workspace.</summary>
         Workspace,
@@ -32,28 +32,35 @@ namespace DBDStudio.Core.Models
     /// Represents a texture pack containing texture mappings and metadata.
     /// </summary>
     /// <remarks>
-    /// This class automatically tracks modifications by updating <see cref="LastUpdatedUtc"/> and marking the <see cref="Source"/> as <see cref="TexturePackSource.Workspace"/>
+    /// This class automatically tracks modifications by updating <see cref="LastUpdatedUtc"/> and marking the <see cref="Origin"/> as <see cref="TexturePackOrigin.Workspace"/>
     /// whenever any user-editable property changes. Computed properties (e.g., <see cref="IsPrivate"/>, <see cref="LastUpdatedLocal"/>) are automatically notified
     /// when their dependencies change, ensuring UI bindings remain in sync.
     /// </remarks>
-    public sealed class TexturePack : INotifyPropertyChanged
+    public sealed class TexturePack : INotifyPropertyChanged, IEquatable<TexturePack>
     {
         #region Fields
+        private readonly Guid _uid = Guid.NewGuid();
 
         private string _name = string.Empty;
         private string _description = string.Empty;
         private TexturePackVisibility _visibility;
         private DateTimeOffset _lastUpdatedUtc = DateTimeOffset.MinValue;
-        private TexturePackSource _source = TexturePackSource.Workspace;
+        private readonly TexturePackOrigin _origin = TexturePackOrigin.Workspace;
 
         #endregion
 
         #region Properties
 
         /// <summary>
+        /// Gets the unique identifier (GUID) of the texture pack.
+        /// </summary>
+        /// <remarks>This property is read-only and is automatically generated when the texture pack is created.</remarks>
+        public Guid Uid => _uid;
+
+        /// <summary>
         /// Gets or sets the name of the texture pack.
         /// </summary>
-        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackSource.Workspace"/>.</remarks>
+        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackOrigin.Workspace"/>.</remarks>
         public string Name
         {
             get => _name;
@@ -63,7 +70,7 @@ namespace DBDStudio.Core.Models
         /// <summary>
         /// Gets or sets the description of the texture pack.
         /// </summary>
-        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackSource.Workspace"/>.</remarks>
+        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackOrigin.Workspace"/>.</remarks>
         public string Description
         {
             get => _description;
@@ -73,7 +80,7 @@ namespace DBDStudio.Core.Models
         /// <summary>
         /// Gets or sets the visibility level of the texture pack.
         /// </summary>
-        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackSource.Workspace"/>.
+        /// <remarks>Setting this property automatically updates <see cref="LastUpdatedUtc"/> and marks the source as <see cref="TexturePackOrigin.Workspace"/>.
         /// Changing this value also triggers notifications for <see cref="IsPrivate"/> and <see cref="AllowRandomSelection"/>.</remarks>
         public TexturePackVisibility Visibility
         {
@@ -123,25 +130,18 @@ namespace DBDStudio.Core.Models
         public DateTimeOffset LastUpdatedLocal => LastUpdatedUtc.ToLocalTime();
 
         /// <summary>
-        /// Gets or sets the source or origin of the texture pack.
+        /// Gets or sets the origin of the texture pack.
         /// </summary>
-        /// <remarks>This property is automatically set to <see cref="TexturePackSource.Workspace"/> whenever a user-editable property changes.
-        /// Changing this value also triggers a notification for <see cref="SourceLabel"/>.</remarks>
-        public TexturePackSource Source
-        {
-            get => _source;
-            set => SetProperty(ref _source, value);
-        }
+        public TexturePackOrigin Origin => _origin;
 
         /// <summary>
-        /// Gets a human-readable label for the current <see cref="Source"/>.
+        /// Gets a human-readable label for the current <see cref="Origin"/>.
         /// </summary>
-        /// <remarks>This is a computed property that returns "Workspace", "Game Data", or "Unknown" based on the <see cref="Source"/> value.</remarks>
-        public string SourceLabel => Source switch
+        public string OriginLabel => Origin switch
         {
-            TexturePackSource.Workspace => "Workspace",
-            TexturePackSource.ModsFolder => "Mods",
-            TexturePackSource.GameDataFolder => "Game Data",
+            TexturePackOrigin.Workspace => "Workspace",
+            TexturePackOrigin.ModsFolder => "Mods Folder",
+            TexturePackOrigin.GameDataFolder => "Game Data",
             _ => "Unknown"
         };
 
@@ -166,10 +166,31 @@ namespace DBDStudio.Core.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="TexturePack"/> class.
         /// </summary>
+        /// <param name="guid"> An optional unique identifier (GUID) for the texture pack. If omitted, a new GUID is generated.</param>
+        /// <param name="origin">The optional origin of the texture pack. Defaults to <see cref="TexturePackOrigin.Workspace"/>.</param>
         /// <remarks>Subscribes to the <see cref="PropertyChanged"/> event to handle automatic updates of timestamp and source tracking.</remarks>
-        public TexturePack()
+        public TexturePack(Guid? guid = null, TexturePackOrigin? origin = null)
         {
+            _uid = guid ?? Guid.NewGuid();
+            _origin = origin ?? TexturePackOrigin.Workspace;
             PropertyChanged += OnPropertyChanged;
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Creates a deep copy of the current <see cref="TexturePack"/> instance, including all texture mappings.
+        /// </summary>
+        /// <returns>A new <see cref="TexturePack"/> instance that is a deep copy of the current instance.</returns>
+        public TexturePack Clone()
+        {
+            var clone = (TexturePack)MemberwiseClone();
+            foreach (var mapping in Mappings) {
+                clone.Mappings.Add(mapping.Clone());
+            }
+            return clone;
         }
 
         #endregion
@@ -220,28 +241,32 @@ namespace DBDStudio.Core.Models
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastUpdatedLocal)));
                     return;
 
-                case nameof(Source):
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SourceLabel)));
+                case nameof(Origin):
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OriginLabel)));
                     return;
 
                 // Skip computed properties to avoid triggering auto-update logic
                 case nameof(IsPrivate):
                 case nameof(AllowRandomSelection):
                 case nameof(LastUpdatedLocal):
-                case nameof(SourceLabel):
+                case nameof(OriginLabel):
                     return;
             }
 
             // Auto-update LastUpdatedUtc and Source when any user-editable property changes
             _lastUpdatedUtc = DateTimeOffset.UtcNow;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastUpdatedUtc)));
-
-            if (_source != TexturePackSource.Workspace)
-            {
-                _source = TexturePackSource.Workspace;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
-            }
         }
+
+        #endregion
+
+        #region Equality
+
+        public bool Equals(TexturePack? other) => other is not null && _uid == other._uid;
+        public override bool Equals(object? obj) => obj is TexturePack other && Equals(other);
+        public override int GetHashCode() => _uid.GetHashCode();
+        public static bool operator ==(TexturePack? left, TexturePack? right) => left?.Equals(right) ?? right is null;
+        public static bool operator !=(TexturePack? left, TexturePack? right) => !(left == right);
 
         #endregion
     }

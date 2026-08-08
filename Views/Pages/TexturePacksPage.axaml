@@ -138,7 +138,7 @@
                                 CornerRadius="10"
                                 VerticalAlignment="Center"
                                 Background="{DynamicResource SystemAccentColorLight2}">
-                                <TextBlock Text="{Binding SelectedPack.SourceLabel}"
+                                <TextBlock Text="{Binding SelectedPack.OriginLabel}"
                                     Classes="caption"
                                     FontWeight="SemiBold" />
                             </Border>

@@ -29,6 +29,7 @@ namespace DBDStudio.Core.Models
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        public TextureMapping Clone() => (TextureMapping)MemberwiseClone();
         public override bool Equals(object? obj)
         {
             if (obj is not TextureMapping other) {

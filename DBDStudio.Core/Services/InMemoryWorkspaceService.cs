@@ -85,7 +85,7 @@ namespace DBDStudio.Core.Services
             target.TexturePacks.Clear();
             foreach (var texturePackSnapshot in snapshot.TexturePacks)
             {
-                var pack = new TexturePack
+                var pack = new TexturePack(guid: texturePackSnapshot.Uid, origin: TexturePackOrigin.Workspace)
                 {
                     Name = texturePackSnapshot.Name,
                     Description = texturePackSnapshot.Description,
@@ -163,6 +163,7 @@ namespace DBDStudio.Core.Services
                     },
                     TexturePacks = workspace.TexturePacks.Select(pack => new TexturePackSnapshot
                     {
+                        Uid = pack.Uid,
                         Name = pack.Name,
                         Description = pack.Description,
                         Visibility = pack.Visibility,
@@ -195,6 +196,7 @@ namespace DBDStudio.Core.Services
 
         private sealed class TexturePackSnapshot
         {
+            public Guid Uid { get; init; } = Guid.Empty;
             public string Name { get; init; } = string.Empty;
             public string Description { get; init; } = string.Empty;
             public TexturePackVisibility Visibility { get; init; }
