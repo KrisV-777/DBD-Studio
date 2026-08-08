@@ -1,6 +1,7 @@
-﻿namespace DBDStudio.Core;
-
-public class Class1
+﻿namespace DBDStudio.Core
 {
+    public class Class1
+    {
 
+    }
 }

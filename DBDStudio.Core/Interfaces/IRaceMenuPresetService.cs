@@ -1,11 +1,12 @@
 using DBDStudio.Core.Models;
 
-namespace DBDStudio.Core.Interfaces;
-
-public interface IRaceMenuPresetService
+namespace DBDStudio.Core.Interfaces
 {
-    IReadOnlyList<RaceMenuPreset> GetPresets();
-    void Add(RaceMenuPreset preset);
-    void Update(RaceMenuPreset preset);
-    void Remove(RaceMenuPreset preset);
+    public interface IRaceMenuPresetService
+    {
+        IReadOnlyList<RaceMenuPreset> GetPresets();
+        void Add(RaceMenuPreset preset);
+        void Update(RaceMenuPreset preset);
+        void Remove(RaceMenuPreset preset);
+    }
 }

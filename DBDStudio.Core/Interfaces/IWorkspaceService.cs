@@ -1,10 +1,11 @@
 using DBDStudio.Core.Models;
 
-namespace DBDStudio.Core.Interfaces;
-
-public interface IWorkspaceService
+namespace DBDStudio.Core.Interfaces
 {
-    Workspace Current { get; }
-    void Load();
-    void Save();
+    public interface IWorkspaceService
+    {
+        Workspace Current { get; }
+        void Load();
+        void Save();
+    }
 }

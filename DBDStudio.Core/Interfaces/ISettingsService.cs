@@ -1,10 +1,11 @@
 using DBDStudio.Core.Models;
 
-namespace DBDStudio.Core.Interfaces;
-
-public interface ISettingsService
+namespace DBDStudio.Core.Interfaces
 {
-    ApplicationSettings Settings { get; }
-    void Load();
-    void Save();
+    public interface ISettingsService
+    {
+        ApplicationSettings Settings { get; }
+        void Load();
+        void Save();
+    }
 }

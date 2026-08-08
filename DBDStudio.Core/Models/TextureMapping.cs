@@ -1,52 +1,56 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace DBDStudio.Core.Models;
-
-public sealed class TextureMapping : INotifyPropertyChanged
+namespace DBDStudio.Core.Models
 {
-    private string _vanillaTexture = string.Empty;
-    private string _replacementTexture = string.Empty;
-    private string _sourcePath = string.Empty;
-
-    public string VanillaTexture
+    public sealed class TextureMapping : INotifyPropertyChanged
     {
-        get => _vanillaTexture;
-        set => SetProperty(ref _vanillaTexture, value);
-    }
+        private string _vanillaTexture = string.Empty;
+        private string _replacementTexture = string.Empty;
+        private string _sourcePath = string.Empty;
 
-    public string ReplacementTexture
-    {
-        get => _replacementTexture;
-        set => SetProperty(ref _replacementTexture, value);
-    }
+        public string VanillaTexture
+        {
+            get => _vanillaTexture;
+            set => SetProperty(ref _vanillaTexture, value);
+        }
 
-    public string SourcePath
-    {
-        get => _sourcePath;
-        set => SetProperty(ref _sourcePath, value);
-    }
+        public string ReplacementTexture
+        {
+            get => _replacementTexture;
+            set => SetProperty(ref _replacementTexture, value);
+        }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+        public string SourcePath
+        {
+            get => _sourcePath;
+            set => SetProperty(ref _sourcePath, value);
+        }
 
-    public override bool Equals(object? obj)
-    {
-        if (obj is not TextureMapping other)
-            return false;
-        return _vanillaTexture == other._vanillaTexture;
-    }
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-    public override int GetHashCode()
-    {
-        return _vanillaTexture.GetHashCode();
-    }
+        public override bool Equals(object? obj)
+        {
+            if (obj is not TextureMapping other) {
+                return false;
+            }
 
-    private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-            return;
+            return _vanillaTexture == other._vanillaTexture;
+        }
 
-        field = value;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        public override int GetHashCode()
+        {
+            return _vanillaTexture.GetHashCode();
+        }
+
+        private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) {
+                return;
+            }
+
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

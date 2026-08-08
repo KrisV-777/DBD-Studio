@@ -1,9 +1,10 @@
 using DBDStudio.Core.Models;
 
-namespace DBDStudio.Core.Interfaces;
-
-public interface IConditionRegistryService
+namespace DBDStudio.Core.Interfaces
 {
-    IReadOnlyList<ConditionDefinition> GetDefinitions();
-    ConditionDefinition? FindByName(string? name);
+    public interface IConditionRegistryService
+    {
+        IReadOnlyList<ConditionDefinition> GetDefinitions();
+        ConditionDefinition? FindByName(string? name);
+    }
 }
