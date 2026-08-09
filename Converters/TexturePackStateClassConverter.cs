@@ -11,12 +11,12 @@ namespace DBDStudio.Converters
     {
         private static TexturePackState ResolveState(object? value)
         {
-            if (value is TexturePackState texturePackState) {
+            if (value is null) {
+                return TexturePackState.None;
+            } else if (value is TexturePackState texturePackState) {
                 return texturePackState;
             } else if (value is TexturePackData pack) {
                 return pack.State;
-            } else if (value is IRenderedTexturePack renderedPack) {
-                return renderedPack.State;
             }
             Debug.WriteLine($"[TexturePackStateClassConverter] Unrecognized value type: {value?.GetType().FullName ?? "null"}");
             return TexturePackState.None;

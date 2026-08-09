@@ -42,33 +42,50 @@
                             <fluent:SymbolIcon Symbol="Copy" />
                         </Button>
 
-                        <Button Click="OnDeleteSelectedPackClick"
-                            IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                            ToolTip.Tip="Delete selected pack"
-                            Classes="icon"
-                            Foreground="#D13438">
-                            <fluent:SymbolIcon Symbol="Delete" />
-                        </Button>
+                        <!-- if (SelectedPack) ... -->
+                        <StackPanel Orientation="Horizontal"
+                            Spacing="6"
+                            HorizontalAlignment="Right"
+                            IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNotNull}}">
 
-                        <Button IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
-                            ToolTip.Tip="File packs are read-only and cannot be deleted"
+                            <Button Click="OnDeleteSelectedPackClick"
+                                IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                ToolTip.Tip="Delete selected pack"
+                                Classes="icon"
+                                Foreground="#D13438">
+                                <fluent:SymbolIcon Symbol="Delete" />
+                            </Button>
+
+                            <Button
+                                IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                IsEnabled="False"
+                                Classes="icon"
+                                Opacity="0.45">
+                                <fluent:SymbolIcon Symbol="ArrowUndo" />
+                            </Button>
+
+                            <Button Click="OnResetSelectedPackClick"
+                                IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                ToolTip.Tip="Reset edited pack to its original file state"
+                                Classes.icon="True"
+                                Classes.pack-state="True"
+                                Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                Classes.diskedited="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                Name="ResetSelectedPackButton">
+                                <fluent:SymbolIcon Symbol="ArrowUndo" />
+                            </Button>
+                        </StackPanel>
+                        <!-- Else... -->
+                        <Button
+                            IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNull}}"
+                            ToolTip.Tip="No pack selected"
                             IsEnabled="False"
                             Classes="icon"
                             Opacity="0.45">
                             <fluent:SymbolIcon Symbol="ArrowUndo" />
                         </Button>
 
-                        <Button Click="OnResetSelectedPackClick"
-                            IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
-                            ToolTip.Tip="Reset edited pack to its original file state"
-                            Classes.icon="True"
-                            Classes.pack-state="True"
-                            Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                            Classes.disk="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
-                            Classes.diskedited="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
-                            Name="ResetSelectedPackButton">
-                            <fluent:SymbolIcon Symbol="ArrowUndo" />
-                        </Button>
                     </StackPanel>
                 </StackPanel>
 
