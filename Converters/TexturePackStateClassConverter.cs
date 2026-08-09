@@ -1,7 +1,8 @@
 ﻿using System.Globalization;
 using Avalonia.Data.Converters;
+using System.Diagnostics;
 using DBDStudio.Core.Interfaces;
-using DBDStudio.Core.Models;
+using DBDStudio.Core.Models.Textures;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DBDStudio.Converters
@@ -12,13 +13,12 @@ namespace DBDStudio.Converters
         {
             if (value is TexturePackState texturePackState) {
                 return texturePackState;
+            } else if (value is TexturePackData pack) {
+                return pack.State;
+            } else if (value is IRenderedTexturePack renderedPack) {
+                return renderedPack.State;
             }
-
-            if (value is TexturePack pack && Avalonia.Application.Current is App app && app.Services is not null) {
-                var texturePackService = app.Services.GetRequiredService<ITexturePackService>();
-                return texturePackService.GetTexturePackState(pack);
-            }
-
+            Debug.WriteLine($"[TexturePackStateClassConverter] Unrecognized value type: {value?.GetType().FullName ?? "null"}");
             return TexturePackState.None;
         }
 
@@ -33,9 +33,9 @@ namespace DBDStudio.Converters
 
             if (string.Equals(mode, "label", StringComparison.OrdinalIgnoreCase)) {
                 return state switch {
-                    TexturePackState.Ephemeral => "Workspace Pack",
-                    TexturePackState.DiskEdited => "Edited Pack",
-                    TexturePackState.Disk => "File Pack",
+                    TexturePackState.Ephemeral => "Ephemeral Pack",
+                    TexturePackState.Modified => "Modified Primordial Pack",
+                    TexturePackState.Primordial => "Primordial Pack",
                     _ => "No Pack"
                 };
             }
@@ -44,12 +44,12 @@ namespace DBDStudio.Converters
                 return (state == TexturePackState.Ephemeral) ^ invert;
             }
 
-            if (string.Equals(mode, "is-disk-edited", StringComparison.OrdinalIgnoreCase)) {
-                return (state == TexturePackState.DiskEdited) ^ invert;
+            if (string.Equals(mode, "is-primordial-edited", StringComparison.OrdinalIgnoreCase)) {
+                return (state == TexturePackState.Modified) ^ invert;
             }
 
-            if (string.Equals(mode, "is-disk", StringComparison.OrdinalIgnoreCase)) {
-                return (state == TexturePackState.Disk) ^ invert;
+            if (string.Equals(mode, "is-primordial", StringComparison.OrdinalIgnoreCase)) {
+                return (state == TexturePackState.Primordial) ^ invert;
             }
 
             return false;

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using DBDStudio.Core.Models.Textures;
 
 namespace DBDStudio.Core.Models
 {

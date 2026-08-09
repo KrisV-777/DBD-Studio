@@ -7,6 +7,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
+using DBDStudio.Core.Models.Textures;
 using DBDStudio.ViewModels;
 
 namespace DBDStudio.Views.Pages
@@ -25,19 +26,19 @@ namespace DBDStudio.Views.Pages
         /// <param name="e"></param>
         private async void OnAddPackFromFolderClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
 
             var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is null) return;
+            if (topLevel is null)
+                return;
 
-            var result = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-            {
+            var result = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
                 Title = "Select Texture Root Folder",
                 AllowMultiple = false
             });
 
-            if (result.Count > 0)
-            {
+            if (result.Count > 0) {
                 var selectedFolder = result[0].Path.LocalPath;
                 viewModel.PopulatePackFromFolder(selectedFolder);
             }
@@ -50,15 +51,18 @@ namespace DBDStudio.Views.Pages
         /// <param name="e"></param>
         private async void OnBrowseTextureClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
-            if (sender is not Button button) return;
-            if (button.Tag is not TextureMapping mapping) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
+            if (sender is not Button button)
+                return;
+            if (button.Tag is not TextureMapping mapping)
+                return;
 
             var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is null) return;
+            if (topLevel is null)
+                return;
 
-            var result = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
+            var result = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
                 Title = "Select Replacement Texture",
                 AllowMultiple = false,
                 FileTypeFilter = [
@@ -79,19 +83,19 @@ namespace DBDStudio.Views.Pages
 
         private async void OnAddFolderClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
 
             var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is null) return;
+            if (topLevel is null)
+                return;
 
-            var result = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-            {
+            var result = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
                 Title = "Select Texture Root Folder",
                 AllowMultiple = false
             });
 
-            if (result.Count > 0)
-            {
+            if (result.Count > 0) {
                 var selectedFolder = result[0].Path.LocalPath;
                 viewModel.PopulatePackFromFolder(selectedFolder, viewModel.SelectedPack);
             }
@@ -99,7 +103,8 @@ namespace DBDStudio.Views.Pages
 
         private async void OnAddMappingClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
             viewModel.AddMappingCommand.Execute(null);
 
             if (viewModel.SelectedMapping is null)
@@ -113,18 +118,20 @@ namespace DBDStudio.Views.Pages
 
         private async void OnExportPackClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
-            if (viewModel.SelectedPack is null || viewModel.SelectedPack.Mappings.Count == 0) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
+            if (viewModel.SelectedPack is null || viewModel.SelectedPack.NumMappings == 0)
+                return;
 
             var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is null) return;
+            if (topLevel is null)
+                return;
 
             var suggestedFileName = string.IsNullOrWhiteSpace(viewModel.SelectedPack.Name)
                 ? "TexturePack.zip"
                 : $"{viewModel.SelectedPack.Name}.zip";
 
-            var saveFile = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
+            var saveFile = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions {
                 Title = "Export Texture Pack",
                 SuggestedFileName = suggestedFileName,
                 DefaultExtension = "zip",
@@ -150,12 +157,15 @@ namespace DBDStudio.Views.Pages
         /// <param name="e"></param>
         private void OnDeleteMappingClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
-            if (sender is not Button button) return;
-            if (button.Tag is not TextureMapping mapping) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
+            if (sender is not Button button)
+                return;
+            if (button.Tag is not TextureMapping mapping)
+                return;
 
             viewModel.SelectedMapping = mapping;
-            viewModel.DeleteMappingCommand.Execute(null);
+            viewModel.RemoveMappingCommand.Execute(null);
         }
 
         private async void OnDeleteSelectedPackClick(object? sender, RoutedEventArgs e)
@@ -165,12 +175,12 @@ namespace DBDStudio.Views.Pages
             var selectedPack = viewModel.SelectedPack;
 
             System.Diagnostics.Debug.Assert(selectedPack is not null);
-            System.Diagnostics.Debug.Assert(viewModel.SelectedPackState == TexturePackState.Ephemeral);
+            System.Diagnostics.Debug.Assert(selectedPack.Is(TexturePackState.Ephemeral));
 
-            if (selectedPack.Mappings.Count > 0) {
+            if (selectedPack.NumMappings > 0) {
                 var shouldDelete = await ShowConfirmationDialogAsync(
                     "Delete Texture Pack",
-                    $"'{selectedPack.Name}' contains {selectedPack.Mappings.Count} mapping(s).\n\nDelete this workspace pack anyway?",
+                    $"'{selectedPack.Name}' contains {selectedPack.NumMappings} mapping(s).\n\nDelete this workspace pack anyway?",
                     "Delete",
                     "Cancel");
 
@@ -184,75 +194,79 @@ namespace DBDStudio.Views.Pages
 
         private void OnResetSelectedPackClick(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not TexturePacksViewModel viewModel) return;
+            if (DataContext is not TexturePacksViewModel viewModel)
+                return;
             System.Diagnostics.Debug.Assert(viewModel.SelectedPack is not null);
-            System.Diagnostics.Debug.Assert(viewModel.SelectedPackState == TexturePackState.DiskEdited);
+            System.Diagnostics.Debug.Assert(viewModel.SelectedPack.Is(TexturePackState.Modified));
 
             viewModel.ResetPackCommand.Execute(null);
         }
 
-        private async Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText, string cancelText)
+        private async Task<bool> ShowConfirmationDialogAsync(
+            string title,
+            string message,
+            string confirmText,
+            string cancelText)
         {
-            var owner = TopLevel.GetTopLevel(this) as Window;
-            if (owner is null) {
+            if (TopLevel.GetTopLevel(this) is not Window owner)
                 return false;
-            }
 
-            var cancelButton = new Button
-            {
+            var dialog = new Window {
+                Title = title,
+
+                // Give the dialog a sensible width, but let the height
+                // be determined naturally by its content.
+                Width = 400,
+                SizeToContent = SizeToContent.Height,
+
+                CanResize = false,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false,
+
+                // Let Windows/Avalonia provide the normal window frame.
+                WindowDecorations = WindowDecorations.Full
+            };
+
+            var cancelButton = new Button {
                 Content = cancelText,
+                MinWidth = 90,
+                IsCancel = true
+            };
+
+            var confirmButton = new Button {
+                Content = confirmText,
                 MinWidth = 90,
                 IsDefault = true
             };
 
-            var confirmButton = new Button
-            {
-                Content = confirmText,
-                MinWidth = 90,
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.Parse("#D13438"))
-            };
+            cancelButton.Click += (_, _) => dialog.Close(false);
+            confirmButton.Click += (_, _) => dialog.Close(true);
 
-            var dialog = new Window
-            {
-                Title = title,
-                Width = 420,
-                CanResize = false,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                ShowInTaskbar = false,
-                WindowDecorations = WindowDecorations.BorderOnly,
-                Content = new Border
+            dialog.Content = new StackPanel {
+                Spacing = 18,
+                Margin = new Thickness(24),
+                Children =
                 {
-                    Padding = new Thickness(18),
-                    Child = new StackPanel
+                    new TextBlock
                     {
-                        Spacing = 16,
+                        Text = message,
+                        TextWrapping = TextWrapping.Wrap,
+                        FontSize = 14
+                    },
+
+                    new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        Spacing = 8,
                         Children =
                         {
-                            new TextBlock
-                            {
-                                Text = message,
-                                TextWrapping = TextWrapping.Wrap,
-                                FontSize = 14
-                            },
-                            new StackPanel
-                            {
-                                Orientation = Orientation.Horizontal,
-                                HorizontalAlignment = HorizontalAlignment.Right,
-                                Spacing = 8,
-                                Children =
-                                {
-                                    cancelButton,
-                                    confirmButton
-                                }
-                            }
+                            cancelButton,
+                            confirmButton
                         }
                     }
                 }
             };
-
-            cancelButton.Click += (_, _) => dialog.Close(false);
-            confirmButton.Click += (_, _) => dialog.Close(true);
 
             return await dialog.ShowDialog<bool>(owner);
         }

@@ -30,7 +30,7 @@ namespace DBDStudio.ViewModels
             _mainWindowViewModel = mainWindowViewModel;
 
             _settingsService.Settings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
-            _texturePackService.TexturePacksChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
+            _texturePackService.TexturePackListChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
 
             SaveCommand = new RelayCommand(SaveSettings);
             CmdOpenGithub = new RelayCommand(() => OpenUrl("https://github.com/"));
@@ -50,7 +50,7 @@ namespace DBDStudio.ViewModels
 
         private void SaveSettings()
         {
-            _texturePackService.RefreshFromConfiguredFolders();
+            _texturePackService.ResetTextureList();
             _settingsService.Save();
             OnPropertyChanged(nameof(TexturePacksFound));
         }

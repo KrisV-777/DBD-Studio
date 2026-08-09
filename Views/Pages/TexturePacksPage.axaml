@@ -43,14 +43,14 @@
                         </Button>
 
                         <Button Click="OnDeleteSelectedPackClick"
-                            IsVisible="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                            IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
                             ToolTip.Tip="Delete selected pack"
                             Classes="icon"
                             Foreground="#D13438">
                             <fluent:SymbolIcon Symbol="Delete" />
                         </Button>
 
-                        <Button IsVisible="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
+                        <Button IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
                             ToolTip.Tip="File packs are read-only and cannot be deleted"
                             IsEnabled="False"
                             Classes="icon"
@@ -59,13 +59,13 @@
                         </Button>
 
                         <Button Click="OnResetSelectedPackClick"
-                            IsVisible="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                            IsVisible="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
                             ToolTip.Tip="Reset edited pack to its original file state"
                             Classes.icon="True"
                             Classes.pack-state="True"
-                            Classes.ephemeral="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                            Classes.disk="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
-                            Classes.diskedited="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                            Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                            Classes.disk="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                            Classes.diskedited="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
                             Name="ResetSelectedPackButton">
                             <fluent:SymbolIcon Symbol="ArrowUndo" />
                         </Button>
@@ -85,8 +85,8 @@
                                 CornerRadius="6"
                                 Classes.pack-state="True"
                                 Classes.ephemeral="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                                Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
-                                Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}">
+                                Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}">
 
                                 <Grid ColumnDefinitions="Auto,*,Auto">
 
@@ -118,9 +118,9 @@
                                         Margin="8,0,0,0"
                                         Classes.pack-state="True"
                                         Classes.ephemeral="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                                        Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
-                                        Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
-                                        IsVisible="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=!is-disk}" />
+                                        Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                        Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                        IsVisible="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=!is-primordial}" />
 
                                 </Grid>
                             </Border>
@@ -180,15 +180,15 @@
                                 VerticalAlignment="Center"
                                 Name="PackStateBadge"
                                 Classes.pack-state="True"
-                                Classes.ephemeral="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                                Classes.disk="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
-                                Classes.diskedited="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}">
-                                <TextBlock Text="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=label}"
+                                Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                Classes.diskedited="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}">
+                                <TextBlock Text="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=label}"
                                     Name="PackStateLabel"
                                     Classes.pack-state="True"
-                                    Classes.ephemeral="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                                    Classes.disk="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk}"
-                                    Classes.diskedited="{Binding SelectedPackState, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-disk-edited}"
+                                    Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                    Classes.disk="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                    Classes.diskedited="{Binding SelectedPack.State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
                                     FontSize="{DynamicResource CaptionFontSize}"
                                     FontWeight="SemiBold" />
                             </Border>

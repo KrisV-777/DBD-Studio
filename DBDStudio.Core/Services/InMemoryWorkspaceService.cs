@@ -82,63 +82,65 @@ namespace DBDStudio.Core.Services
             target.Settings.BaseFontSize = snapshot.Settings.BaseFontSize;
             target.Settings.Theme = snapshot.Settings.Theme;
 
-            target.TexturePacks.Clear();
-            foreach (var texturePackSnapshot in snapshot.TexturePacks)
-            {
-                var pack = new TexturePack(guid: texturePackSnapshot.Uid)
-                {
-                    Name = texturePackSnapshot.Name,
-                    Description = texturePackSnapshot.Description,
-                    Visibility = texturePackSnapshot.Visibility,
-                    // LastUpdatedUtc = texturePackSnapshot.LastUpdatedUtc
-                };
+            return;
+            
+            // target.TexturePacks.Clear();
+            // foreach (var texturePackSnapshot in snapshot.TexturePacks)
+            // {
+            //     var pack = new TexturePack(guid: texturePackSnapshot.Uid)
+            //     {
+            //         Name = texturePackSnapshot.Name,
+            //         Description = texturePackSnapshot.Description,
+            //         Visibility = texturePackSnapshot.Visibility,
+            //         // LastUpdatedUtc = texturePackSnapshot.LastUpdatedUtc
+            //     };
 
-                foreach (var mappingSnapshot in texturePackSnapshot.Mappings)
-                {
-                    pack.Mappings.Add(new TextureMapping
-                    {
-                        VanillaTexture = mappingSnapshot.VanillaTexture,
-                        ReplacementTexture = mappingSnapshot.ReplacementTexture,
-                        SourcePath = mappingSnapshot.SourcePath
-                    });
-                }
+            //     foreach (var mappingSnapshot in texturePackSnapshot.Mappings)
+            //     {
+            //         pack.Mappings.Add(new TextureMapping
+            //         {
+            //             VanillaTexture = mappingSnapshot.VanillaTexture,
+            //             ReplacementTexture = mappingSnapshot.ReplacementTexture,
+            //             SourcePath = mappingSnapshot.SourcePath
+            //         });
+            //     }
 
-                target.TexturePacks.Add(pack);
-            }
+            //     target.TexturePacks.Add(pack);
+            // }
 
-            target.Rules.Clear();
-            foreach (var ruleSnapshot in snapshot.Rules)
-            {
-                var rule = new Rule
-                {
-                    Name = ruleSnapshot.Name,
-                    FileName = ruleSnapshot.FileName
-                };
-                foreach (var candidate in ruleSnapshot.TextureCandidates) {
-                    rule.TextureCandidates.Add(candidate);
-                }
+            // target.Rules.Clear();
+            // foreach (var ruleSnapshot in snapshot.Rules)
+            // {
+            //     var rule = new Rule
+            //     {
+            //         Name = ruleSnapshot.Name,
+            //         FileName = ruleSnapshot.FileName
+            //     };
+            //     foreach (var candidate in ruleSnapshot.TextureCandidates) {
+            //         rule.TextureCandidates.Add(candidate);
+            //     }
 
-                foreach (var candidate in ruleSnapshot.BodySlideCandidates) {
-                    rule.BodySlideCandidates.Add(candidate);
-                }
+            //     foreach (var candidate in ruleSnapshot.BodySlideCandidates) {
+            //         rule.BodySlideCandidates.Add(candidate);
+            //     }
 
-                foreach (var candidate in ruleSnapshot.RaceMenuCandidates) {
-                    rule.RaceMenuCandidates.Add(candidate);
-                }
+            //     foreach (var candidate in ruleSnapshot.RaceMenuCandidates) {
+            //         rule.RaceMenuCandidates.Add(candidate);
+            //     }
 
-                foreach (var conditionSnapshot in ruleSnapshot.Conditions)
-                {
-                    rule.Conditions.Add(new Condition
-                    {
-                        Type = conditionSnapshot.Type,
-                        Operator = conditionSnapshot.Operator,
-                        Value = conditionSnapshot.Value,
-                        Group = conditionSnapshot.Group
-                    });
-                }
+            //     foreach (var conditionSnapshot in ruleSnapshot.Conditions)
+            //     {
+            //         rule.Conditions.Add(new Condition
+            //         {
+            //             Type = conditionSnapshot.Type,
+            //             Operator = conditionSnapshot.Operator,
+            //             Value = conditionSnapshot.Value,
+            //             Group = conditionSnapshot.Group
+            //         });
+            //     }
 
-                target.Rules.Add(rule);
-            }
+            //     target.Rules.Add(rule);
+            // }
         }
 
         private sealed class WorkspaceSnapshot
@@ -166,13 +168,13 @@ namespace DBDStudio.Core.Services
                         Uid = pack.Uid,
                         Name = pack.Name,
                         Description = pack.Description,
-                        Visibility = pack.Visibility,
+                        // Visibility = pack.Visibility,
                         // LastUpdatedUtc = pack.LastUpdatedUtc,
                         Mappings = pack.Mappings.Select(mapping => new TextureMappingSnapshot
                         {
                             VanillaTexture = mapping.VanillaTexture,
                             ReplacementTexture = mapping.ReplacementTexture,
-                            SourcePath = mapping.SourcePath
+                            SourcePath = default
                         }).ToList()
                     }).ToList(),
                     Rules = workspace.Rules.Select(rule => new RuleSnapshot
@@ -199,7 +201,7 @@ namespace DBDStudio.Core.Services
             public Guid Uid { get; init; } = Guid.Empty;
             public string Name { get; init; } = string.Empty;
             public string Description { get; init; } = string.Empty;
-            public TexturePackVisibility Visibility { get; init; }
+            // public TexturePackVisibility Visibility { get; init; }
             // public DateTimeOffset LastUpdatedUtc { get; init; } = DateTimeOffset.MinValue;
             public List<TextureMappingSnapshot> Mappings { get; init; } = [];
         }
@@ -208,7 +210,7 @@ namespace DBDStudio.Core.Services
         {
             public string VanillaTexture { get; init; } = string.Empty;
             public string ReplacementTexture { get; init; } = string.Empty;
-            public string SourcePath { get; init; } = string.Empty;
+            public string? SourcePath { get; init; } = string.Empty;
         }
 
         private sealed class SettingsSnapshot

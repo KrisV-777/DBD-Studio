@@ -22,7 +22,7 @@ namespace DBDStudio
             var services = new ServiceCollection();
             services.AddSingleton<IWorkspaceService, InMemoryWorkspaceService>();
             services.AddSingleton<ISettingsService, MockSettingsService>();
-            services.AddSingleton<ITexturePackService, MockTexturePackService>();
+            services.AddSingleton<ITexturePackService, TexturePackService>();
             services.AddSingleton<IBodySlideService, MockBodySlideService>();
             services.AddSingleton<IRuleService, MockRuleService>();
             services.AddSingleton<IRaceMenuPresetService, MockRaceMenuPresetService>();
@@ -37,7 +37,7 @@ namespace DBDStudio
             var settingsService = Services.GetRequiredService<ISettingsService>();
             settingsService.Load();
             Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
-            Services.GetRequiredService<ITexturePackService>().RefreshFromConfiguredFolders();
+            Services.GetRequiredService<ITexturePackService>().ResetTextureList();
 
             // Apply saved font sizes to application resources
             var baseFontSize = settingsService.Settings.BaseFontSize;
