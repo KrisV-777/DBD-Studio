@@ -21,6 +21,10 @@
             Value="{DynamicResource SystemControlHighlightListLowBrush}" />
     </Style>
 
+    <Style Selector="Button.icon:disabled">
+        <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
     <Style Selector="Button.icon:pressed">
         <Setter Property="Background"
             Value="{DynamicResource SystemControlHighlightListMediumBrush}" />

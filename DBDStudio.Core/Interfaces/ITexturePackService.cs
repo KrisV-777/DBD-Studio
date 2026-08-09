@@ -28,9 +28,9 @@ namespace DBDStudio.Core.Interfaces
         internal TexturePack? Primordial { get; }
 
         Guid Uid { get; }
-        string Name { get; }
-        string Description { get; }
-        bool IsPrivate { get; }
+        string Name { get; set; }
+        string Description { get; set; }
+        bool IsPrivate { get; set; }
         DateTimeOffset LastUpdatedUtc { get; }
         DateTimeOffset LastUpdatedLocal { get; }
         ReadOnlyCollection<TextureMapping> Mappings { get; }
@@ -65,7 +65,7 @@ namespace DBDStudio.Core.Interfaces
         /// <param name="pack">The texture pack to emplace. If null, a new ephemeral pack will be created.</param>
         /// <returns>The emplaced texture pack.</returns>
         /// <remarks>If the pack is already present in the collection, it will be replaced with the new instance.</remarks>
-        IRenderedTexturePack Emplace(IRenderedTexturePack? pack);
+        void Emplace(IRenderedTexturePack? pack);
 
         /// <summary>
         /// Emplaces a new texture pack into the collection and performs an action on its underlying TexturePack.

@@ -74,9 +74,11 @@ namespace DBDStudio.ViewModels
                 break;
             case TexturePackListChangedEventArgs.ChangeType.Removed:
                 System.Diagnostics.Debug.Assert(e.AffectedPack is not null);
-                if (Packs.Remove(e.AffectedPack) && ReferenceEquals(SelectedPack, e.AffectedPack)) {
-                    SelectedPack = Packs.Count <= 0 ? null :
-                        Packs[Math.Clamp(Packs.IndexOf(e.AffectedPack), 0, Packs.Count - 1)];
+                var newSelection = Packs.Count <= 1 ? null :
+                        Packs[Math.Clamp(Packs.IndexOf(e.AffectedPack), 1, Packs.Count - 1) - 1];
+                var wasSelected = ReferenceEquals(SelectedPack, e.AffectedPack);
+                if (Packs.Remove(e.AffectedPack) && wasSelected) {
+                    SelectedPack = newSelection;
                 }
                 break;
             case TexturePackListChangedEventArgs.ChangeType.Updated:
@@ -125,6 +127,11 @@ namespace DBDStudio.ViewModels
             // Emplace the pack and perform the population action
             _texturePackService.EmplaceAction(pack, (it) => {
                 try {
+                    if (pack is null) {
+                        // Newly created pack, set its name and description based on the folder
+                        it.Name = rootDirectory.Name;
+                        it.Description = $"Pack populated from folder:\n{rootDirectory.FullName}";
+                    }
                     // Only search within the textures directory for performance (avoids scanning unrelated files in root)
                     var files = texturesDirectory.GetFiles("*.dds", SearchOption.AllDirectories);
                     var numMappings = it.Mappings.Count;

@@ -38,8 +38,6 @@ namespace DBDStudio.Core.Services
             ResetTextureList();
         }
 
-        public event EventHandler<TexturePackListChangedEventArgs>? TexturePackListChanged;
-
         public void ResetTextureList()
         {
             HashSet<IRenderedTexturePack> previousPrimordialPacks = [.. _texturePacks.Where(pack => pack.IsPrimordial())];
@@ -96,48 +94,22 @@ namespace DBDStudio.Core.Services
         /// it appends a numeric suffix to the name to ensure uniqueness.
         /// </summary>
         /// <param name="pack">The texture pack to add.</param>
-        public IRenderedTexturePack Emplace(IRenderedTexturePack? pack)
+        public void Emplace(IRenderedTexturePack? pack)
         {
-            pack ??= new TexturePackData(new TexturePack(Guid.NewGuid(), "New Pack", string.Empty, false, DateTimeOffset.UtcNow, []));
-
-            if (_texturePacks.Contains(pack)) {
-                Debug.WriteLine($"Pack with UID {pack.Uid} already exists.");
-                return pack;
-            }
-
-            // Strip a trailing " (N)" suffix, if present.
-            var baseName = System.Text.RegularExpressions.Regex.Replace(pack.Name, @"\s*\(\d+\)$", string.Empty);
-            var regex = new System.Text.RegularExpressions.Regex(
-                $@"^{System.Text.RegularExpressions.Regex.Escape(baseName)}\s\((\d+)\)$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            var hasBaseName = _texturePacks.Any(existingPack =>
-                existingPack.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase));
-
-            var maxSuffix = _texturePacks
-                .Select(existingPack => regex.Match(existingPack.Name))
-                .Where(match => match.Success)
-                .Select(match => int.Parse(match.Groups[1].Value))
-                .DefaultIfEmpty(hasBaseName ? 0 : -1)
-                .Max();
-
-            if (maxSuffix > -1) {
-                pack.Underlying.Name = $"{baseName} ({maxSuffix + 1})";
-            }
+            pack = ValidatePackName(pack);
             UpdateList(pack, null);
-            return pack;
         }
 
         public void EmplaceAction(IRenderedTexturePack? pack, Action<TexturePack> action, bool suppressChangeEvent = true)
         {
+            var updatedPack = ValidatePackName(pack);
             try {
                 _suppressChangeEvent = suppressChangeEvent;
-                pack ??= Emplace(pack);
-                action(pack.Underlying);
+                action(updatedPack.Underlying);
             } finally {
                 _suppressChangeEvent = false;
             }
-            UpdateList(pack, null);
+            UpdateList(updatedPack, pack);
         }
 
         public void Remove(IRenderedTexturePack pack)
@@ -151,6 +123,65 @@ namespace DBDStudio.Core.Services
             Debug.Assert(pack.IsPrimordial(), "Cannot reset a non-primordial pack.");
             UpdateList(new TexturePackData(pack.Primordial!.Clone(), pack.Primordial!), pack);
         }
+        public void Export(IRenderedTexturePack pack, string zipFileLocation)
+        {
+            Debug.Assert(!string.IsNullOrWhiteSpace(zipFileLocation), "Selected pack must have a valid name for export.");
+            if (pack.Underlying.Mappings.Count == 0) {
+                Debug.WriteLine("Error: Cannot export a pack with no mappings.");
+                return;
+            }
+
+            try {
+                if (!zipFileLocation.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    zipFileLocation += ".zip";
+
+                var exportDir = Path.GetDirectoryName(zipFileLocation);
+                if (string.IsNullOrWhiteSpace(exportDir)) {
+                    Debug.WriteLine("Error: Invalid export path.");
+                    return;
+                }
+
+                if (!Directory.Exists(exportDir))
+                    Directory.CreateDirectory(exportDir);
+
+                var tempDir = Path.Combine(Path.GetTempPath(), $"TexturePack_{Guid.NewGuid()}");
+                var profileDir = Path.Combine(tempDir, "textures", "dbd", pack.Name);
+
+                try {
+                    Directory.CreateDirectory(profileDir);
+
+                    // Write config.json
+                    var jsonConfig = JsonConfiguration.Configuration;
+                    var json = JsonSerializer.Serialize(pack.Underlying, jsonConfig);
+                    File.WriteAllText(Path.Combine(profileDir, "config.json"), json);
+
+                    // Copy textures
+                    foreach (var mapping in pack.Underlying.Mappings) {
+                        if (!string.IsNullOrEmpty(mapping.AbsolutePath) && File.Exists(mapping.AbsolutePath)) {
+                            var textureDestPath = Path.Combine(profileDir, mapping.ReplacementTexture);
+                            Directory.CreateDirectory(Path.GetDirectoryName(textureDestPath)!);
+                            File.Copy(mapping.AbsolutePath, textureDestPath, overwrite: true);
+                        }
+                    }
+
+                    // Create ZIP
+                    if (File.Exists(zipFileLocation))
+                        File.Delete(zipFileLocation);
+                    ZipFile.CreateFromDirectory(tempDir, zipFileLocation);
+
+                    Debug.WriteLine($"Pack exported to: {zipFileLocation}");
+                } finally {
+                    if (Directory.Exists(tempDir))
+                        Directory.Delete(tempDir, recursive: true);
+                }
+            } catch (Exception ex) {
+                Debug.WriteLine($"Error exporting pack: {ex.Message}");
+            }
+        }
+
+        #region Events
+
+        public event EventHandler<TexturePackListChangedEventArgs>? TexturePackListChanged;
 
         private void UpdateList(IRenderedTexturePack? add = null, IRenderedTexturePack? remove = null)
         {
@@ -187,6 +218,41 @@ namespace DBDStudio.Core.Services
             TexturePackListChanged?.Invoke(this, new TexturePackListChangedEventArgs(
                 nameof(_texturePacks), type, add ?? remove
             ));
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private IRenderedTexturePack ValidatePackName(IRenderedTexturePack? pack = null)
+        {
+            pack ??= new TexturePackData(new TexturePack(Guid.NewGuid(), "New Pack", string.Empty, false, DateTimeOffset.UtcNow, []));
+
+            if (_texturePacks.Contains(pack)) {
+                Debug.WriteLine($"Pack with UID {pack.Uid} already exists.");
+                return pack;
+            }
+
+            // Strip a trailing " (N)" suffix, if present.
+            var baseName = System.Text.RegularExpressions.Regex.Replace(pack.Name, @"\s*\(\d+\)$", string.Empty);
+            var regex = new System.Text.RegularExpressions.Regex(
+                $@"^{System.Text.RegularExpressions.Regex.Escape(baseName)}\s\((\d+)\)$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            var hasBaseName = _texturePacks.Any(existingPack =>
+                existingPack.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase));
+
+            var maxSuffix = _texturePacks
+                .Select(existingPack => regex.Match(existingPack.Name))
+                .Where(match => match.Success)
+                .Select(match => int.Parse(match.Groups[1].Value))
+                .DefaultIfEmpty(hasBaseName ? 0 : -1)
+                .Max();
+
+            if (maxSuffix > -1) {
+                pack.Underlying.Name = $"{baseName} ({maxSuffix + 1})";
+            }
+            return pack;
         }
 
         /// <summary>
@@ -278,60 +344,6 @@ namespace DBDStudio.Core.Services
             return null;
         }
 
-        public void Export(IRenderedTexturePack pack, string zipFileLocation)
-        {
-            Debug.Assert(!string.IsNullOrWhiteSpace(zipFileLocation), "Selected pack must have a valid name for export.");
-            if (pack.Underlying.Mappings.Count == 0) {
-                Debug.WriteLine("Error: Cannot export a pack with no mappings.");
-                return;
-            }
-
-            try {
-                if (!zipFileLocation.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                    zipFileLocation += ".zip";
-
-                var exportDir = Path.GetDirectoryName(zipFileLocation);
-                if (string.IsNullOrWhiteSpace(exportDir)) {
-                    Debug.WriteLine("Error: Invalid export path.");
-                    return;
-                }
-
-                if (!Directory.Exists(exportDir))
-                    Directory.CreateDirectory(exportDir);
-
-                var tempDir = Path.Combine(Path.GetTempPath(), $"TexturePack_{Guid.NewGuid()}");
-                var profileDir = Path.Combine(tempDir, "textures", "dbd", pack.Name);
-
-                try {
-                    Directory.CreateDirectory(profileDir);
-
-                    // Write config.json
-                    var jsonConfig = JsonConfiguration.Configuration;
-                    var json = JsonSerializer.Serialize(pack.Underlying, jsonConfig);
-                    File.WriteAllText(Path.Combine(profileDir, "config.json"), json);
-
-                    // Copy textures
-                    foreach (var mapping in pack.Underlying.Mappings) {
-                        if (!string.IsNullOrEmpty(mapping.AbsolutePath) && File.Exists(mapping.AbsolutePath)) {
-                            var textureDestPath = Path.Combine(profileDir, mapping.ReplacementTexture);
-                            Directory.CreateDirectory(Path.GetDirectoryName(textureDestPath)!);
-                            File.Copy(mapping.AbsolutePath, textureDestPath, overwrite: true);
-                        }
-                    }
-
-                    // Create ZIP
-                    if (File.Exists(zipFileLocation))
-                        File.Delete(zipFileLocation);
-                    ZipFile.CreateFromDirectory(tempDir, zipFileLocation);
-
-                    Debug.WriteLine($"Pack exported to: {zipFileLocation}");
-                } finally {
-                    if (Directory.Exists(tempDir))
-                        Directory.Delete(tempDir, recursive: true);
-                }
-            } catch (Exception ex) {
-                Debug.WriteLine($"Error exporting pack: {ex.Message}");
-            }
-        }
+        #endregion
     }
 }

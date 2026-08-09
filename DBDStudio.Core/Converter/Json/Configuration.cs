@@ -31,7 +31,8 @@ namespace DBDStudio.Core.Converter.Json
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Strict) {
                 PropertyNameCaseInsensitive = true,
                 ReadCommentHandling = JsonCommentHandling.Skip,
-                AllowTrailingCommas = true
+                AllowTrailingCommas = true,
+                WriteIndented = true
             };
 
             options.Converters.Add(new TextureMappingJsonConverter());

@@ -176,14 +176,16 @@ namespace DBDStudio.Core.Models.Textures
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Prevents recursive updates if the event is triggered by this instance itself.
+            if (e.PropertyName is not nameof(LastUpdatedUtc)) {
+                _lastUpdatedUtc = DateTimeOffset.UtcNow;
+                OnPropertyChanged(nameof(LastUpdatedUtc));
+            }
+
             if (ReferenceEquals(sender, this))
                 return;
 
             OnPropertyChanged(e.PropertyName);
 
-            _lastUpdatedUtc = DateTimeOffset.UtcNow;
-            OnPropertyChanged(nameof(LastUpdatedUtc));
         }
 
         #endregion

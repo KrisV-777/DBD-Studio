@@ -81,8 +81,7 @@
                             IsVisible="{Binding SelectedPack, Converter={x:Static ObjectConverters.IsNull}}"
                             ToolTip.Tip="No pack selected"
                             IsEnabled="False"
-                            Classes="icon"
-                            Opacity="0.45">
+                            Classes="icon">
                             <fluent:SymbolIcon Symbol="ArrowUndo" />
                         </Button>
 
@@ -101,9 +100,9 @@
                                 Padding="6,4"
                                 CornerRadius="6"
                                 Classes.pack-state="True"
-                                Classes.ephemeral="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                                Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
-                                Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}">
+                                Classes.ephemeral="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                Classes.diskedited="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}">
 
                                 <Grid ColumnDefinitions="Auto,*,Auto">
 
@@ -134,10 +133,10 @@
                                         VerticalAlignment="Center"
                                         Margin="8,0,0,0"
                                         Classes.pack-state="True"
-                                        Classes.ephemeral="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
-                                        Classes.disk="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
-                                        Classes.diskedited="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
-                                        IsVisible="{Binding ., Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=!is-primordial}" />
+                                        Classes.ephemeral="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                        Classes.disk="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial}"
+                                        Classes.diskedited="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                        IsVisible="{Binding State, Converter={StaticResource TexturePackStateClassConverter}, ConverterParameter=!is-primordial}" />
 
                                 </Grid>
                             </Border>

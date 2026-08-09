@@ -2,6 +2,7 @@
 using DBDStudio.Core.Interfaces;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Data;
 
 namespace DBDStudio.Core.Models.Textures
 {
@@ -31,17 +32,29 @@ namespace DBDStudio.Core.Models.Textures
         /// <summary>
         /// Gets the name of the texture pack.
         /// </summary>
-        public string Name => Underlying.Name;
+        public string Name
+        {
+            get => Underlying.Name;
+            set => Underlying.Name = value;
+        }
 
         /// <summary>
         /// Gets the description of the texture pack.
         /// </summary>
-        public string Description => Underlying.Description;
+        public string Description
+        {
+            get => Underlying.Description;
+            set => Underlying.Description = value;
+        }
 
         /// <summary>
         /// Gets a value indicating whether the texture pack is public (accessible to random selection).
         /// </summary>
-        public bool IsPrivate => Underlying.IsPrivate;
+        public bool IsPrivate
+        {
+            get => Underlying.IsPrivate;
+            set => Underlying.IsPrivate = value;
+        }
 
         /// <summary>
         /// Gets or sets the date and time when the texture pack was last updated (UTC).
@@ -119,6 +132,8 @@ namespace DBDStudio.Core.Models.Textures
 
         #region Events
 
+        private TexturePackState _cachedState = TexturePackState.None;
+
         /// <summary>
         /// Occurs when a property value changes on the underlying <see cref="TexturePack"/> instance, allowing subscribers to react to changes in the texture pack's data.
         /// </summary>
@@ -132,6 +147,11 @@ namespace DBDStudio.Core.Models.Textures
             case nameof(TexturePack.LastUpdatedUtc):
                 OnPropertyChanged(nameof(LastUpdatedLocal));
                 break;
+            }
+
+            if (_cachedState != State) {
+                _cachedState = State;
+                OnPropertyChanged(nameof(State));
             }
         }
 
