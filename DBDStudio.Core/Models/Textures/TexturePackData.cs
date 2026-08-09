@@ -145,9 +145,6 @@ namespace DBDStudio.Core.Models.Textures
         public static bool operator !=(TexturePackData? left, TexturePackData? right) => !(left == right);
         public override int GetHashCode() => Underlying.Uid.GetHashCode();
         public int CompareTo(TexturePackData? other) => other is null ? 1 : Underlying.Uid.CompareTo(other.Underlying.Uid);
-        IRenderedTexturePack IRenderedTexturePack.Copy() => throw new NotImplementedException();
-        bool IRenderedTexturePack.Is(TexturePackState state) => throw new NotImplementedException();
-        bool IRenderedTexturePack.IsPrimordial() => throw new NotImplementedException();
 
         public static bool operator <(TexturePackData? left, TexturePackData? right) => left is null ? right is not null : left.CompareTo(right) < 0;
         public static bool operator >(TexturePackData? left, TexturePackData? right) => left is not null && left.CompareTo(right) > 0;
