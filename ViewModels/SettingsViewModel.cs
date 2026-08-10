@@ -3,12 +3,13 @@ using DBDStudio.Core.Interfaces;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Styling;
+using DBDStudio.Core.Models;
 
 namespace DBDStudio.ViewModels
 {
     public sealed class SettingsViewModel : ViewModelBase
     {
-        private readonly ISettingsService _settingsService;
+        private readonly ApplicationSettings _appSettings;
         private readonly ITexturePackService _texturePackService;
         private readonly IBodySlideService _bodySlideService;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
@@ -17,19 +18,19 @@ namespace DBDStudio.ViewModels
         public static readonly string[] ThemeOptions = ["Light", "Dark", "System"];
 
         public SettingsViewModel(
-            ISettingsService settingsService,
+            ApplicationSettings settingsService,
             ITexturePackService texturePackService,
             IBodySlideService bodySlideService,
             IRaceMenuPresetService raceMenuPresetService,
             MainWindowViewModel? mainWindowViewModel = null)
         {
-            _settingsService = settingsService;
+            _appSettings = settingsService;
             _texturePackService = texturePackService;
             _bodySlideService = bodySlideService;
             _raceMenuPresetService = raceMenuPresetService;
             _mainWindowViewModel = mainWindowViewModel;
 
-            _settingsService.Settings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
+            _appSettings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
             _texturePackService.TexturePackListChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
 
             SaveCommand = new RelayCommand(SaveSettings);
@@ -51,7 +52,6 @@ namespace DBDStudio.ViewModels
         private void SaveSettings()
         {
             _texturePackService.ResetTextureList();
-            _settingsService.Save();
             OnPropertyChanged(nameof(TexturePacksFound));
         }
 
@@ -67,10 +67,10 @@ namespace DBDStudio.ViewModels
 
         public string SkyrimDataFolder
         {
-            get => _settingsService.Settings.SkyrimDataFolder;
+            get => _appSettings.SkyrimDataFolder;
             set
             {
-                _settingsService.Settings.SkyrimDataFolder = value;
+                _appSettings.SkyrimDataFolder = value;
                 // TODO: Reload Mutagen Database when this changes
                 // TODO: Reload Texture Packs when this changes
                 OnPropertyChanged();
@@ -79,20 +79,20 @@ namespace DBDStudio.ViewModels
 
         public string ModsFolder
         {
-            get => _settingsService.Settings.ModsFolder;
+            get => _appSettings.ModsFolder;
             set
             {
-                _settingsService.Settings.ModsFolder = value;
+                _appSettings.ModsFolder = value;
                 OnPropertyChanged();
             }
         }
 
         public string BodySlidePresetsFolder
         {
-            get => _settingsService.Settings.BodySlidePresetsFolder;
+            get => _appSettings.BodySlidePresetsFolder;
             set
             {
-                _settingsService.Settings.BodySlidePresetsFolder = value;
+                _appSettings.BodySlidePresetsFolder = value;
                 // TODO: Scan for BodySlide presets when this changes
                 OnPropertyChanged();
             }
@@ -100,10 +100,10 @@ namespace DBDStudio.ViewModels
 
         public string RaceMenuPresetsFolder
         {
-            get => _settingsService.Settings.RaceMenuPresetsFolder;
+            get => _appSettings.RaceMenuPresetsFolder;
             set
             {
-                _settingsService.Settings.RaceMenuPresetsFolder = value;
+                _appSettings.RaceMenuPresetsFolder = value;
                 // TODO: Scan for RaceMenu presets when this changes
                 OnPropertyChanged();
             }
@@ -111,10 +111,10 @@ namespace DBDStudio.ViewModels
 
         public string WorkspaceFilePath
         {
-            get => _settingsService.Settings.WorkspaceFilePath;
+            get => _appSettings.WorkspaceFilePath;
             set
             {
-                _settingsService.Settings.WorkspaceFilePath = value;
+                _appSettings.WorkspaceFilePath = value;
                 OnPropertyChanged();
             }
         }
@@ -126,13 +126,13 @@ namespace DBDStudio.ViewModels
 
         public double BaseFontSize
         {
-            get => _settingsService.Settings.BaseFontSize;
+            get => _appSettings.BaseFontSize;
             set
             {
-                if (_settingsService.Settings.BaseFontSize == value)
+                if (_appSettings.BaseFontSize == value)
                     return;
 
-                _settingsService.Settings.BaseFontSize = value;
+                _appSettings.BaseFontSize = value;
 
                 Application.Current!.Resources["FontSize"] = value;
                 Application.Current.Resources["H1FontSize"] = value * 1.6;
@@ -146,13 +146,13 @@ namespace DBDStudio.ViewModels
 
         public string Theme
         {
-            get => _settingsService.Settings.Theme;
+            get => _appSettings.Theme;
             set
             {
-                if (_settingsService.Settings.Theme == value || Application.Current == null)
+                if (_appSettings.Theme == value || Application.Current == null)
                     return;
 
-                _settingsService.Settings.Theme = value;
+                _appSettings.Theme = value;
                 Application.Current.RequestedThemeVariant = value switch
                 {
                     "Light" => ThemeVariant.Light,

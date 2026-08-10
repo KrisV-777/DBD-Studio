@@ -1,4 +1,5 @@
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Models;
 
 namespace DBDStudio.ViewModels
 {
@@ -6,7 +7,7 @@ namespace DBDStudio.ViewModels
     {
         private int _selectedPageIndex;
         private string _statusMessage = "Ready";
-        private readonly ISettingsService _settingsService;
+        private readonly ApplicationSettings _appSettings;
         private readonly ITexturePackService _texturePackService;
         private readonly IBodySlideService _bodySlideService;
         private readonly IRuleService _ruleService;
@@ -17,7 +18,7 @@ namespace DBDStudio.ViewModels
         private readonly IRaceMenuPresetService _raceMenuPresetService;
 
         public MainWindowViewModel(
-            ISettingsService settingsService,
+            ApplicationSettings settingsService,
             ITexturePackService texturePackService,
             IBodySlideService bodySlideService,
             IRuleService ruleService,
@@ -27,7 +28,7 @@ namespace DBDStudio.ViewModels
             ILoadOrderService loadOrderService,
             IRaceMenuPresetService raceMenuPresetService)
         {
-            _settingsService = settingsService;
+            _appSettings = settingsService;
             _texturePackService = texturePackService;
             _bodySlideService = bodySlideService;
             _ruleService = ruleService;
@@ -39,7 +40,7 @@ namespace DBDStudio.ViewModels
 
             // Create SettingsViewModel with reference to this MainWindowViewModel
             Settings = new SettingsViewModel(settingsService, texturePackService, bodySlideService, raceMenuPresetService, this);
-            TexturePacks = new TexturePacksViewModel(texturePackService, this);
+            TexturePacks = new TexturePacksViewModel(texturePackService);
             BodySlide = new BodySlideViewModel(bodySlideService);
             RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
             Rules = new RulesViewModel(ruleService, raceMenuPresetService, conditionRegistryService, ruleResolutionService);

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -6,7 +5,7 @@ namespace DBDStudio.Core.Models
 {
     public sealed class ApplicationSettings : INotifyPropertyChanged
     {
-        private string _workspaceFilePath = string.Empty;
+        private string _workspaceFilePath = BuildDefaultWorkspacePath();
         private string _skyrimDataFolder = string.Empty;
         private string _modsFolder = string.Empty;
         private string _bodySlidePresetsFolder = string.Empty;
@@ -66,6 +65,12 @@ namespace DBDStudio.Core.Models
 
             field = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private static string BuildDefaultWorkspacePath()
+        {
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            return Path.Combine(appDataFolder, "DBDStudio", "workspace.dbdproj");
         }
     }
 }

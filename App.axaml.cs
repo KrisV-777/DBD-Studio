@@ -20,8 +20,7 @@ namespace DBDStudio
         public override void OnFrameworkInitializationCompleted()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IWorkspaceService, InMemoryWorkspaceService>();
-            services.AddSingleton<ISettingsService, MockSettingsService>();
+            services.AddSingleton<IWorkspaceService, JsonWorkspaceService>();
             services.AddSingleton<ITexturePackService, TexturePackService>();
             services.AddSingleton<IBodySlideService, MockBodySlideService>();
             services.AddSingleton<IRuleService, MockRuleService>();
@@ -34,13 +33,12 @@ namespace DBDStudio
             services.AddTransient<MainWindowViewModel>();
             Services = services.BuildServiceProvider();
         
-            var settingsService = Services.GetRequiredService<ISettingsService>();
-            settingsService.Load();
-            Services.GetRequiredService<ILoadOrderService>().Initialize(settingsService.Settings.SkyrimDataFolder);
-            Services.GetRequiredService<ITexturePackService>().ResetTextureList();
+            var workspaceService = Services.GetRequiredService<IWorkspaceService>();
+            workspaceService.Load();
+            Services.GetRequiredService<ILoadOrderService>().Initialize(workspaceService.Settings.SkyrimDataFolder);
 
             // Apply saved font sizes to application resources
-            var baseFontSize = settingsService.Settings.BaseFontSize;
+            var baseFontSize = workspaceService.Settings.BaseFontSize;
             Resources["FontSize"] = baseFontSize;
             Resources["H1FontSize"] = baseFontSize * 1.6;
             Resources["H2FontSize"] = baseFontSize * 1.3;
@@ -48,7 +46,7 @@ namespace DBDStudio
             Resources["TinyFontSize"] = baseFontSize * 0.7;
 
             // Apply saved theme
-            var theme = settingsService.Settings.Theme;
+            var theme = workspaceService.Settings.Theme;
             var themeVariant = theme switch
             {
                 "Light" => Avalonia.Styling.ThemeVariant.Light,
@@ -59,7 +57,7 @@ namespace DBDStudio
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.Exit += (_, _) => settingsService.Save();
+                desktop.Exit += (_, _) => workspaceService.Save();
                 var mainWindowViewModel = Services.GetRequiredService<MainWindowViewModel>();
                 desktop.MainWindow = new MainWindow(mainWindowViewModel);
             }

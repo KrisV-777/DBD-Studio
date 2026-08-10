@@ -17,26 +17,28 @@ namespace DBDStudio.Core.Services
 {
     public sealed class TexturePackService : ITexturePackService
     {
-        private readonly ISettingsService _settingsService;
+        private readonly ApplicationSettings _settings;
         private readonly HashSet<IRenderedTexturePack> _texturePacks = [];
         private bool _suppressChangeEvent = false;
 
-        public TexturePackService(ISettingsService settingsService)
+        public TexturePackService(ApplicationSettings settingsService)
         {
-            _settingsService = settingsService;
-            _settingsService.Settings.PropertyChanged += (_, e) =>
+            _settings = settingsService;
+            _settings.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or nameof(ApplicationSettings.ModsFolder)) {
                     ResetTextureList();
                 }
             };
-
             ResetTextureList();
         }
 
-        public void ResetTextureList()
+        public void ResetTextureList(IReadOnlyList<TexturePack>? packs = null)
         {
-            var temporaryPacks = _texturePacks.ToArray();
+            var temporaryPacks = packs?
+                .Concat(_texturePacks.Select(tp => tp.Underlying))
+                .DistinctBy(pack => pack.Uid)
+                .ToArray() ?? [];
             var wasChangeEventSuppressed = _suppressChangeEvent;
             _suppressChangeEvent = true;
 
@@ -62,24 +64,24 @@ namespace DBDStudio.Core.Services
                         Debug.WriteLine($"Failed to discover texture packs in folder '{folder}': {ex.Message}");
                     }
                 };
-                populateFilePacks(_settingsService.Settings.SkyrimDataFolder);
-                populateFilePacks(_settingsService.Settings.ModsFolder);
+                populateFilePacks(_settings.SkyrimDataFolder);
+                populateFilePacks(_settings.ModsFolder);
 
                 foreach (var temporaryPack in temporaryPacks) {
                     var freshlyLoadedPack = _texturePacks.FirstOrDefault(pack => pack.Uid == temporaryPack.Uid);
 
                     if (freshlyLoadedPack is null) {
                         // Packs without a current disk representation are ephemeral.
-                        UpdateList(new TexturePackData(temporaryPack.Underlying), null);
+                        UpdateList(new TexturePackData(temporaryPack), null);
                         continue;
                     }
 
                     Debug.Assert(freshlyLoadedPack.Primordial is not null);
                     var freshlyLoadedPrimordial = freshlyLoadedPack.Primordial!;
-                    if (temporaryPack.Underlying.IsMoreRecentThan(freshlyLoadedPrimordial)) {
+                    if (temporaryPack.IsMoreRecentThan(freshlyLoadedPrimordial)) {
                         // Pair the edited data with the newly loaded primordial so State is
                         // computed from the current disk version rather than the stale one.
-                        var modifiedPack = new TexturePackData(temporaryPack.Underlying, freshlyLoadedPrimordial);
+                        var modifiedPack = new TexturePackData(temporaryPack, freshlyLoadedPrimordial);
                         UpdateList(modifiedPack, freshlyLoadedPack);
                     }
                 }
@@ -156,6 +158,7 @@ namespace DBDStudio.Core.Services
 
                     // Write config.json
                     var jsonConfig = JsonConfiguration.Configuration;
+                    JsonConfiguration.Mode = SerializationMode.Publish;
                     var json = JsonSerializer.Serialize(pack.Underlying, jsonConfig);
                     File.WriteAllText(Path.Combine(profileDir, "config.json"), json);
 

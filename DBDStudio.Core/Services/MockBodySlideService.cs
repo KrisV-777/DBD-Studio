@@ -13,6 +13,6 @@ namespace DBDStudio.Core.Services
             _workspaceService = workspaceService;
         }
 
-        public IReadOnlyList<BodySlidePreset> GetPresets() => _workspaceService.Current.BodySlidePresets;
+        public IReadOnlyList<BodySlidePreset> GetPresets() => _workspaceService.BodySlidePresets;
     }
 }

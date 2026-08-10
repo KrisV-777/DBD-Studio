@@ -26,18 +26,18 @@ namespace DBDStudio.Core.Services
             ".esl"
         };
 
-        private readonly ISettingsService _settingsService;
+        private readonly ApplicationSettings settingsService;
         private readonly List<FormRecord> _records = [];
         private readonly Dictionary<string, FormRecord> _recordsByEditorId = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, FormRecord> _recordsByFormId = new(StringComparer.OrdinalIgnoreCase);
         private readonly object _syncRoot = new();
         private Task? _indexingTask;
 
-        public MutagenSkyrimService(ISettingsService settingsService)
+        public MutagenSkyrimService(ApplicationSettings settingsService)
         {
-            _settingsService = settingsService;
+            this.settingsService = settingsService;
             // Only re-index when the data folder path actually changes, not on every property change.
-            _settingsService.Settings.PropertyChanged += OnSettingsPropertyChanged;
+            this.settingsService.PropertyChanged += OnSettingsPropertyChanged;
         }
 
         public bool IsLoading { get; private set; }
@@ -111,9 +111,9 @@ namespace DBDStudio.Core.Services
             }
         }
 
-        public void Initialize(string? dataFolder) => ScheduleRefresh(dataFolder ?? _settingsService.Settings.SkyrimDataFolder);
+        public void Initialize(string? dataFolder) => ScheduleRefresh(dataFolder ?? settingsService.SkyrimDataFolder);
 
-        public void Refresh() => ScheduleRefresh(_settingsService.Settings.SkyrimDataFolder);
+        public void Refresh() => ScheduleRefresh(settingsService.SkyrimDataFolder);
 
         private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {

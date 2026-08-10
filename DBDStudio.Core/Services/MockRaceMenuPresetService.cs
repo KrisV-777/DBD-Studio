@@ -14,13 +14,13 @@ namespace DBDStudio.Core.Services
             _workspaceService = workspaceService;
         }
 
-        public IReadOnlyList<RaceMenuPreset> GetPresets() => _workspaceService.Current.RaceMenuPresets;
+        public IReadOnlyList<RaceMenuPreset> GetPresets() => _workspaceService.RaceMenuPresets;
 
-        public void Add(RaceMenuPreset preset) => _workspaceService.Current.RaceMenuPresets.Add(preset);
+        public void Add(RaceMenuPreset preset) => throw new NotImplementedException("MockRaceMenuPresetService does not support adding presets.");
 
         public void Update(RaceMenuPreset preset)
         {
-            var existing = _workspaceService.Current.RaceMenuPresets.FirstOrDefault(x => x.Name == preset.Name);
+            var existing = _workspaceService.RaceMenuPresets.FirstOrDefault(x => x.Name == preset.Name);
             if (existing is null) {
                 return;
             }
@@ -31,6 +31,6 @@ namespace DBDStudio.Core.Services
             existing.DdsFile = preset.DdsFile;
         }
 
-        public void Remove(RaceMenuPreset preset) => _workspaceService.Current.RaceMenuPresets.Remove(preset);
+        public void Remove(RaceMenuPreset preset) => throw new NotImplementedException("MockRaceMenuPresetService does not support removing presets.");
     }
 }

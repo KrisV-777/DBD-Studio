@@ -14,13 +14,13 @@ namespace DBDStudio.Core.Services
             _workspaceService = workspaceService;
         }
 
-        public IReadOnlyList<Rule> GetRules() => _workspaceService.Current.Rules;
+        public IReadOnlyList<Rule> GetRules() => _workspaceService.Rules;
 
-        public void Add(Rule rule) => _workspaceService.Current.Rules.Add(rule);
+        public void Add(Rule rule) => throw new NotImplementedException("MockRuleService does not support adding rules.");
 
         public void Update(Rule rule)
         {
-            var existing = _workspaceService.Current.Rules.FirstOrDefault(x => x.Name == rule.Name);
+            var existing = _workspaceService.Rules.FirstOrDefault(x => x.Name == rule.Name);
             if (existing is null) {
                 return;
             }
@@ -47,6 +47,6 @@ namespace DBDStudio.Core.Services
             }
         }
 
-        public void Remove(Rule rule) => _workspaceService.Current.Rules.Remove(rule);
+        public void Remove(Rule rule) => throw new NotImplementedException("MockRuleService does not support removing rules.");
     }
 }

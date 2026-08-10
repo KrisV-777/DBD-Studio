@@ -99,7 +99,7 @@ namespace DBDStudio.Core.Interfaces
         /// Refreshes the list of texture packs from the configured folders, 
         /// updating the collection to reflect any changes in the underlying data.
         /// </summary>
-        void ResetTextureList();
+        void ResetTextureList(IReadOnlyList<TexturePack>? packs = null);
     }
 
     /// <summary>

@@ -9,7 +9,6 @@ namespace DBDStudio.ViewModels
     public sealed class TexturePacksViewModel : ViewModelBase
     {
         private readonly ITexturePackService _texturePackService;
-        private readonly MainWindowViewModel _mainWindowViewModel;
         private IRenderedTexturePack? _selectedPack;
         private TextureMapping? _selectedMapping;
 
@@ -42,10 +41,9 @@ namespace DBDStudio.ViewModels
         public ICommand AddMappingCommand { get; }
         public ICommand RemoveMappingCommand { get; }
 
-        public TexturePacksViewModel(ITexturePackService texturePackService, MainWindowViewModel mainWindowViewModel)
+        public TexturePacksViewModel(ITexturePackService texturePackService)
         {
             _texturePackService = texturePackService;
-            _mainWindowViewModel = mainWindowViewModel;
 
             AddPackCommand = new RelayCommand(() => AddPack(null));
             DuplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
@@ -122,7 +120,7 @@ namespace DBDStudio.ViewModels
             var texturesPath = Path.Combine(folderPath, "textures");
             var texturesDirectory = new DirectoryInfo(texturesPath);
             if (!texturesDirectory.Exists) {
-                DisplayMessage($"Error: No 'textures' folder found in the selected directory. Expected structure: <folder>/textures/");
+                System.Diagnostics.Debug.WriteLine($"Error: No 'textures' folder found in the selected directory. Expected structure: <folder>/textures/");
                 return;
             }
 
@@ -157,9 +155,9 @@ namespace DBDStudio.ViewModels
                             numReplaced++;
                         }
                     }
-                    DisplayMessage($"Populated pack '{it.Name}' with {numMappings - numMappingStart} new mappings and {numReplaced} replaced mappings.");
+                    System.Diagnostics.Debug.WriteLine($"Populated pack '{it.Name}' with {numMappings - numMappingStart} new mappings and {numReplaced} replaced mappings.");
                 } catch (Exception ex) {
-                    DisplayMessage($"An error occurred while populating the texture pack from the folder: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"An error occurred while populating the texture pack from the folder: {ex.Message}");
                 }
             });            
         }
@@ -222,7 +220,7 @@ namespace DBDStudio.ViewModels
                 $"{Path.DirectorySeparatorChar}textures{Path.DirectorySeparatorChar}",
                 StringComparison.OrdinalIgnoreCase);
             if (texturesIndex == -1) {
-                DisplayMessage($"Error: The selected texture file '{filePath}' is not located within a 'textures' folder. Expected structure: <folder>/textures/**");
+                System.Diagnostics.Debug.WriteLine($"Error: The selected texture file '{filePath}' is not located within a 'textures' folder. Expected structure: <folder>/textures/**");
                 return;
             }
             // Move index to the character after "textures/"
@@ -237,22 +235,16 @@ namespace DBDStudio.ViewModels
         public void ExportPack(string outputZipPath)
         {
             if (SelectedPack is null) {
-                DisplayMessage("Error: No texture pack selected for export.");
+                System.Diagnostics.Debug.WriteLine("Error: No texture pack selected for export.");
                 return;
             }
 
             try {
                 _texturePackService.Export(SelectedPack, outputZipPath);
-                DisplayMessage($"Successfully exported texture pack '{SelectedPack.Name}' to '{outputZipPath}'.");
+                System.Diagnostics.Debug.WriteLine($"Successfully exported texture pack '{SelectedPack.Name}' to '{outputZipPath}'.");
             } catch (Exception ex) {
-                DisplayMessage($"An error occurred while exporting the texture pack: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"An error occurred while exporting the texture pack: {ex.Message}");
             }
-        }
-
-        private void DisplayMessage(string message)
-        {
-            System.Diagnostics.Debug.WriteLine(message);
-            _mainWindowViewModel.StatusMessage = message;
         }
     }
 }
