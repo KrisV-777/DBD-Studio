@@ -17,17 +17,13 @@ namespace DBDStudio.Core.Services
 {
     public sealed class TexturePackService : ITexturePackService
     {
-        private readonly IWorkspaceService _workspaceService;
         private readonly ISettingsService _settingsService;
         private readonly HashSet<IRenderedTexturePack> _texturePacks = [];
         private bool _suppressChangeEvent = false;
 
-        public TexturePackService(IWorkspaceService workspaceService, ISettingsService settingsService)
+        public TexturePackService(ISettingsService settingsService)
         {
-            _workspaceService = workspaceService;
             _settingsService = settingsService;
-
-            _workspaceService.Current.TexturePacks.CollectionChanged += (_, _) => RebuildResolvedTexturePacks();
             _settingsService.Settings.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or nameof(ApplicationSettings.ModsFolder)) {
@@ -40,51 +36,58 @@ namespace DBDStudio.Core.Services
 
         public void ResetTextureList()
         {
-            HashSet<IRenderedTexturePack> previousPrimordialPacks = [.. _texturePacks.Where(pack => pack.IsPrimordial())];
-            var populateFilePacks = (string folder) =>
-            {
-                try {
-                    foreach (var pack in DiscoverExternalPacks(folder)) {
-                        var existingPack = _texturePacks.FirstOrDefault(p => p.Uid == pack.Uid);
-                        if (existingPack is not null) {
-                            previousPrimordialPacks.Remove(existingPack);
-                            if (pack.Underlying.IsMoreRecentThan(existingPack.Underlying)) {
-                                UpdateList(pack, existingPack);
+            var temporaryPacks = _texturePacks.ToArray();
+            var wasChangeEventSuppressed = _suppressChangeEvent;
+            _suppressChangeEvent = true;
+
+            try {
+                _texturePacks.Clear();
+
+                // Load packs from the Skyrim data folder and mods folder, if they exist.
+                var populateFilePacks = (string folder) =>
+                {
+                    try {
+                        foreach (var pack in DiscoverExternalPacks(folder)) {
+                            var existingPack = _texturePacks.FirstOrDefault(p => p.Uid == pack.Uid);
+                            if (existingPack is not null) {
+                                if (pack.Underlying.IsMoreRecentThan(existingPack.Underlying)) {
+                                    UpdateList(pack, existingPack);
+                                }
+                            } else {
+                                UpdateList(pack, null);
                             }
-                        } else {
-                            UpdateList(pack, null);
+                            Debug.Assert(_texturePacks.Contains(pack));
                         }
-                        Debug.Assert(existingPack is null || _texturePacks.Contains(existingPack));
-                        Debug.Assert(_texturePacks.Contains(pack));
+                    } catch (Exception ex) {
+                        Debug.WriteLine($"Failed to discover texture packs in folder '{folder}': {ex.Message}");
                     }
-                } catch (Exception ex) {
-                    Debug.WriteLine($"Failed to discover texture packs in folder '{folder}': {ex.Message}");
-                }
-            };
-            populateFilePacks(_settingsService.Settings.SkyrimDataFolder);
-            populateFilePacks(_settingsService.Settings.ModsFolder);
+                };
+                populateFilePacks(_settingsService.Settings.SkyrimDataFolder);
+                populateFilePacks(_settingsService.Settings.ModsFolder);
 
-            // Reduce any remaining previous primordial packs to ephemeral status
-            foreach (var pack in previousPrimordialPacks) {
-                UpdateList(new TexturePackData(pack.Underlying), pack);
-            }
+                foreach (var temporaryPack in temporaryPacks) {
+                    var freshlyLoadedPack = _texturePacks.FirstOrDefault(pack => pack.Uid == temporaryPack.Uid);
 
-            RebuildResolvedTexturePacks();
-        }
-
-        private void RebuildResolvedTexturePacks()
-        {
-            foreach (var workspacePack in _workspaceService.Current.TexturePacks) {
-                var existingPack = _texturePacks.FirstOrDefault(pack => pack.Uid == workspacePack.Uid);
-                if (existingPack is not null) {
-                    if (existingPack.Underlying.IsMoreRecentThan(workspacePack)) {
-                        // Existing one is more recent, ignore the workspace pack and continue
+                    if (freshlyLoadedPack is null) {
+                        // Packs without a current disk representation are ephemeral.
+                        UpdateList(new TexturePackData(temporaryPack.Underlying), null);
                         continue;
                     }
+
+                    Debug.Assert(freshlyLoadedPack.Primordial is not null);
+                    var freshlyLoadedPrimordial = freshlyLoadedPack.Primordial!;
+                    if (temporaryPack.Underlying.IsMoreRecentThan(freshlyLoadedPrimordial)) {
+                        // Pair the edited data with the newly loaded primordial so State is
+                        // computed from the current disk version rather than the stale one.
+                        var modifiedPack = new TexturePackData(temporaryPack.Underlying, freshlyLoadedPrimordial);
+                        UpdateList(modifiedPack, freshlyLoadedPack);
+                    }
                 }
-                // Existing pack (if any) may be a primordial, forward field to preserve the primordial state
-                UpdateList(new TexturePackData(workspacePack, existingPack?.Primordial), existingPack);
+            } finally {
+                _suppressChangeEvent = wasChangeEventSuppressed;
             }
+
+            RaiseTexturePackListChanged(TexturePackListChangedEventArgs.ChangeType.Reset, null);
         }
 
         IReadOnlyList<IRenderedTexturePack> ITexturePackService.GetTexturePacks() => [.. _texturePacks.Select(pack => (IRenderedTexturePack)pack)];
@@ -123,6 +126,7 @@ namespace DBDStudio.Core.Services
             Debug.Assert(pack.IsPrimordial(), "Cannot reset a non-primordial pack.");
             UpdateList(new TexturePackData(pack.Primordial!.Clone(), pack.Primordial!), pack);
         }
+
         public void Export(IRenderedTexturePack pack, string zipFileLocation)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(zipFileLocation), "Selected pack must have a valid name for export.");
@@ -208,15 +212,22 @@ namespace DBDStudio.Core.Services
                 }
                 type = TexturePackListChangedEventArgs.ChangeType.Removed;
             } else {
-                _texturePacks.Clear();
-                type = TexturePackListChangedEventArgs.ChangeType.Reset;
-            }
-
-            if (_suppressChangeEvent) {
+                Debug.Assert(false, "UpdateList called with both add and remove as null.");
                 return;
             }
+
+            RaiseTexturePackListChanged(type, add ?? remove);
+        }
+
+        private void RaiseTexturePackListChanged(
+            TexturePackListChangedEventArgs.ChangeType type,
+            IRenderedTexturePack? affectedPack)
+        {
+            if (_suppressChangeEvent)
+                return;
+
             TexturePackListChanged?.Invoke(this, new TexturePackListChangedEventArgs(
-                nameof(_texturePacks), type, add ?? remove
+                nameof(_texturePacks), type, affectedPack
             ));
         }
 

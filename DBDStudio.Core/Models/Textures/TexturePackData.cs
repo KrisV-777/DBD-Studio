@@ -119,6 +119,8 @@ namespace DBDStudio.Core.Models.Textures
 
             Underlying = pack ?? throw new ArgumentNullException(nameof(pack));
             Primordial = primordialPack;
+            _cachedState = State;
+            OnPropertyChanged(nameof(State));
             Underlying.PropertyChanged += OnUnderlyingTexturePackUpdated;
         }
 
