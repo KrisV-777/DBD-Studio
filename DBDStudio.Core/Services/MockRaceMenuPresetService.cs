@@ -2,25 +2,61 @@ using System.Collections.Generic;
 using System.Linq;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
+using DBDStudio.Core.Persistence;
 
 namespace DBDStudio.Core.Services
 {
-    public sealed class MockRaceMenuPresetService : IRaceMenuPresetService
+    public sealed class MockRaceMenuPresetService : IRaceMenuPresetService, IPersistable
     {
-        private readonly IWorkspaceService _workspaceService;
+        private readonly List<RaceMenuPreset> _presets = [];
 
-        public MockRaceMenuPresetService(IWorkspaceService workspaceService)
+        public string PersistenceKey => "raceMenuPresets";
+        public Type PersistenceStateType => typeof(RaceMenuPresetPersistenceState);
+
+        public object? SaveState()
         {
-            _workspaceService = workspaceService;
+            return new RaceMenuPresetPersistenceState {
+                Presets = [.. _presets.Select(preset => new RaceMenuPreset {
+                    Name = preset.Name,
+                    JsSlotFile = preset.JsSlotFile,
+                    Sex = preset.Sex,
+                    NifFile = preset.NifFile,
+                    DdsFile = preset.DdsFile
+                })]
+            };
         }
 
-        public IReadOnlyList<RaceMenuPreset> GetPresets() => _workspaceService.RaceMenuPresets;
+        public void RestoreState(object? state)
+        {
+            _presets.Clear();
+            if (state is not RaceMenuPresetPersistenceState persistenceState) {
+                return;
+            }
 
-        public void Add(RaceMenuPreset preset) => throw new NotImplementedException("MockRaceMenuPresetService does not support adding presets.");
+            foreach (var preset in persistenceState.Presets) {
+                _presets.Add(new RaceMenuPreset {
+                    Name = preset.Name,
+                    JsSlotFile = preset.JsSlotFile,
+                    Sex = preset.Sex,
+                    NifFile = preset.NifFile,
+                    DdsFile = preset.DdsFile
+                });
+            }
+        }
+
+        public IReadOnlyList<RaceMenuPreset> GetPresets() => _presets;
+
+        public void Add(RaceMenuPreset preset) => _presets.Add(new RaceMenuPreset {
+            Name = preset.Name,
+            JsSlotFile = preset.JsSlotFile,
+            Sex = preset.Sex,
+            NifFile = preset.NifFile,
+            DdsFile = preset.DdsFile
+        });
 
         public void Update(RaceMenuPreset preset)
         {
-            var existing = _workspaceService.RaceMenuPresets.FirstOrDefault(x => x.Name == preset.Name);
+            var existing = _presets.FirstOrDefault(x => x.Name == preset.Name);
             if (existing is null) {
                 return;
             }
@@ -31,6 +67,12 @@ namespace DBDStudio.Core.Services
             existing.DdsFile = preset.DdsFile;
         }
 
-        public void Remove(RaceMenuPreset preset) => throw new NotImplementedException("MockRaceMenuPresetService does not support removing presets.");
+        public void Remove(RaceMenuPreset preset)
+        {
+            var existing = _presets.FirstOrDefault(x => x.Name == preset.Name);
+            if (existing is not null) {
+                _presets.Remove(existing);
+            }
+        }
     }
 }

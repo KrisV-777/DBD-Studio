@@ -7,6 +7,7 @@ using DBDStudio.Core.Converter.Json;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 using DBDStudio.Core.Models.Textures;
+using DBDStudio.Core.Persistence;
 using DynamicData;
 using Noggog;
 using YamlDotNet.Core;
@@ -15,7 +16,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace DBDStudio.Core.Services
 {
-    public sealed class TexturePackService : ITexturePackService
+    public sealed class TexturePackService : ITexturePackService, IPersistable
     {
         private readonly ApplicationSettings _settings;
         private readonly HashSet<IRenderedTexturePack> _texturePacks = [];
@@ -33,12 +34,31 @@ namespace DBDStudio.Core.Services
             ResetTextureList();
         }
 
+        public string PersistenceKey => "texturePacks";
+        public Type PersistenceStateType => typeof(TexturePackPersistenceState);
+
+        public object? SaveState()
+        {
+            return new TexturePackPersistenceState {
+                Packs = [.. _texturePacks.Select(pack => pack.Underlying.Clone())]
+            };
+        }
+
+        public void RestoreState(object? state)
+        {
+            if (state is not TexturePackPersistenceState texturePackState) {
+                return;
+            }
+
+            ResetTextureList([.. texturePackState.Packs]);
+        }
+
         public void ResetTextureList(IReadOnlyList<TexturePack>? packs = null)
         {
-            var temporaryPacks = packs?
-                .Concat(_texturePacks.Select(tp => tp.Underlying))
+            var temporaryPacks = _texturePacks.Select(tp => tp.Underlying)
+                .Concat(packs ?? [])
                 .DistinctBy(pack => pack.Uid)
-                .ToArray() ?? [];
+                .ToArray();
             var wasChangeEventSuppressed = _suppressChangeEvent;
             _suppressChangeEvent = true;
 

@@ -35,6 +35,7 @@ namespace DBDStudio.Core.Converter.Json
                 WriteIndented = true
             };
 
+            options.Converters.Add(new ApplicationSettingsJsonConverter());
             options.Converters.Add(new TextureMappingJsonConverter());
             options.Converters.Add(new TexturePackJsonConverter());
 

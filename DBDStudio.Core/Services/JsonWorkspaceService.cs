@@ -1,84 +1,16 @@
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DBDStudio.Core.Converter.Json;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
-using DBDStudio.Core.Models.Textures;
+using DBDStudio.Core.Persistence;
 
 namespace DBDStudio.Core.Services
 {
-    internal sealed class JsonSnapShot
+    public sealed class PersistenceManager(ApplicationSettings settings, IEnumerable<IPersistable> persistables)
     {
-        public ApplicationSettings Settings { get; set; } = new();
-        public IReadOnlyList<TexturePack> TexturePacks { get; set; } = [];
-
-        // TODO: Other collections (BodySlidePresets, RaceMenuPresets, Rules) when implemented.
-    }
-
-    internal sealed class JsonWorkspaceServiceConverter : JsonConverter<JsonSnapShot>
-    {
-        public override JsonSnapShot Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            using var document = JsonDocument.ParseValue(ref reader);
-            var root = document.RootElement;
-
-            var settings = JsonSerializer.Deserialize<ApplicationSettings>(
-                root.GetProperty(nameof(JsonSnapShot.Settings)).GetRawText(),
-                options)
-                ?? throw new JsonException("Missing settings.");
-
-            var texPacks = JsonSerializer.Deserialize<IReadOnlyList<TexturePack>>(
-                root.GetProperty(nameof(JsonSnapShot.TexturePacks)).GetRawText(), options)
-                ?? throw new JsonException("Missing texture packs.");
-
-            return new JsonSnapShot {
-                Settings = settings,
-                TexturePacks = texPacks
-            };
-        }
-
-        public override void Write(Utf8JsonWriter writer, JsonSnapShot value, JsonSerializerOptions options)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName(nameof(JsonSnapShot.Settings));
-            JsonSerializer.Serialize(writer, value.Settings, options);
-
-            writer.WritePropertyName(nameof(JsonSnapShot.TexturePacks));
-            JsonSerializer.Serialize(writer, value.TexturePacks, options);
-
-            writer.WriteEndObject();
-        }
-    }
-
-    public sealed class JsonWorkspaceService(
-        ITexturePackService texturePackService,
-        IBodySlideService bodySlideService,
-        IRaceMenuPresetService raceMenuPresetService,
-        IRuleService ruleService) : IWorkspaceService
-    {
-        private readonly ITexturePackService _texturePackService = texturePackService;
-        private readonly IBodySlideService _bodySlideService = bodySlideService;
-        private readonly IRaceMenuPresetService _raceMenuPresetService = raceMenuPresetService;
-        private readonly IRuleService _ruleService = ruleService;
-        private ApplicationSettings _settings = new();
-
-        public ApplicationSettings Settings => _settings;
-
-        public IReadOnlyList<TexturePack> TexturePacks
-        {
-            get => [.. _texturePackService.GetTexturePacks().Select(tp => tp.Underlying)];
-            set => _texturePackService.ResetTextureList(value);
-        }
-
-        public IReadOnlyList<BodySlidePreset> BodySlidePresets => throw new NotImplementedException();
-
-        public IReadOnlyList<RaceMenuPreset> RaceMenuPresets => throw new NotImplementedException();
-
-        public IReadOnlyList<Rule> Rules => throw new NotImplementedException();
+        private readonly ApplicationSettings _settings = settings;
+        private readonly IReadOnlyList<IPersistable> _persistables = persistables.ToArray();
 
         public void Load()
         {
@@ -87,34 +19,56 @@ namespace DBDStudio.Core.Services
                 return;
             }
 
-            var json = File.ReadAllText(workspacePath);
-            var config = JsonConfiguration.Configuration;
-            var snapshot = JsonSerializer.Deserialize<JsonSnapShot>(json, config);
+            try {
+                JsonConfiguration.Mode = SerializationMode.Local;
+                var json = File.ReadAllText(workspacePath);
+                var snapshot = JsonSerializer.Deserialize<PersistenceSnapshot>(json, JsonConfiguration.Configuration);
+                if (snapshot is null || snapshot.SchemaVersion != PersistenceSnapshot.CurrentSchemaVersion) {
+                    return;
+                }
 
-            if (snapshot is null) {
-                Debug.WriteLine($"Failed to load workspace from '{workspacePath}': Deserialized snapshot is null.");
-                return;
+                foreach (var persistable in _persistables) {
+                    if (!snapshot.Items.TryGetValue(persistable.PersistenceKey, out var payload)) {
+                        continue;
+                    }
+
+                    try {
+                        object? state = null;
+                        if (payload is JsonElement jsonElement) {
+                            state = JsonSerializer.Deserialize(jsonElement.GetRawText(), persistable.PersistenceStateType, JsonConfiguration.Configuration);
+                        } else if (payload is not null) {
+                            state = JsonSerializer.Deserialize(payload.ToString() ?? "{}", persistable.PersistenceStateType, JsonConfiguration.Configuration);
+                        }
+
+                        persistable.RestoreState(state);
+                    } catch (Exception ex) {
+                        Debug.WriteLine($"Failed to restore persistable '{persistable.PersistenceKey}': {ex.Message}");
+                    }
+                }
+            } catch (Exception ex) {
+                Debug.WriteLine($"Failed to load workspace from '{workspacePath}': {ex.Message}");
             }
-
-            _settings = snapshot.Settings;
-            TexturePacks = snapshot.TexturePacks;
-            // TODO: Other collections (BodySlidePresets, RaceMenuPresets, Rules) should also be loaded here when implemented.
         }
 
         public void Save()
         {
             var workspacePath = ResolveWorkspacePath();
-            JsonConfiguration.Mode = SerializationMode.Local;
-            var config = JsonConfiguration.Configuration;
-            var snapshot = new JsonSnapShot {
-                Settings = _settings,
-                TexturePacks = TexturePacks
+            var snapshot = new PersistenceSnapshot {
+                Items = new Dictionary<string, object?>()
             };
-            var json = JsonSerializer.Serialize(snapshot, config);
+            foreach (var persistable in _persistables) {
+                snapshot.Items[persistable.PersistenceKey] = persistable.SaveState();
+            }
+
+            JsonConfiguration.Mode = SerializationMode.Local;
+            var json = JsonSerializer.Serialize(snapshot, JsonConfiguration.Configuration);
+            var directory = Path.GetDirectoryName(workspacePath);
+            if (!string.IsNullOrWhiteSpace(directory)) {
+                Directory.CreateDirectory(directory);
+            }
+
             File.WriteAllText(workspacePath, json);
         }
-
-        #region Private Methods
 
         private string ResolveWorkspacePath()
         {
@@ -125,7 +79,5 @@ namespace DBDStudio.Core.Services
                 ? configured
                 : configured + ".dbdproj";
         }
-
-        #endregion
     }
 }

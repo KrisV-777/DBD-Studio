@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Persistence;
 
 namespace DBDStudio.Core.Models
 {
-    public sealed class ApplicationSettings : INotifyPropertyChanged
+    public sealed class ApplicationSettings : INotifyPropertyChanged, IPersistable
     {
         private string _workspaceFilePath = BuildDefaultWorkspacePath();
         private string _skyrimDataFolder = string.Empty;
@@ -12,6 +14,9 @@ namespace DBDStudio.Core.Models
         private string _raceMenuPresetsFolder = string.Empty;
         private double _baseFontSize = 14;
         private string _theme = "System";
+
+        public string PersistenceKey => "settings";
+        public Type PersistenceStateType => typeof(ApplicationSettingsPersistenceState);
 
         public string WorkspaceFilePath
         {
@@ -56,6 +61,34 @@ namespace DBDStudio.Core.Models
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        public object? SaveState()
+        {
+            return new ApplicationSettingsPersistenceState {
+                WorkspaceFilePath = _workspaceFilePath,
+                SkyrimDataFolder = _skyrimDataFolder,
+                ModsFolder = _modsFolder,
+                BodySlidePresetsFolder = _bodySlidePresetsFolder,
+                RaceMenuPresetsFolder = _raceMenuPresetsFolder,
+                BaseFontSize = _baseFontSize,
+                Theme = _theme
+            };
+        }
+
+        public void RestoreState(object? state)
+        {
+            if (state is not ApplicationSettingsPersistenceState settings) {
+                return;
+            }
+
+            WorkspaceFilePath = settings.WorkspaceFilePath;
+            SkyrimDataFolder = settings.SkyrimDataFolder;
+            ModsFolder = settings.ModsFolder;
+            BodySlidePresetsFolder = settings.BodySlidePresetsFolder;
+            RaceMenuPresetsFolder = settings.RaceMenuPresetsFolder;
+            BaseFontSize = settings.BaseFontSize;
+            Theme = settings.Theme;
+        }
 
         private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
