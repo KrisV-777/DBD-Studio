@@ -121,8 +121,9 @@
                     <TextBlock Text="BodySlide Presets Folder"
                         Classes="default" />
                     <controls:FilePathPickerControl Text="{Binding BodySlidePresetsFolder}"
-                        PickerTitle="Select BodySlide folder"
-                        PlaceholderText="Path to BodySlide slider preset folder…" />
+                        PickerTitle="BodySlide slider presets folder (Relative to Skyrim Data folder)"
+                        IsEnabled="{Binding SkyrimDataFolder, Converter={StaticResource StringNotNullOrEmptyConverter}}"
+                        PlaceholderText="{Binding BodySlidePresetsFolderDefault}" />
                 </StackPanel>
 
                 <!-- RaceMenu Presets -->
@@ -130,8 +131,9 @@
                     <TextBlock Text="RaceMenu Presets Folder"
                         Classes="default" />
                     <controls:FilePathPickerControl Text="{Binding RaceMenuPresetsFolder}"
-                        PickerTitle="Select RaceMenu presets folder"
-                        PlaceholderText="Path to RaceMenu preset folder…" />
+                        PickerTitle="RaceMenu presets folder (Relative to Skyrim Data folder)"
+                        IsEnabled="{Binding SkyrimDataFolder, Converter={StaticResource StringNotNullOrEmptyConverter}}"
+                        PlaceholderText="{Binding RaceMenuPresetsFolderDefault}" />
                 </StackPanel>
             </StackPanel>
 
@@ -151,7 +153,7 @@
                         Margin="0,0,12,8">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding TexturePacksFound}"
-                                FontSize="26"
+                                Classes="h1"
                                 FontWeight="Bold" />
                             <TextBlock Text="Texture Packs Found"
                                 Classes="caption"
@@ -167,7 +169,7 @@
                         Margin="0,0,12,8">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding BodySlidePresetsFound}"
-                                FontSize="26"
+                                Classes="h1"
                                 FontWeight="Bold" />
                             <TextBlock Text="BodySlide Presets Found"
                                 Classes="caption"
@@ -183,7 +185,7 @@
                         Margin="0,0,12,8">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{Binding RaceMenuPresetsFound}"
-                                FontSize="26"
+                                Classes="h1"
                                 FontWeight="Bold" />
                             <TextBlock Text="RaceMenu Presets Found"
                                 Classes="caption"
@@ -235,20 +237,6 @@
                         Width="200" />
                 </StackPanel>
             </StackPanel>
-
-            <!-- ── Action Buttons ── -->
-            <StackPanel Orientation="Horizontal" 
-                HorizontalAlignment="Right" 
-                Spacing="8"
-                Margin="0,6,0,12">
-                <Button Content="Scan Assets"
-                    Classes="accent"
-                    IsEnabled="False"
-                    ToolTip.Tip="Asset scanning will be available in a future update." />
-                <Button Content="Save Settings"
-                    Command="{Binding SaveCommand}" />
-            </StackPanel>
-
         </StackPanel>
     </ScrollViewer>
 </UserControl>

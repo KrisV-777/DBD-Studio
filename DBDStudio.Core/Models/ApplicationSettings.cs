@@ -10,8 +10,8 @@ namespace DBDStudio.Core.Models
         private string _workspaceFilePath = BuildDefaultWorkspacePath();
         private string _skyrimDataFolder = string.Empty;
         private string _modsFolder = string.Empty;
-        private string _bodySlidePresetsFolder = string.Empty;
-        private string _raceMenuPresetsFolder = string.Empty;
+        private string _bodySlidePresetsFolder = BodySlidePresetsFolderDefault;
+        private string _raceMenuPresetsFolder = RaceMenuPresetsFolderDefault;
         private double _baseFontSize = 14;
         private string _theme = "System";
 
@@ -47,6 +47,9 @@ namespace DBDStudio.Core.Models
             get => _raceMenuPresetsFolder;
             set => SetProperty(ref _raceMenuPresetsFolder, value);
         }
+
+        public static string BodySlidePresetsFolderDefault => "CalienteTools\\BodySlide\\SliderPresets";
+        public static string RaceMenuPresetsFolderDefault => "SKSE\\Plugins\\CharGen\\Presets";
 
         public double BaseFontSize
         {

@@ -3,7 +3,6 @@ using Avalonia.Data.Converters;
 using System.Diagnostics;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models.Textures;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace DBDStudio.Converters
 {

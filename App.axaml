@@ -21,5 +21,6 @@
         <x:Double x:Key="TinyFontSize">10</x:Double>
 
         <converters:TexturePackStateClassConverter x:Key="TexturePackStateClassConverter" />
+        <converters:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter" />
     </Application.Resources>
 </Application>

@@ -109,6 +109,9 @@ namespace DBDStudio.ViewModels
             }
         }
 
+        public static string BodySlidePresetsFolderDefault => ApplicationSettings.BodySlidePresetsFolderDefault;
+        public static string RaceMenuPresetsFolderDefault => ApplicationSettings.RaceMenuPresetsFolderDefault;
+
         public string WorkspaceFilePath
         {
             get => _appSettings.WorkspaceFilePath;
