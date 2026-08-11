@@ -45,7 +45,7 @@ namespace DBDStudio
             services.AddPersistable<ApplicationSettings>();
             services.AddSingleton<PersistenceManager>();
             services.AddPersistable<ITexturePackService, TexturePackService>();
-            services.AddPersistable<IBodySlideService, MockBodySlideService>();
+            services.AddPersistable<IBodySlideService, BodySlideService>();
             services.AddPersistable<IRaceMenuPresetService, MockRaceMenuPresetService>();
             services.AddPersistable<IRuleService, MockRuleService>();
             services.AddSingleton<IConditionRegistryService, ConditionRegistryService>();

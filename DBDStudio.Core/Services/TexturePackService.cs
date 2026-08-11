@@ -31,7 +31,6 @@ namespace DBDStudio.Core.Services
                     ResetTextureList();
                 }
             };
-            ResetTextureList();
         }
 
         public string PersistenceKey => "texturePacks";

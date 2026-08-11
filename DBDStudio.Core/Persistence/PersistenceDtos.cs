@@ -27,11 +27,6 @@ namespace DBDStudio.Core.Persistence
         public List<TexturePack> Packs { get; set; } = [];
     }
 
-    public sealed class BodySlidePresetPersistenceState
-    {
-        public List<BodySlidePreset> Presets { get; set; } = [];
-    }
-
     public sealed class RaceMenuPresetPersistenceState
     {
         public List<RaceMenuPreset> Presets { get; set; } = [];

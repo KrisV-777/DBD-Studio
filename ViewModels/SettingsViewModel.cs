@@ -32,30 +32,18 @@ namespace DBDStudio.ViewModels
 
             _appSettings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
             _texturePackService.TexturePackListChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
+            _bodySlideService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(BodySlidePresetsFound));
 
-            SaveCommand = new RelayCommand(SaveSettings);
-            CmdOpenGithub = new RelayCommand(() => OpenUrl("https://github.com/"));
-            CmdOpenWiki = new RelayCommand(() => OpenUrl("https://github.com/wiki"));
-            CmdOpenNexus = new RelayCommand(() => OpenUrl("https://www.nexusmods.com/"));
-            CmdOpenKofi = new RelayCommand(() => OpenUrl("https://ko-fi.com/"));
-        }
-
-        static private void OpenUrl(string url)
-        {
-            Process.Start(new ProcessStartInfo
-            {
+            var openUrl = (string url) => Process.Start(new ProcessStartInfo {
                 FileName = url,
                 UseShellExecute = true
             });
+            CmdOpenGithub = new RelayCommand(() => openUrl("https://github.com/"));
+            CmdOpenWiki = new RelayCommand(() => openUrl("https://github.com/wiki"));
+            CmdOpenNexus = new RelayCommand(() => openUrl("https://www.nexusmods.com/"));
+            CmdOpenKofi = new RelayCommand(() => openUrl("https://ko-fi.com/"));
         }
 
-        private void SaveSettings()
-        {
-            _texturePackService.ResetTextureList();
-            OnPropertyChanged(nameof(TexturePacksFound));
-        }
-
-        public ICommand SaveCommand { get; }
         public ICommand CmdOpenGithub { get; }
         public ICommand CmdOpenWiki { get; }
         public ICommand CmdOpenNexus { get; }
@@ -72,7 +60,6 @@ namespace DBDStudio.ViewModels
             {
                 _appSettings.SkyrimDataFolder = value;
                 // TODO: Reload Mutagen Database when this changes
-                // TODO: Reload Texture Packs when this changes
                 OnPropertyChanged();
             }
         }
@@ -92,8 +79,8 @@ namespace DBDStudio.ViewModels
             get => _appSettings.BodySlidePresetsFolder;
             set
             {
-                _appSettings.BodySlidePresetsFolder = value;
-                // TODO: Scan for BodySlide presets when this changes
+                Debug.Assert(!string.IsNullOrWhiteSpace(SkyrimDataFolder));
+                _appSettings.BodySlidePresetsFolder = ValidatePresetsFolder(value);
                 OnPropertyChanged();
             }
         }
@@ -103,7 +90,8 @@ namespace DBDStudio.ViewModels
             get => _appSettings.RaceMenuPresetsFolder;
             set
             {
-                _appSettings.RaceMenuPresetsFolder = value;
+                Debug.Assert(!string.IsNullOrWhiteSpace(SkyrimDataFolder));
+                _appSettings.RaceMenuPresetsFolder = ValidatePresetsFolder(value);          
                 // TODO: Scan for RaceMenu presets when this changes
                 OnPropertyChanged();
             }
@@ -123,7 +111,7 @@ namespace DBDStudio.ViewModels
         }
 
         public int TexturePacksFound => _texturePackService.GetTexturePacks().Count;
-        public int BodySlidePresetsFound => _bodySlideService.GetPresets().Count;
+        public int BodySlidePresetsFound => _bodySlideService.Presets.Count;
 
         public int RaceMenuPresetsFound => _raceMenuPresetService.GetPresets().Count;
 
@@ -165,6 +153,46 @@ namespace DBDStudio.ViewModels
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(GitHubIconPath)); 
             }
+        }
+
+        private string ValidatePresetsFolder(string value)
+        {
+            if (!Path.IsPathFullyQualified(value)) {
+                return value;
+            }
+
+            var fullPath = Path.GetFullPath(value);
+            var skyrimData = Path.GetFullPath(SkyrimDataFolder);
+            var modsFolder = Path.GetFullPath(ModsFolder);
+
+            if (IsChildPath(skyrimData, fullPath)) {
+                return Path.GetRelativePath(skyrimData, fullPath);
+            }
+
+            if (IsChildPath(modsFolder, fullPath)) {
+                var relativeToMods = Path.GetRelativePath(modsFolder, fullPath);
+
+                // Remove the mod folder itself:
+                // Mods\SomeMod\Presets\Sliders -> Presets\Sliders
+                var separator = relativeToMods.IndexOfAny(
+                    [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
+
+                return separator >= 0
+                        ? relativeToMods[(separator + 1)..]
+                        : string.Empty;
+            }
+
+            // Absolute path, but not under either known folder.
+            return value;
+        }
+
+        private static bool IsChildPath(string parent, string child)
+        {
+            var relative = Path.GetRelativePath(parent, child);
+
+            return relative != ".."
+                && !relative.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !Path.IsPathRooted(relative);
         }
     }
 }

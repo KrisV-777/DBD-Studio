@@ -1,41 +1,53 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:DBDStudio.ViewModels"
-             x:Class="DBDStudio.Views.Pages.BodySlidePage"
-             x:DataType="vm:BodySlideViewModel">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DBDStudio.ViewModels"
+    xmlns:fluent="using:FluentIcons.Avalonia"
+    x:Class="DBDStudio.Views.Pages.BodySlidePage"
+    x:DataType="vm:BodySlideViewModel">
 
-    <DockPanel Margin="16">
+    <Grid Margin="16"
+        RowDefinitions="Auto,*">
 
-        <!-- ── Toolbar ── -->
-        <StackPanel DockPanel.Dock="Top"
-                    Orientation="Horizontal"
-                    Spacing="10"
-                    Margin="0,0,0,12">
-            <TextBlock Text="BodySlide Presets"
-                       FontSize="20"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
-            <TextBox Text="{Binding SearchText}"
-                     PlaceholderText="Search presets…"
-                     Width="240"
-                     VerticalAlignment="Center" />
-        </StackPanel>
+        <!-- Header / Search -->
+        <Grid Grid.Row="0"
+            ColumnDefinitions="*,*"
+            Margin="0,0,0,12">
 
-        <!-- ── Read-only grid ── -->
-        <DataGrid ItemsSource="{Binding FilteredPresets}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserResizeColumns="True"
-                  GridLinesVisibility="Horizontal">
+            <TextBlock Grid.Column="0"
+                Text="BodySlide Presets"
+                Classes="h1"
+                FontWeight="SemiBold"
+                VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1"
+                Text="{Binding SearchText}"
+                Classes="default"
+                PlaceholderText="Search presets…"
+                VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Loaded Presets Table -->
+        <DataGrid Grid.Row="1"
+            ItemsSource="{Binding FilteredPresets}"
+            AutoGenerateColumns="False"
+            CanUserResizeColumns="True"
+            GridLinesVisibility="Horizontal">
+
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Preset"
-                                    Binding="{Binding Preset}"
-                                    Width="*" />
+                    Binding="{Binding Preset}"
+                    IsReadOnly="True"
+                    Width="*" />
+
                 <DataGridTextColumn Header="XML File"
-                                    Binding="{Binding SourceXml}"
-                                    Width="*" />
+                    Binding="{Binding SourceXml}"
+                    IsReadOnly="True"
+                    Width="*" />
+
+                <DataGridCheckBoxColumn Header="Private"
+                    Binding="{Binding IsPrivate}"
+                    Width="Auto" />
             </DataGrid.Columns>
         </DataGrid>
-
-    </DockPanel>
+    </Grid>
 </UserControl>

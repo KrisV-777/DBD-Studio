@@ -1,10 +1,11 @@
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using DBDStudio.Core.Models;
 
 namespace DBDStudio.Core.Interfaces
 {
     public interface IBodySlideService
     {
-        IReadOnlyList<BodySlidePreset> GetPresets();
+        ObservableCollection<BodySlidePreset> Presets { get; }
+        void Reset();
     }
 }

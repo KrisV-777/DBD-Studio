@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 
@@ -9,9 +10,14 @@ namespace DBDStudio.ViewModels
     public sealed class BodySlideViewModel : ViewModelBase
     {
         private readonly IBodySlideService _bodySlideService;
+        public ObservableCollection<BodySlidePreset> FilteredPresets { get; } = [];
         private string _searchText = string.Empty;
 
-        public ObservableCollection<BodySlidePreset> FilteredPresets { get; } = [];
+        public BodySlideViewModel(IBodySlideService bodySlideService)
+        {
+            _bodySlideService = bodySlideService;
+            ApplyFilter();
+        }
 
         public string SearchText
         {
@@ -23,19 +29,13 @@ namespace DBDStudio.ViewModels
             }
         }
 
-        public BodySlideViewModel(IBodySlideService bodySlideService)
-        {
-            _bodySlideService = bodySlideService;
-            ApplyFilter();
-        }
-
         private void ApplyFilter()
         {
             FilteredPresets.Clear();
 
             var source = string.IsNullOrWhiteSpace(_searchText)
-                ? _bodySlideService.GetPresets().AsEnumerable()
-                : _bodySlideService.GetPresets().Where(p =>
+                ? _bodySlideService.Presets.AsEnumerable()
+                : _bodySlideService.Presets.Where(p =>
                     p.Preset.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
                     p.SourceXml.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
