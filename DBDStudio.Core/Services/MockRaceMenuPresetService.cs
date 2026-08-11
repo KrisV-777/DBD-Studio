@@ -1,78 +1,128 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 using DBDStudio.Core.Persistence;
+using Noggog;
 
 namespace DBDStudio.Core.Services
 {
     public sealed class MockRaceMenuPresetService : IRaceMenuPresetService, IPersistable
     {
-        private readonly List<RaceMenuPreset> _presets = [];
+        private readonly ApplicationSettings _settings;
+        private readonly ObservableCollection<RaceMenuPreset> _presets = [];
 
-        public string PersistenceKey => "raceMenuPresets";
-        public Type PersistenceStateType => typeof(RaceMenuPresetPersistenceState);
-
-        public object? SaveState()
+        public MockRaceMenuPresetService(ApplicationSettings settings)
         {
-            return new RaceMenuPresetPersistenceState {
-                Presets = [.. _presets.Select(preset => new RaceMenuPreset {
-                    Name = preset.Name,
-                    JsSlotFile = preset.JsSlotFile,
-                    Sex = preset.Sex,
-                    NifFile = preset.NifFile,
-                    DdsFile = preset.DdsFile
-                })]
+            _settings = settings;
+
+            _settings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or
+                    nameof(ApplicationSettings.ModsFolder) or nameof(ApplicationSettings.RaceMenuPresetsFolder)) {
+                    Reset();
+                }
             };
         }
 
+        public string PersistenceKey => "raceMenuPresets";
+        public Type PersistenceStateType => typeof(List<RaceMenuPreset>);
+
+        public ObservableCollection<RaceMenuPreset> Presets => _presets;
+
+        public void Reset() => ReInitializePresets(
+            DiscoverExternalPresets(_settings.SkyrimDataFolder).Union(DiscoverExternalPresets(_settings.ModsFolder)));
+
+        public object? SaveState() => _presets;
+
         public void RestoreState(object? state)
         {
+            if (state is not List<RaceMenuPreset> savedPresets) {
+                return;
+            }
+            ReInitializePresets(savedPresets);
+        }
+
+        private void ReInitializePresets(IEnumerable<RaceMenuPreset> newPresets)
+        {
+            var oldPresets = _presets.ToHashSet();
             _presets.Clear();
-            if (state is not RaceMenuPresetPersistenceState persistenceState) {
-                return;
-            }
 
-            foreach (var preset in persistenceState.Presets) {
-                _presets.Add(new RaceMenuPreset {
-                    Name = preset.Name,
-                    JsSlotFile = preset.JsSlotFile,
-                    Sex = preset.Sex,
-                    NifFile = preset.NifFile,
-                    DdsFile = preset.DdsFile
+            newPresets
+                .Where(p => !string.IsNullOrWhiteSpace(p.Name) && File.Exists(p.JsSlotFile))
+                .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                .ForEach(p =>
+                {
+                    if (oldPresets.TryGetValue(p, out var old) && IsValidSex(old.Sex))
+                        p.Sex = old.Sex;
+
+                    _presets.Add(p);
                 });
-            }
         }
 
-        public IReadOnlyList<RaceMenuPreset> GetPresets() => _presets;
-
-        public void Add(RaceMenuPreset preset) => _presets.Add(new RaceMenuPreset {
-            Name = preset.Name,
-            JsSlotFile = preset.JsSlotFile,
-            Sex = preset.Sex,
-            NifFile = preset.NifFile,
-            DdsFile = preset.DdsFile
-        });
-
-        public void Update(RaceMenuPreset preset)
+        private IEnumerable<RaceMenuPreset> DiscoverExternalPresets(string rootFolder)
         {
-            var existing = _presets.FirstOrDefault(x => x.Name == preset.Name);
-            if (existing is null) {
-                return;
+            if (string.IsNullOrWhiteSpace(rootFolder) || !Directory.Exists(rootFolder)) {
+                yield break;
             }
 
-            existing.JsSlotFile = preset.JsSlotFile;
-            existing.Sex = preset.Sex;
-            existing.NifFile = preset.NifFile;
-            existing.DdsFile = preset.DdsFile;
+            foreach (var presetFile in EnumeratePresetFiles(rootFolder)) {
+                var sex = InferSexFromPathOrName(presetFile);
+
+                yield return new RaceMenuPreset {
+                    Name = Path.GetFileNameWithoutExtension(presetFile),
+                    JsSlotFile = presetFile,
+                    Sex = sex
+                };
+            }
         }
 
-        public void Remove(RaceMenuPreset preset)
+        private IEnumerable<string> EnumeratePresetFiles(string rootFolder)
         {
-            var existing = _presets.FirstOrDefault(x => x.Name == preset.Name);
-            if (existing is not null) {
-                _presets.Remove(existing);
+            // Pattern 1: rootFolder/<config.raceMenuPath>/*.jslot
+            var presetsFolder = Path.Combine(rootFolder, _settings.RaceMenuPresetsFolder);
+            if (Directory.Exists(presetsFolder)) {
+                foreach (var presetFile in Directory.EnumerateFiles(presetsFolder, "*.jslot", SearchOption.TopDirectoryOnly)) {
+                    yield return presetFile;
+                }
+            }
+
+            // Pattern 2: rootFolder/*/<config.raceMenuPath>/*.jslot
+            foreach (var subdir in Directory.EnumerateDirectories(rootFolder)) {
+                var presetsFolderSub = Path.Combine(subdir, _settings.RaceMenuPresetsFolder);
+                if (!Directory.Exists(presetsFolderSub))
+                    continue;
+
+                foreach (var presetFile in Directory.EnumerateFiles(presetsFolderSub, "*.jslot", SearchOption.TopDirectoryOnly)) {
+                    yield return presetFile;
+                }
             }
         }
+
+        private static string InferSexFromPathOrName(string presetFile)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(presetFile);
+            var filePath = presetFile;
+
+            if (ContainsMarker(fileName, "female") || ContainsMarker(filePath, "female") ||
+                ContainsMarker(fileName, "fem") || ContainsMarker(filePath, "fem")) {
+                return "Female";
+            }
+
+            if (ContainsMarker(fileName, "male") || ContainsMarker(filePath, "male") ||
+                ContainsMarker(fileName, "masc") || ContainsMarker(filePath, "masc")) {
+                return "Male";
+            }
+
+            return "Male";
+        }
+
+        private static bool ContainsMarker(string source, string marker)
+            => source.Contains(marker, StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsValidSex(string sex)
+            => string.Equals(sex, "Male", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(sex, "Female", StringComparison.OrdinalIgnoreCase);
     }
 }

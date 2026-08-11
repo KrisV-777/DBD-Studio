@@ -84,7 +84,7 @@ namespace DBDStudio.ViewModels
             foreach (var definition in _conditionRegistryService.GetDefinitions().OrderBy(d => d.Priority).ThenBy(d => d.DisplayName))
                 AvailableConditionTypes.Add(definition.Name);
 
-            foreach (var preset in raceMenuPresetService.GetPresets())
+            foreach (var preset in raceMenuPresetService.Presets)
                 AvailableRaceMenuPresets.Add(preset.Name);
 
             foreach (var rule in _ruleService.GetRules())

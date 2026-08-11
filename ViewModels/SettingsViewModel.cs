@@ -33,6 +33,7 @@ namespace DBDStudio.ViewModels
             _appSettings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
             _texturePackService.TexturePackListChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
             _bodySlideService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(BodySlidePresetsFound));
+            _raceMenuPresetService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(RaceMenuPresetsFound));
 
             var openUrl = (string url) => Process.Start(new ProcessStartInfo {
                 FileName = url,
@@ -113,7 +114,7 @@ namespace DBDStudio.ViewModels
         public int TexturePacksFound => _texturePackService.GetTexturePacks().Count;
         public int BodySlidePresetsFound => _bodySlideService.Presets.Count;
 
-        public int RaceMenuPresetsFound => _raceMenuPresetService.GetPresets().Count;
+        public int RaceMenuPresetsFound => _raceMenuPresetService.Presets.Count;
 
         public double BaseFontSize
         {
