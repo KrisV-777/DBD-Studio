@@ -44,9 +44,18 @@
                     IsReadOnly="True"
                     Width="*" />
 
-                <DataGridCheckBoxColumn Header="Private"
-                    Binding="{Binding IsPrivate}"
-                    Width="Auto" />
+                <DataGridTemplateColumn Header="Private"
+                    Width="Auto"
+                    MinWidth="72">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox
+                                IsChecked="{Binding IsPrivate, Mode=TwoWay}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

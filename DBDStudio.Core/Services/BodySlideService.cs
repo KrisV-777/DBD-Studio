@@ -23,7 +23,8 @@ namespace DBDStudio.Core.Services
 
             _settings.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or nameof(ApplicationSettings.ModsFolder)) {
+                if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or 
+                    nameof(ApplicationSettings.ModsFolder) or nameof(ApplicationSettings.BodySlidePresetsFolder)) {
                     Reset();
                 }
             };

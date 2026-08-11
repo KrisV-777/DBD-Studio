@@ -6,7 +6,6 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using DBDStudio.Core.Interfaces;
-using DBDStudio.Core.Models;
 using DBDStudio.Core.Models.Textures;
 using DBDStudio.ViewModels;
 
