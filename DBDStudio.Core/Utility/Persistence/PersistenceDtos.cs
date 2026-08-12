@@ -1,7 +1,7 @@
 ﻿using DBDStudio.Core.Models;
 using DBDStudio.Core.Models.Textures;
 
-namespace DBDStudio.Core.Persistence
+namespace DBDStudio.Core.Utility.Persistence
 {
     public sealed class PersistenceSnapshot
     {
@@ -35,5 +35,10 @@ namespace DBDStudio.Core.Persistence
     public sealed class RulePersistenceState
     {
         public List<Rule> Rules { get; set; } = [];
+    }
+
+    public sealed class LoadOrderPersistenceState
+    {
+        // public List<DiscoveredPlugin> Plugins { get; set; } = [];
     }
 }
