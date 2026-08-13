@@ -60,7 +60,6 @@ namespace DBDStudio.ViewModels
             set
             {
                 _appSettings.SkyrimDataFolder = value;
-                // TODO: Reload Mutagen Database when this changes
                 OnPropertyChanged();
             }
         }
@@ -92,8 +91,7 @@ namespace DBDStudio.ViewModels
             set
             {
                 Debug.Assert(!string.IsNullOrWhiteSpace(SkyrimDataFolder));
-                _appSettings.RaceMenuPresetsFolder = ValidatePresetsFolder(value);          
-                // TODO: Scan for RaceMenu presets when this changes
+                _appSettings.RaceMenuPresetsFolder = ValidatePresetsFolder(value);
                 OnPropertyChanged();
             }
         }
@@ -111,7 +109,7 @@ namespace DBDStudio.ViewModels
             }
         }
 
-        public int TexturePacksFound => _texturePackService.GetTexturePacks().Count;
+        public int TexturePacksFound => _texturePackService.TexturePacks.Count;
         public int BodySlidePresetsFound => _bodySlideService.Presets.Count;
 
         public int RaceMenuPresetsFound => _raceMenuPresetService.Presets.Count;

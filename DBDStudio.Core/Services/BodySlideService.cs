@@ -4,9 +4,10 @@ using System.Xml.Linq;
 using System.Collections.ObjectModel;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
-using DBDStudio.Core.Persistence;
+using DBDStudio.Core.Utility.Persistence;
 using Noggog;
 using System.Reactive.Linq;
+using DBDStudio.Core.Utility;
 
 namespace DBDStudio.Core.Services
 {
@@ -23,7 +24,7 @@ namespace DBDStudio.Core.Services
 
             _settings.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or 
+                if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or
                     nameof(ApplicationSettings.ModsFolder) or nameof(ApplicationSettings.BodySlidePresetsFolder)) {
                     Reset();
                 }
@@ -36,9 +37,8 @@ namespace DBDStudio.Core.Services
 
         public ObservableCollection<BodySlidePreset> Presets => _presets;
 
-        public void Reset() => ReInitializePresets(
-            DiscoverExternalPresets(_settings.SkyrimDataFolder).Union(DiscoverExternalPresets(_settings.ModsFolder)));
-    
+        public void Reset() => ReInitializePresets(DiscoverExternalPresets());
+
         #endregion
 
         #region IPersistable
@@ -77,13 +77,12 @@ namespace DBDStudio.Core.Services
                 });
         }
 
-        private IEnumerable<BodySlidePreset> DiscoverExternalPresets(string rootFolder)
+        private IEnumerable<BodySlidePreset> DiscoverExternalPresets()
         {
-            if (string.IsNullOrWhiteSpace(rootFolder) || !Directory.Exists(rootFolder)) {
-                yield break;
-            }
-
-            foreach (var xmlFileInfo in EnumerateConfigFiles(rootFolder)) {
+            foreach (var xmlFileInfo in DirectoryIterator.EnumerateProjectFiles([
+                    new DirectoryIterator.IteratorDetails(_settings.SkyrimDataFolder, 0),
+                    new DirectoryIterator.IteratorDetails(_settings.ModsFolder, 1),
+                ], _settings.BodySlidePresetsFolder, "*.xml")) {
                 var xmlFile = xmlFileInfo.FullName;
                 var document = XDocument.Load(xmlFile);
 
@@ -94,28 +93,6 @@ namespace DBDStudio.Core.Services
                         SourceXml = xmlFile,
                         IsPrivate = false
                     };
-                }
-            }
-        }
-
-        private IEnumerable<FileInfo> EnumerateConfigFiles(string rootFolder)
-        {
-            // Pattern 1: rootFolder/<config.bodyslidePath>/*.xml
-            var sliderPresets = Path.Combine(rootFolder, _settings.BodySlidePresetsFolder);
-            if (Directory.Exists(sliderPresets)) {
-                var xmlFiles = Directory.EnumerateFiles(sliderPresets, "*.xml", SearchOption.TopDirectoryOnly);
-                foreach (var xmlFile in xmlFiles) {
-                    yield return new FileInfo(xmlFile);
-                }
-            }
-            // Pattern 2: rootFolder/*/<config.bodyslidePath>/*.xml
-            foreach (var subdir in Directory.EnumerateDirectories(rootFolder)) {
-                var sliderPresetsSub = Path.Combine(subdir, _settings.BodySlidePresetsFolder);
-                if (!Directory.Exists(sliderPresetsSub))
-                    continue;
-                var xmlFiles = Directory.EnumerateFiles(sliderPresetsSub, "*.xml", SearchOption.TopDirectoryOnly);
-                foreach (var xmlFile in xmlFiles) {
-                    yield return new FileInfo(xmlFile);
                 }
             }
         }

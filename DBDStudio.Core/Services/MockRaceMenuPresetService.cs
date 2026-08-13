@@ -3,7 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
-using DBDStudio.Core.Persistence;
+using DBDStudio.Core.Utility;
+using DBDStudio.Core.Utility.Persistence;
 using Noggog;
 
 namespace DBDStudio.Core.Services
@@ -67,36 +68,18 @@ namespace DBDStudio.Core.Services
                 yield break;
             }
 
-            foreach (var presetFile in EnumeratePresetFiles(rootFolder)) {
-                var sex = InferSexFromPathOrName(presetFile);
+            foreach (var presetFile in DirectoryIterator.EnumerateProjectFiles([
+                    new DirectoryIterator.IteratorDetails(_settings.SkyrimDataFolder, 0),
+                    new DirectoryIterator.IteratorDetails(_settings.ModsFolder, 1),
+                ], _settings.RaceMenuPresetsFolder, "*.jslot")) {
+                var presetFilePath = presetFile.FullName;
+                var sex = InferSexFromPathOrName(presetFilePath);
 
                 yield return new RaceMenuPreset {
-                    Name = Path.GetFileNameWithoutExtension(presetFile),
-                    JsSlotFile = presetFile,
+                    Name = presetFile.Name,
+                    JsSlotFile = presetFilePath,
                     Sex = sex
                 };
-            }
-        }
-
-        private IEnumerable<string> EnumeratePresetFiles(string rootFolder)
-        {
-            // Pattern 1: rootFolder/<config.raceMenuPath>/*.jslot
-            var presetsFolder = Path.Combine(rootFolder, _settings.RaceMenuPresetsFolder);
-            if (Directory.Exists(presetsFolder)) {
-                foreach (var presetFile in Directory.EnumerateFiles(presetsFolder, "*.jslot", SearchOption.TopDirectoryOnly)) {
-                    yield return presetFile;
-                }
-            }
-
-            // Pattern 2: rootFolder/*/<config.raceMenuPath>/*.jslot
-            foreach (var subdir in Directory.EnumerateDirectories(rootFolder)) {
-                var presetsFolderSub = Path.Combine(subdir, _settings.RaceMenuPresetsFolder);
-                if (!Directory.Exists(presetsFolderSub))
-                    continue;
-
-                foreach (var presetFile in Directory.EnumerateFiles(presetsFolderSub, "*.jslot", SearchOption.TopDirectoryOnly)) {
-                    yield return presetFile;
-                }
             }
         }
 
