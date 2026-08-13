@@ -11,7 +11,6 @@ namespace DBDStudio.ViewModels
         private readonly ITexturePackService _texturePackService;
         private IRenderedTexturePack? _selectedPack;
         private TextureMapping? _selectedMapping;
-
         public ObservableCollection<IRenderedTexturePack> Packs { get; } = [];
 
         public IRenderedTexturePack? SelectedPack
@@ -54,7 +53,7 @@ namespace DBDStudio.ViewModels
 
             _texturePackService.TexturePackListChanged += OnTexturePackListChanged;
 
-            Packs.AddRange(_texturePackService.GetTexturePacks());
+            Packs.AddRange(_texturePackService.TexturePacks);
             SelectedPack = Packs.Count > 0 ? Packs[0] : null;
         }
 
@@ -90,7 +89,7 @@ namespace DBDStudio.ViewModels
             case TexturePackListChangedEventArgs.ChangeType.Reset:
                 var currentSelection = SelectedPack?.Uid;
                 Packs.Clear();
-                Packs.AddRange(_texturePackService.GetTexturePacks());
+                Packs.AddRange(_texturePackService.TexturePacks);
                 SelectedPack = currentSelection is not null && Packs.Any(p => p.Uid == currentSelection) ?
                     Packs.First(p => p.Uid == currentSelection) : (Packs.Count > 0 ? Packs[0] : null);
                 break;

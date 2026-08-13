@@ -57,7 +57,7 @@ namespace DBDStudio.Core.Interfaces
         /// Retrieves a read-only list of all texture packs currently managed by the service.
         /// </summary>
         /// <returns>A read-only list of all texture packs currently managed by the service.</returns>
-        IReadOnlyList<IRenderedTexturePack> GetTexturePacks();
+        IReadOnlySet<IRenderedTexturePack> TexturePacks { get; }
 
         /// <summary>
         /// Emplaces a texture pack into the collection.

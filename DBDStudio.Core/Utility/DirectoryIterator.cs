@@ -1,10 +1,13 @@
-﻿namespace DBDStudio.Core.Utility
+﻿using Noggog;
+
+namespace DBDStudio.Core.Utility
 {
     public static class DirectoryIterator
     {
         public class IteratorDetails(string rootFolder, int iterDepth)
         {
-            public DirectoryInfo RootFolder { get; set; } = new DirectoryInfo(rootFolder);
+            public DirectoryInfo? RootFolder { get; set; } =
+                rootFolder.IsNullOrEmpty() || !Directory.Exists(rootFolder) ? null : new DirectoryInfo(rootFolder);
             public int IterDepth { get; set; } = iterDepth;
         }
 
@@ -12,13 +15,29 @@
         {
             return rootPaths
                 .SelectMany(rp => CollectDirectoriesOfDepth(rp.RootFolder, rp.IterDepth))
-                .Select(directory => new DirectoryInfo(Path.Combine(directory.FullName, infix)))
-                .Where(directory => directory.Exists)
+                .SelectMany(directory => EnumerateDirectories(directory.FullName, infix))
                 .SelectMany(directory => directory.EnumerateFiles(searchPattern));
         }
 
-        private static IEnumerable<DirectoryInfo> CollectDirectoriesOfDepth(DirectoryInfo directory, int depth)
+        private static IEnumerable<DirectoryInfo> EnumerateDirectories(string root, string pattern)
         {
+            IEnumerable<DirectoryInfo> current = [new DirectoryInfo(root)];
+
+            var patterns = pattern.Split(
+                [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in patterns) {
+                current = current.SelectMany(d => d.EnumerateDirectories(part));
+            }
+
+            return current;
+        }
+
+        private static IEnumerable<DirectoryInfo> CollectDirectoriesOfDepth(DirectoryInfo? directory, int depth)
+        {
+            if (directory == null)
+                yield break;
+
             ArgumentOutOfRangeException.ThrowIfNegative(depth);
             if (depth == 0) {
                 yield return directory;

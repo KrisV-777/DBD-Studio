@@ -7,7 +7,8 @@ using DBDStudio.Core.Converter.Json;
 using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Models;
 using DBDStudio.Core.Models.Textures;
-using DBDStudio.Core.Persistence;
+using DBDStudio.Core.Utility;
+using DBDStudio.Core.Utility.Persistence;
 using DynamicData;
 using Noggog;
 using YamlDotNet.Core;
@@ -52,6 +53,8 @@ namespace DBDStudio.Core.Services
             ResetTextureList([.. texturePackState.Packs]);
         }
 
+        public IReadOnlySet<IRenderedTexturePack> TexturePacks => _texturePacks;
+
         public void ResetTextureList(IReadOnlyList<TexturePack>? packs = null)
         {
             var temporaryPacks = _texturePacks.Select(tp => tp.Underlying)
@@ -64,27 +67,21 @@ namespace DBDStudio.Core.Services
             try {
                 _texturePacks.Clear();
 
-                // Load packs from the Skyrim data folder and mods folder, if they exist.
-                var populateFilePacks = (string folder) =>
-                {
-                    try {
-                        foreach (var pack in DiscoverExternalPacks(folder)) {
-                            var existingPack = _texturePacks.FirstOrDefault(p => p.Uid == pack.Uid);
-                            if (existingPack is not null) {
-                                if (pack.Underlying.IsMoreRecentThan(existingPack.Underlying)) {
-                                    UpdateList(pack, existingPack);
-                                }
-                            } else {
-                                UpdateList(pack, null);
+                try {
+                    foreach (var pack in DiscoverExternalPacks()) {
+                        var existingPack = _texturePacks.FirstOrDefault(p => p.Uid == pack.Uid);
+                        if (existingPack is not null) {
+                            if (pack.Underlying.IsMoreRecentThan(existingPack.Underlying)) {
+                                UpdateList(pack, existingPack);
                             }
-                            Debug.Assert(_texturePacks.Contains(pack));
+                        } else {
+                            UpdateList(pack, null);
                         }
-                    } catch (Exception ex) {
-                        Debug.WriteLine($"Failed to discover texture packs in folder '{folder}': {ex.Message}");
+                        Debug.Assert(_texturePacks.Contains(pack));
                     }
-                };
-                populateFilePacks(_settings.SkyrimDataFolder);
-                populateFilePacks(_settings.ModsFolder);
+                } catch (Exception ex) {
+                    Debug.WriteLine($"Failed to discover texture packs: {ex.Message}");
+                }
 
                 foreach (var temporaryPack in temporaryPacks) {
                     var freshlyLoadedPack = _texturePacks.FirstOrDefault(pack => pack.Uid == temporaryPack.Uid);
@@ -110,8 +107,6 @@ namespace DBDStudio.Core.Services
 
             RaiseTexturePackListChanged(TexturePackListChangedEventArgs.ChangeType.Reset, null);
         }
-
-        IReadOnlyList<IRenderedTexturePack> ITexturePackService.GetTexturePacks() => [.. _texturePacks.Select(pack => (IRenderedTexturePack)pack)];
 
         /// <summary>
         /// Adds a new texture pack to the workspace. If a texture pack with the same name already exists,
@@ -294,54 +289,21 @@ namespace DBDStudio.Core.Services
         /// <param name="rootFolder">The root folder to search for texture packs.</param>
         /// <returns>An enumerable of TexturePack instances discovered in the root folder.</returns>
         /// <exception cref="Exception">Exceptions are forwarded to the caller. The method does not handle exceptions internally.</exception>
-        private static IEnumerable<TexturePackData> DiscoverExternalPacks(string rootFolder)
+        private IEnumerable<TexturePackData> DiscoverExternalPacks()
         {
-            if (string.IsNullOrWhiteSpace(rootFolder) || !Directory.Exists(rootFolder)) {
-                yield break;
-            }
-
-            foreach (var configFile in EnumerateConfigFiles(rootFolder)) {
+            foreach (var configFile in DirectoryIterator.EnumerateProjectFiles([
+                    new DirectoryIterator.IteratorDetails(_settings.SkyrimDataFolder, 0),
+                    new DirectoryIterator.IteratorDetails(_settings.ModsFolder, 1),
+                ], "textures/dbd/*", "config.json")) {
                 var primordial = TryReadPackFromConfig(configFile);
                 if (primordial is null) {
                     Debug.WriteLine($"Failed to read texture pack from config file '{configFile.FullName}'.");
                     continue;
                 }
-                var renderPack = new TexturePackData(primordial.Clone(), primordial);
-                yield return renderPack;
-            }
-        }
-
-        /// <summary>
-        /// Searches for texture pack configuration files in the specified root folder. It looks for config.yml files in two patterns:
-        /// 1. Directly under the root folder in the path: rootFolder/textures/dbd/*/config.json
-        /// 2. In any subdirectory of the root folder in the path: rootFolder/*/textures/dbd/*/config.json
-        /// </summary>
-        /// <param name="rootFolder">The root folder to search for texture pack configuration files.</param>
-        /// <returns>An enumerable of FileInfo objects representing the found configuration files.</returns>
-        /// <exception cref="Exception">Exceptions are forwarded to the caller. The method does not handle exceptions internally.</exception>
-        private static IEnumerable<FileInfo> EnumerateConfigFiles(string rootFolder)
-        {
-            // Pattern 1: rootFolder/textures/dbd/*/config.json
-            var texturesDbd = Path.Combine(rootFolder, "textures", "dbd");
-            if (Directory.Exists(texturesDbd)) {
-                foreach (var packDir in Directory.EnumerateDirectories(texturesDbd)) {
-                    var configFile = Path.Combine(packDir, "config.json");
-                    if (File.Exists(configFile)) {
-                        yield return new FileInfo(configFile);
-                    }
-                }
-            }
-            // Pattern 2: rootFolder/*/textures/dbd/*/config.json
-            foreach (var subdir in Directory.EnumerateDirectories(rootFolder)) {
-                var texturesDbdSub = Path.Combine(subdir, "textures", "dbd");
-                if (Directory.Exists(texturesDbdSub)) {
-                    foreach (var packDir in Directory.EnumerateDirectories(texturesDbdSub)) {
-                        var configFile = Path.Combine(packDir, "config.json");
-                        if (File.Exists(configFile)) {
-                            yield return new FileInfo(configFile);
-                        }
-                    }
-                }
+                yield return new TexturePackData(
+                    primordial.Clone(),
+                    primordial
+                );
             }
         }
 
