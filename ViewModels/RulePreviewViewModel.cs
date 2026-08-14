@@ -1,31 +1,32 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Interfaces.Mutagen;
 using DBDStudio.Core.Models;
 
 namespace DBDStudio.ViewModels
 {
     public sealed class RulePreviewViewModel : ViewModelBase
     {
-        private readonly IFormDatabaseService _formDatabaseService;
+        private readonly IFormDatabase _formDatabase;
         private readonly IRuleService _ruleService;
         private readonly IRuleResolutionService _ruleResolutionService;
         private FormReference? _selectedReference;
         private string _searchText = string.Empty;
 
         public RulePreviewViewModel(
-            IFormDatabaseService formDatabaseService,
+            IFormDatabase formDatabase,
             IRuleService ruleService,
             IRuleResolutionService ruleResolutionService)
         {
-            _formDatabaseService = formDatabaseService;
+            _formDatabase = formDatabase;
             _ruleService = ruleService;
             _ruleResolutionService = ruleResolutionService;
             ApplyCommand = new RelayCommand(ApplySelection);
         }
 
         public ICommand ApplyCommand { get; }
-        public IFormDatabaseService FormDatabaseService => _formDatabaseService;
+        public IFormDatabase FormDatabase => _formDatabase;
 
         public string SearchText
         {
@@ -43,7 +44,7 @@ namespace DBDStudio.ViewModels
             }
         }
 
-        public ObservableCollection<Rule> MatchingRules { get; } = [];
+        public ObservableCollection<Rule> MatchingRules { get; } = new ObservableCollection<Rule>();
         public Rule? WinningRule { get; private set; }
         public string Priority { get; private set; } = "—";
         public string AssignedTexturePack { get; private set; } = "—";

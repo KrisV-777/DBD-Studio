@@ -29,8 +29,8 @@
         <DataTemplate DataType="{x:Type vm:RulePreviewViewModel}">
             <pages:RulePreviewPage />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:LoadOrderExplorerViewModel}">
-            <pages:LoadOrderExplorerPage />
+        <DataTemplate DataType="{x:Type vm:FormDatabaseViewModel}">
+            <pages:FormDatabasePage />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PreviewViewModel}">
             <pages:PreviewPage />
@@ -73,7 +73,7 @@
                         <ListBoxItem Padding="10,9" Content="RaceMenu Presets" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="Rules" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="Rule Preview" Classes="default" />
-                        <ListBoxItem Padding="10,9" Content="Load Order Explorer" Classes="default" />
+                        <ListBoxItem Padding="10,9" Content="Form Database" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="Preview / Export" Classes="default" />
                     </ListBox>
                 </DockPanel>

@@ -6,6 +6,8 @@ using DBDStudio.Core.Interfaces;
 using DBDStudio.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using DBDStudio.Core.Models;
+using DBDStudio.Core.Interfaces.Mutagen;
+using DBDStudio.Core.Models.Mutagen;
 
 internal static class ServiceCollectionExtensions
 {
@@ -50,16 +52,14 @@ namespace DBDStudio
             services.AddPersistable<IRuleService, MockRuleService>();
             services.AddSingleton<IConditionRegistryService, ConditionRegistryService>();
             services.AddSingleton<IRuleResolutionService, RuleResolutionService>();
-            services.AddSingleton<MutagenSkyrimService>();
-            services.AddSingleton<IFormDatabaseService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
-            services.AddSingleton<ILoadOrderService>(sp => sp.GetRequiredService<MutagenSkyrimService>());
+            services.AddSingleton<IFormDatabase, FormDatabase>();
             services.AddTransient<MainWindowViewModel>();
             Services = services.BuildServiceProvider();
 
             var settings = Services.GetRequiredService<ApplicationSettings>();
             var persistenceManager = Services.GetRequiredService<PersistenceManager>();
+            var database = Services.GetRequiredService<IFormDatabase>();
             persistenceManager.Load();
-            Services.GetRequiredService<ILoadOrderService>().Initialize(settings.SkyrimDataFolder);
 
             // Apply saved font sizes to application resources
             var baseFontSize = settings.BaseFontSize;

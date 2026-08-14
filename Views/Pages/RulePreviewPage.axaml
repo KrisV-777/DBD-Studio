@@ -19,7 +19,7 @@
                     CornerRadius="6">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Reference Search" FontWeight="SemiBold" />
-                    <controls:FormSearchControl FormDatabaseService="{Binding FormDatabaseService}"
+                    <controls:FormSearchControl FormDatabase="{Binding FormDatabase}"
                                                 SelectedFormReference="{Binding SelectedReference}" />
                 </StackPanel>
             </Border>

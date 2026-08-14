@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using DBDStudio.Core.Interfaces;
-using DBDStudio.Core.Persistence;
+using DBDStudio.Core.Utility.Persistence;
 
 namespace DBDStudio.Core.Models
 {

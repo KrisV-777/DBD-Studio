@@ -20,6 +20,7 @@
         <x:Double x:Key="CaptionFontSize">12</x:Double>
         <x:Double x:Key="TinyFontSize">10</x:Double>
 
+        <converters:PluginLoadStateClassConverter x:Key="PluginLoadStateClassConverter" />
         <converters:TexturePackStateClassConverter x:Key="TexturePackStateClassConverter" />
         <converters:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter" />
     </Application.Resources>

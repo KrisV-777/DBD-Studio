@@ -3,14 +3,15 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Interfaces.Mutagen;
 using DBDStudio.Core.Models;
 
 namespace DBDStudio.Views.Controls
 {
     public partial class FormSearchControl : UserControl
     {
-        public static readonly StyledProperty<IFormDatabaseService?> FormDatabaseServiceProperty =
-            AvaloniaProperty.Register<FormSearchControl, IFormDatabaseService?>(nameof(FormDatabaseService));
+        public static readonly StyledProperty<IFormDatabase?> FormDatabaseProperty =
+            AvaloniaProperty.Register<FormSearchControl, IFormDatabase?>(nameof(FormDatabase));
 
         public static readonly StyledProperty<FormReference?> SelectedFormReferenceProperty =
             AvaloniaProperty.Register<FormSearchControl, FormReference?>(nameof(SelectedFormReference));
@@ -23,10 +24,10 @@ namespace DBDStudio.Views.Controls
             InitializeComponent();
         }
 
-        public IFormDatabaseService? FormDatabaseService
+        public IFormDatabase? FormDatabase
         {
-            get => GetValue(FormDatabaseServiceProperty);
-            set => SetValue(FormDatabaseServiceProperty, value);
+            get => GetValue(FormDatabaseProperty);
+            set => SetValue(FormDatabaseProperty, value);
         }
 
         public FormReference? SelectedFormReference
@@ -58,11 +59,11 @@ namespace DBDStudio.Views.Controls
         private void OnSearchClicked(object? sender, RoutedEventArgs e)
         {
             SearchResults.Clear();
-            if (FormDatabaseService is null)
+            if (FormDatabase is null)
                 return;
 
-            foreach (var record in FormDatabaseService.Search(QueryText))
-                SearchResults.Add(record);
+            // foreach (var record in FormDatabase.Search(QueryText))
+            //     SearchResults.Add(record);
         }
     }
 }

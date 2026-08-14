@@ -1,7 +1,7 @@
 namespace DBDStudio.Core.Models
 {
-    public sealed record FormReference(string Plugin, string FormId)
+    public sealed record FormReference(string Plugin, uint FormId)
     {
-        public override string ToString() => $"{Plugin}::{FormId}";
+        public override string ToString() => $"{Plugin}|{FormId:X8}";
     }
 }

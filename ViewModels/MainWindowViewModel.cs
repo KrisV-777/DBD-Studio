@@ -1,4 +1,5 @@
 using DBDStudio.Core.Interfaces;
+using DBDStudio.Core.Interfaces.Mutagen;
 using DBDStudio.Core.Models;
 
 namespace DBDStudio.ViewModels
@@ -13,8 +14,7 @@ namespace DBDStudio.ViewModels
         private readonly IRuleService _ruleService;
         private readonly IConditionRegistryService _conditionRegistryService;
         private readonly IRuleResolutionService _ruleResolutionService;
-        private readonly IFormDatabaseService _formDatabaseService;
-        private readonly ILoadOrderService _loadOrderService;
+        private readonly IFormDatabase _formDatabase;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
 
         public MainWindowViewModel(
@@ -24,8 +24,7 @@ namespace DBDStudio.ViewModels
             IRuleService ruleService,
             IConditionRegistryService conditionRegistryService,
             IRuleResolutionService ruleResolutionService,
-            IFormDatabaseService formDatabaseService,
-            ILoadOrderService loadOrderService,
+            IFormDatabase formDatabase,
             IRaceMenuPresetService raceMenuPresetService)
         {
             _appSettings = settingsService;
@@ -34,8 +33,7 @@ namespace DBDStudio.ViewModels
             _ruleService = ruleService;
             _conditionRegistryService = conditionRegistryService;
             _ruleResolutionService = ruleResolutionService;
-            _formDatabaseService = formDatabaseService;
-            _loadOrderService = loadOrderService;
+            _formDatabase = formDatabase;
             _raceMenuPresetService = raceMenuPresetService;
 
             // Create SettingsViewModel with reference to this MainWindowViewModel
@@ -45,8 +43,8 @@ namespace DBDStudio.ViewModels
             RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
             Rules = new RulesViewModel(ruleService, raceMenuPresetService, conditionRegistryService, ruleResolutionService);
             Preview = new PreviewViewModel();
-            RulePreview = new RulePreviewViewModel(formDatabaseService, ruleService, ruleResolutionService);
-            LoadOrderExplorer = new LoadOrderExplorerViewModel(loadOrderService);
+            RulePreview = new RulePreviewViewModel(_formDatabase, ruleService, ruleResolutionService);
+            LoadOrderExplorer = new FormDatabaseViewModel(_formDatabase);
         }
 
         public SettingsViewModel Settings { get; }
@@ -56,7 +54,7 @@ namespace DBDStudio.ViewModels
         public RulesViewModel Rules { get; }
         public PreviewViewModel Preview { get; }
         public RulePreviewViewModel RulePreview { get; }
-        public LoadOrderExplorerViewModel LoadOrderExplorer { get; }
+        public FormDatabaseViewModel LoadOrderExplorer { get; }
 
         public int SelectedPageIndex
         {

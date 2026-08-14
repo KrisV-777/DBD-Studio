@@ -74,4 +74,27 @@
         <SolidColorBrush x:Key="TexturePackEphemeralBadgeBackgroundBrush"
             Color="#24D2891F" />
 
+
+    <!-- ============================================================
+         Plugin load states
+         ============================================================ -->
+
+    <SolidColorBrush x:Key="PluginNotLoadedAccentBrush"
+        Color="#E3A34A" />
+
+    <SolidColorBrush x:Key="PluginNotLoadedListBackgroundBrush"
+        Color="#14E3A34A" />
+
+    <SolidColorBrush x:Key="PluginLoadingAccentBrush"
+        Color="#2D6FA8" />
+
+    <SolidColorBrush x:Key="PluginLoadingListBackgroundBrush"
+        Color="#1465A9DD" />
+
+    <SolidColorBrush x:Key="PluginLoadedAccentBrush"
+        Color="#70C477" />
+
+    <SolidColorBrush x:Key="PluginLoadedListBackgroundBrush"
+        Color="#1470C477" />
+
 </ResourceDictionary>

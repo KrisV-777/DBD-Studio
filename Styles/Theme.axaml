@@ -78,4 +78,41 @@
     <Style Selector="Button#ResetSelectedPackButton.pack-state.diskedited">
         <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
     </Style>
+
+    <!-- Plugin load-state tint in form database table rows -->
+    <Style Selector="Border.plugin-load-state.notloaded">
+        <Setter Property="Background" Value="{DynamicResource PluginNotLoadedListBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.plugin-load-state.loading">
+        <Setter Property="Background" Value="{DynamicResource PluginLoadingListBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.plugin-load-state.loaded">
+        <Setter Property="Background" Value="{DynamicResource PluginLoadedListBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Ellipse.plugin-load-state.notloaded">
+        <Setter Property="Fill" Value="{DynamicResource PluginNotLoadedAccentBrush}" />
+    </Style>
+
+    <Style Selector="Ellipse.plugin-load-state.loading">
+        <Setter Property="Fill" Value="{DynamicResource PluginLoadingAccentBrush}" />
+    </Style>
+
+    <Style Selector="Ellipse.plugin-load-state.loaded">
+        <Setter Property="Fill" Value="{DynamicResource PluginLoadedAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.plugin-load-state.notloaded">
+        <Setter Property="Foreground" Value="{DynamicResource PluginNotLoadedAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.plugin-load-state.loading">
+        <Setter Property="Foreground" Value="{DynamicResource PluginLoadingAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.plugin-load-state.loaded">
+        <Setter Property="Foreground" Value="{DynamicResource PluginLoadedAccentBrush}" />
+    </Style>
 </Styles>
