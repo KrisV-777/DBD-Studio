@@ -41,7 +41,7 @@ namespace DBDStudio.ViewModels
             TexturePacks = new TexturePacksViewModel(texturePackService);
             BodySlide = new BodySlideViewModel(bodySlideService);
             RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
-            Rules = new RulesViewModel(ruleService, raceMenuPresetService, conditionRegistryService, ruleResolutionService);
+            Rules = new RulesViewModel(ruleService, texturePackService, bodySlideService, raceMenuPresetService, conditionRegistryService, ruleResolutionService);
             Preview = new PreviewViewModel();
             RulePreview = new RulePreviewViewModel(_formDatabase, ruleService, ruleResolutionService);
             LoadOrderExplorer = new FormDatabaseViewModel(_formDatabase);

@@ -11,6 +11,8 @@ namespace DBDStudio.ViewModels
     public sealed class RulesViewModel : ViewModelBase
     {
         private readonly IRuleService _ruleService;
+        private readonly ITexturePackService _texturePackService;
+        private readonly IBodySlideService _bodySlideService;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
         private readonly IConditionRegistryService _conditionRegistryService;
         private readonly IRuleResolutionService _ruleResolutionService;
@@ -19,9 +21,9 @@ namespace DBDStudio.ViewModels
         private string _raceMenuAssignmentWarning = string.Empty;
 
         public ObservableCollection<Rule> Rules { get; } = [];
-        public ObservableCollection<string> AvailableTexturePacks { get; } = ["Fair Skin", "Tempered", "Custom", "Player HD"];
-        public ObservableCollection<string> AvailableBodySlidePresets { get; } = ["CBBE Curvy", "BHUNP Slim", "UUNP Special"];
-        public ObservableCollection<string> AvailableRaceMenuPresets { get; } = [];
+        public ObservableCollection<string> AvailableTexturePacks => ["None", .. _texturePackService.TexturePacks.Select(p => p.Name)];
+        public ObservableCollection<string> AvailableBodySlidePresets => ["None", .. _bodySlideService.Presets.Select(p => p.Preset)];
+        public ObservableCollection<string> AvailableRaceMenuPresets => ["None", .. _raceMenuPresetService.Presets.Select(p => p.Name)];
         public ObservableCollection<string> AvailableConditionTypes { get; } = [];
         public ObservableCollection<string> AvailableOperators { get; } = ["<", "<=", "==", ">=", ">", "!="];
         public ObservableCollection<string> ConflictWarnings { get; } = [];
@@ -64,12 +66,17 @@ namespace DBDStudio.ViewModels
 
         public RulesViewModel(
             IRuleService ruleService,
+            ITexturePackService texturePackService,
+            IBodySlideService bodySlideService,
             IRaceMenuPresetService raceMenuPresetService,
             IConditionRegistryService conditionRegistryService,
             IRuleResolutionService ruleResolutionService)
         {
             _ruleService = ruleService;
+            _texturePackService = texturePackService;
+            _bodySlideService = bodySlideService;
             _raceMenuPresetService = raceMenuPresetService;
+
             _conditionRegistryService = conditionRegistryService;
             _ruleResolutionService = ruleResolutionService;
 
@@ -83,9 +90,6 @@ namespace DBDStudio.ViewModels
 
             foreach (var definition in _conditionRegistryService.GetDefinitions().OrderBy(d => d.Priority).ThenBy(d => d.DisplayName))
                 AvailableConditionTypes.Add(definition.Name);
-
-            foreach (var preset in raceMenuPresetService.Presets)
-                AvailableRaceMenuPresets.Add(preset.Name);
 
             foreach (var rule in _ruleService.GetRules())
             {
