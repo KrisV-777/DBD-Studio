@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="DBDStudio.Core/DBDStudio.Core.csproj" />
-  <Project Path="DBDStudio.csproj" />
+  <Project Path="DBDStudio/DBDStudio.csproj" />
 </Solution>
