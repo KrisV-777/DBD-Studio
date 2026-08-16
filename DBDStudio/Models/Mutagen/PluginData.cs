@@ -1,12 +1,10 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using DBDStudio.Interfaces.Mutagen;
-using DynamicData.Binding;
+﻿using DBDStudio.Interfaces.Mutagen;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Records;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Strings;
 using Noggog;
+using FormType = DBDStudio.Interfaces.Mutagen.FormType;
 
 namespace DBDStudio.Models.Mutagen
 {
@@ -24,7 +22,8 @@ namespace DBDStudio.Models.Mutagen
         private readonly long _lastWriteTicksUtc = lastWriteTicksUtc;
 
         private bool _isEnabled = isEnabled;
-        private FormRecord[] _recordsSnapshot = [];
+        private FormRecord[] _records = [];
+        private Dictionary<FormType, IEnumerable<FormRecord>> _recordsByFormKey = [];
         private int _loadStateValue = (int)PluginLoadState.NotLoaded;
 
         #endregion
@@ -40,7 +39,8 @@ namespace DBDStudio.Models.Mutagen
             get => _isEnabled;
             set => SetProperty(ref _isEnabled, value);
         }
-        public IReadOnlyList<FormRecord> Records => Volatile.Read(ref _recordsSnapshot);
+        public IReadOnlyList<FormRecord> Records => Volatile.Read(ref _records);
+        public IReadOnlyDictionary<FormType, IEnumerable<FormRecord>> RecordsByFormKey => Volatile.Read(ref _recordsByFormKey);
         public long LastWriteTicksUtc => _lastWriteTicksUtc;
         public PluginLoadState LoadState => (PluginLoadState)Volatile.Read(ref _loadStateValue);
 
@@ -89,25 +89,14 @@ namespace DBDStudio.Models.Mutagen
                 {
                     try {
                         var mod = SkyrimMod.CreateFromBinaryOverlay(Path, SkyrimRelease.SkyrimSE);
-                        var records = ExtractRecordsFromPlugin(mod);
-                        if (Key.Name == "Skyrim") {
-                            records = records.Concat([
-                                new FormRecord
-                                {
-                                    Name = "PlayerRef",
-                                    EditorId = "PlayerRef",
-                                    FormId = 0x14,
-                                    Plugin = "Skyrim.esm",
-                                    RecordType = nameof(IPlacedNpcGetter).Replace("BinaryOverlay", "")
-                                }
-                            ]);
-                        }
-                        var recordsSnapshot = records.ToArray();
+                        var recordMap = ExtractRecordsFromPlugin(mod);
+                        var recordsSnapshot = recordMap.Values.SelectMany(r => r).ToArray();
 
                         _sync.Enter();
                         try {
                             _mod = mod;
-                            Volatile.Write(ref _recordsSnapshot, recordsSnapshot);
+                            Volatile.Write(ref _recordsByFormKey, recordMap);
+                            Volatile.Write(ref _records, recordsSnapshot);
                         } finally {
                             _sync.Exit();
                         }
@@ -130,24 +119,39 @@ namespace DBDStudio.Models.Mutagen
         /// </summary>
         /// <param name="mod">The mod from which to extract records.</param>
         /// <returns>A collection of FormRecord objects representing the extracted records.</returns>
-        private IEnumerable<FormRecord> ExtractRecordsFromPlugin(ISkyrimModGetter mod)
+        private Dictionary<FormType, IEnumerable<FormRecord>> ExtractRecordsFromPlugin(ISkyrimModGetter mod)
         {
-            return ExtractRecordsFromGroup(mod, mod.Npcs)
-                .Union(ExtractRecordsFromGroup(mod, mod.Perks))
-                .Union(ExtractRecordsFromGroup(mod, mod.Races))
-                .Union(ExtractRecordsFromGroup(mod, mod.FormLists))
-                .Union(ExtractRecordsFromGroup(mod, mod.Factions))
-                .Union(ExtractRecordsFromGroup(mod, mod.CombatStyles))
-                .Union(ExtractRecordsFromGroup(mod, mod.Keywords))
-                .Union(ExtractRecordsFromGroup(mod, mod.EnumerateMajorRecords<IPlacedNpcGetter>()));
+            Dictionary<FormType, IEnumerable<FormRecord>> records = new() {
+                [FormType.NPC] = ExtractRecordsFromGroup(mod, mod.Npcs),
+                [FormType.Perk] = ExtractRecordsFromGroup(mod, mod.Perks),
+                [FormType.Race] = ExtractRecordsFromGroup(mod, mod.Races),
+                [FormType.FormList] = ExtractRecordsFromGroup(mod, mod.FormLists),
+                [FormType.Faction] = ExtractRecordsFromGroup(mod, mod.Factions),
+                [FormType.CombatStyle] = ExtractRecordsFromGroup(mod, mod.CombatStyles),
+                [FormType.Keyword] = ExtractRecordsFromGroup(mod, mod.Keywords),
+                [FormType.ActorRef] = ExtractRecordsFromGroup(mod, mod.EnumerateMajorRecords<IPlacedNpcGetter>())
+            };
+
+            if (Key.Name == "Skyrim") {
+                records[FormType.ActorRef] = records[FormType.ActorRef].Append(
+                    new FormRecord {
+                        Name = "PlayerRef",
+                        EditorId = "PlayerRef",
+                        FormId = 0x14,
+                        Plugin = "Skyrim.esm",
+                        RecordType = nameof(IPlacedNpcGetter).Replace("BinaryOverlay", "")
+                    }
+                );
+            }
+
+            return records;
         }
 
         private IEnumerable<FormRecord> ExtractRecordsFromGroup(ISkyrimModGetter mod, IEnumerable<IMajorRecordGetter> records)
         {
             return records
                 .Where(record => record.FormKey.ModKey == mod.ModKey)
-                .Select(record => new FormRecord
-                {
+                .Select(record => new FormRecord {
                     Name = GetRecordName(record),
                     EditorId = record.EditorID ?? "N/A",
                     FormId = record.FormKey.ID,

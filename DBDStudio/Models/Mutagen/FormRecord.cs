@@ -11,6 +11,24 @@ namespace DBDStudio.Models
 
         #region Equality
 
+        public bool MatchQuery(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return true;
+
+            query = query.Trim();
+
+            if (query.StartsWith("0x", StringComparison.OrdinalIgnoreCase) &&
+                uint.TryParse(query[2..], System.Globalization.NumberStyles.HexNumber, null, out var formId)) {
+                return FormId == formId;
+            }
+
+            return Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                EditorId.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                FormReference.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                FormId.ToString().Contains(query, StringComparison.OrdinalIgnoreCase);
+        }
+
         public bool Equals(FormRecord? other) => other is not null && FormId == other.FormId;
         public override bool Equals(object? obj) => obj is FormRecord other && Equals(other);
         public static bool operator ==(FormRecord? left, FormRecord? right) => left?.Equals(right) ?? right is null;

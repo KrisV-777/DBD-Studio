@@ -1,0 +1,34 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DBDStudio.Views.Controls"
+    xmlns:models="using:DBDStudio.Models"
+    x:Class="DBDStudio.Views.Controls.FormSearchResults">
+
+    <Border Background="{DynamicResource ThemeBackgroundLowBrush}"
+        BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+        BorderThickness="1"
+        CornerRadius="4"
+        Padding="1">
+
+        <ListBox
+            ItemsSource="{Binding SearchResults, RelativeSource={RelativeSource AncestorType=controls:FormSearchResults}}">
+
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:FormRecord">
+                    <Button HorizontalAlignment="Stretch"
+                        Click="OnResultClicked">
+
+                        <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding EditorId}"
+                                Classes="default"
+                                FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding FormReference}"
+                                Classes="caption" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+
+        </ListBox>
+    </Border>
+</UserControl>
