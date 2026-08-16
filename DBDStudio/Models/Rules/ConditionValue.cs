@@ -1,4 +1,5 @@
 ﻿using DBDStudio.Models.Mutagen;
+using DBDStudio.Interfaces.Mutagen;
 
 namespace DBDStudio.Models.Rules
 {
@@ -24,9 +25,39 @@ namespace DBDStudio.Models.Rules
             public bool Value { get; set; }
         }
 
+        public sealed class Sex : ConditionValue
+        {
+            private static readonly IReadOnlyList<string> ChoicesInternal = ["Male", "Female"];
+
+            public bool Value { get; set; }
+
+            public IReadOnlyList<string> Choices => ChoicesInternal;
+
+            public string SelectedSex
+            {
+                get => Value ? "Male" : "Female";
+                set => Value = string.Equals(value, "Male", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
         public sealed class Form : ConditionValue
         {
             public FormRecord? Value { get; set; }
+            public FormType FilteredFormType { get; set; } = FormType.None;
+        }
+
+        public ConditionValue DeepClone()
+        {
+            return this switch
+            {
+                String it => new String { Value = it.Value },
+                Integer it => new Integer { Value = it.Value },
+                Float it => new Float { Value = it.Value },
+                Boolean it => new Boolean { Value = it.Value },
+                Sex it => new Sex { Value = it.Value },
+                Form it => new Form { Value = it.Value, FilteredFormType = it.FilteredFormType },
+                _ => throw new ArgumentOutOfRangeException(nameof(ConditionValue), GetType(), null)
+            };
         }
     }
 }

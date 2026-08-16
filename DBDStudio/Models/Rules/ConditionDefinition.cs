@@ -21,7 +21,7 @@ namespace DBDStudio.Models.Rules
                     break;
                 case ConditionType.UsesCombatStyle: yield return new ConditionValue.Form(); break;
                 case ConditionType.HasKeyword: yield return new ConditionValue.Form(); break;
-                case ConditionType.IsSex: yield return new ConditionValue.Boolean(); break;
+                case ConditionType.IsSex: yield return new ConditionValue.Sex(); break;
                 case ConditionType.GetLevel: yield return new ConditionValue.Integer(); break;
                 default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }

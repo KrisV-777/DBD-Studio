@@ -1,10 +1,10 @@
-using DBDStudio.Models;
+using DBDStudio.Interfaces.Rules;
 
 namespace DBDStudio.Interfaces
 {
     public interface IConditionRegistryService
     {
-        IReadOnlyList<ConditionDefinition> GetDefinitions();
-        ConditionDefinition? FindByName(string? name);
+        IReadOnlyList<ConditionType> GetSupportedConditionTypes();
+        int GetPriority(ConditionType type);
     }
 }

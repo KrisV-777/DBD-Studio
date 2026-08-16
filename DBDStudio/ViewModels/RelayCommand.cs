@@ -23,4 +23,41 @@ namespace DBDStudio.ViewModels
         public void RaiseCanExecuteChanged()
             => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    public sealed class RelayCommand<T> : ICommand
+    {
+        private readonly Action<T?> _execute;
+        private readonly Predicate<T?>? _canExecute;
+
+        public RelayCommand(Action<T?> execute, Predicate<T?>? canExecute = null)
+        {
+            _execute = execute;
+            _canExecute = canExecute;
+        }
+
+        public event EventHandler? CanExecuteChanged;
+
+        public bool CanExecute(object? parameter)
+        {
+            if (_canExecute is null)
+                return true;
+
+            return parameter is T typed
+                ? _canExecute(typed)
+                : _canExecute(default);
+        }
+
+        public void Execute(object? parameter)
+        {
+            if (parameter is T typed) {
+                _execute(typed);
+                return;
+            }
+
+            _execute(default);
+        }
+
+        public void RaiseCanExecuteChanged()
+            => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    }
 }

@@ -22,8 +22,7 @@ namespace DBDStudio.Services
             var maxPriority = 0;
             foreach (var condition in rule.Conditions)
             {
-                var definition = _conditionRegistryService.FindByName(condition.Type);
-                var priority = definition?.Priority ?? 0;
+                var priority = _conditionRegistryService.GetPriority(condition.ConditionType);
                 if (priority > maxPriority) {
                     maxPriority = priority;
                 }
@@ -37,7 +36,7 @@ namespace DBDStudio.Services
             var candidates = rules
                 .Where(rule => ResolveCandidates(rule, category).Count > 0)
                 .OrderBy(rule => GetDerivedPriority(rule))
-                .ThenBy(rule => rule.FileName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(rule => rule.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             return candidates.Count == 0 ? null : candidates[^1];
@@ -59,7 +58,7 @@ namespace DBDStudio.Services
             {
                 AssignmentCategory.Texture => rule.TextureCandidates,
                 AssignmentCategory.BodySlide => rule.BodySlideCandidates,
-                AssignmentCategory.RaceMenu => rule.RaceMenuCandidates,
+                AssignmentCategory.RaceMenu => string.IsNullOrWhiteSpace(rule.RaceMenuCandidate) ? [] : [rule.RaceMenuCandidate],
                 _ => []
             };
         }

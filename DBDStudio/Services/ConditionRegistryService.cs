@@ -1,31 +1,33 @@
 using DBDStudio.Interfaces;
-using DBDStudio.Models;
+using DBDStudio.Interfaces.Rules;
 
 namespace DBDStudio.Services
 {
     public sealed class ConditionRegistryService : IConditionRegistryService
     {
-        private static readonly List<ConditionDefinition> Definitions =
-        [
-            new() { Name = "Race", DisplayName = "Race", Priority = 0, ValueType = ConditionValueType.FormReference, EditorType = ConditionEditorType.FormPicker, UsesFormSearch = true },
-            new() { Name = "Sex", DisplayName = "Sex", Priority = 0, ValueType = ConditionValueType.Boolean, EditorType = ConditionEditorType.BooleanPicker, UsesFormSearch = false },
-            new() { Name = "Level", DisplayName = "Level", Priority = 0, ValueType = ConditionValueType.Integer, EditorType = ConditionEditorType.IntegerEditor, UsesFormSearch = false },
-            new() { Name = "Keyword", DisplayName = "Keyword", Priority = 1, ValueType = ConditionValueType.FormReference, EditorType = ConditionEditorType.FormPicker, UsesFormSearch = true },
-            new() { Name = "Faction", DisplayName = "Faction", Priority = 2, ValueType = ConditionValueType.FormReference, EditorType = ConditionEditorType.FormPicker, UsesFormSearch = true },
-            new() { Name = "FactionRank", DisplayName = "Faction Rank", Priority = 3, ValueType = ConditionValueType.FormAndInteger, EditorType = ConditionEditorType.FormAndIntegerEditor, UsesFormSearch = true },
-            new() { Name = "ActorBase", DisplayName = "Actor Base", Priority = 4, ValueType = ConditionValueType.FormReference, EditorType = ConditionEditorType.FormPicker, UsesFormSearch = true },
-            new() { Name = "ReferenceID", DisplayName = "Reference ID", Priority = 5, ValueType = ConditionValueType.FormReference, EditorType = ConditionEditorType.FormPicker, UsesFormSearch = true }
-        ];
-
-        public IReadOnlyList<ConditionDefinition> GetDefinitions() => Definitions;
-
-        public ConditionDefinition? FindByName(string? name)
+        private static readonly Dictionary<ConditionType, int> Priorities = new()
         {
-            if (string.IsNullOrWhiteSpace(name)) {
-                return null;
-            }
+            [ConditionType.IsRace] = 0,
+            [ConditionType.IsSex] = 0,
+            [ConditionType.GetLevel] = 0,
+            [ConditionType.HasKeyword] = 1,
+            [ConditionType.IsInFaction] = 2,
+            [ConditionType.GetFactionRank] = 3,
+            [ConditionType.IsNPC] = 4,
+            [ConditionType.IsReference] = 5,
+            [ConditionType.HasPerk] = 1,
+            [ConditionType.IsInFormList] = 1,
+            [ConditionType.UsesCombatStyle] = 1
+        };
 
-            return Definitions.FirstOrDefault(d => d.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        private static readonly IReadOnlyList<ConditionType> SupportedTypes =
+            Enum.GetValues<ConditionType>();
+
+        public IReadOnlyList<ConditionType> GetSupportedConditionTypes() => SupportedTypes;
+
+        public int GetPriority(ConditionType type)
+        {
+            return Priorities.TryGetValue(type, out var priority) ? priority : 0;
         }
     }
 }

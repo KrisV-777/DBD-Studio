@@ -1,9 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 using DBDStudio.Interfaces;
+using DBDStudio.Interfaces.Mutagen;
+using DBDStudio.Interfaces.Rules;
 using DBDStudio.Models;
 using DBDStudio.Models.Rules;
 
@@ -16,37 +19,58 @@ namespace DBDStudio.ViewModels
         private readonly IBodySlideService _bodySlideService;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
         private readonly IConditionRegistryService _conditionRegistryService;
-        private readonly IRuleResolutionService _ruleResolutionService;
         private Rule? _selectedRule;
-        private Condition? _selectedCondition;
         private string _raceMenuAssignmentWarning = string.Empty;
+        private string? _selectedTextureCandidateToAdd;
+        private string? _selectedBodySlideCandidateToAdd;
+
+        private readonly RelayCommand _duplicateRuleCommand;
+        private readonly RelayCommand _deleteRuleCommand;
+        private readonly RelayCommand _addTextureCandidateCommand;
+        private readonly RelayCommand _addBodySlideCandidateCommand;
 
         public ObservableCollection<Rule> Rules { get; } = [];
-        public ObservableCollection<string> AvailableTexturePacks => ["None", .. _texturePackService.TexturePacks.Select(p => p.Name)];
-        public ObservableCollection<string> AvailableBodySlidePresets => ["None", .. _bodySlideService.Presets.Select(p => p.Preset)];
-        public ObservableCollection<string> AvailableRaceMenuPresets => ["None", .. _raceMenuPresetService.Presets.Select(p => p.Name)];
-        public ObservableCollection<string> AvailableConditionTypes { get; } = [];
-        public ObservableCollection<string> AvailableOperators { get; } = ["<", "<=", "==", ">=", ">", "!="];
+        public ObservableCollection<string> AvailableTexturePacks => [.. _texturePackService.TexturePacks.Select(p => p.Name)];
+        public ObservableCollection<string> AvailableBodySlidePresets => [.. _bodySlideService.Presets.Select(p => p.Preset)];
+        public ObservableCollection<string> AvailableRaceMenuPresets => [.. _raceMenuPresetService.Presets.Select(p => p.Name)];
+        public ObservableCollection<ConditionType> AvailableConditionTypes { get; } = [];
         public ObservableCollection<string> ConflictWarnings { get; } = [];
+
+        public IFormDatabase FormDatabase { get; }
 
         public Rule? SelectedRule
         {
             get => _selectedRule;
             set
             {
-                if (SetField(ref _selectedRule, value))
-                {
-                    SelectedCondition = null;
-                    UpdateRaceMenuWarning();
-                    OnPropertyChanged(nameof(DerivedPriority));
-                }
+                if (!SetField(ref _selectedRule, value))
+                    return;
+
+                SelectedTextureCandidateToAdd = null;
+                SelectedBodySlideCandidateToAdd = null;
+                UpdateRaceMenuWarning();
+                RefreshCommandStates();
             }
         }
 
-        public Condition? SelectedCondition
+        public string? SelectedTextureCandidateToAdd
         {
-            get => _selectedCondition;
-            set => SetField(ref _selectedCondition, value);
+            get => _selectedTextureCandidateToAdd;
+            set
+            {
+                if (SetField(ref _selectedTextureCandidateToAdd, value))
+                    _addTextureCandidateCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        public string? SelectedBodySlideCandidateToAdd
+        {
+            get => _selectedBodySlideCandidateToAdd;
+            set
+            {
+                if (SetField(ref _selectedBodySlideCandidateToAdd, value))
+                    _addBodySlideCandidateCommand.RaiseCanExecuteChanged();
+            }
         }
 
         public string RaceMenuAssignmentWarning
@@ -55,15 +79,13 @@ namespace DBDStudio.ViewModels
             private set => SetField(ref _raceMenuAssignmentWarning, value);
         }
 
-        public int DerivedPriority => SelectedRule is null ? 0 : _ruleResolutionService.GetDerivedPriority(SelectedRule);
-
         public ICommand AddRuleCommand { get; }
-        public ICommand DuplicateRuleCommand { get; }
-        public ICommand DeleteRuleCommand { get; }
-        public ICommand AddConditionCommand { get; }
-        public ICommand RemoveConditionCommand { get; }
-        public ICommand MoveConditionUpCommand { get; }
-        public ICommand MoveConditionDownCommand { get; }
+        public ICommand DuplicateRuleCommand => _duplicateRuleCommand;
+        public ICommand DeleteRuleCommand => _deleteRuleCommand;
+        public ICommand AddTextureCandidateCommand => _addTextureCandidateCommand;
+        public ICommand RemoveTextureCandidateCommand { get; }
+        public ICommand AddBodySlideCandidateCommand => _addBodySlideCandidateCommand;
+        public ICommand RemoveBodySlideCandidateCommand { get; }
 
         public RulesViewModel(
             IRuleService ruleService,
@@ -71,26 +93,25 @@ namespace DBDStudio.ViewModels
             IBodySlideService bodySlideService,
             IRaceMenuPresetService raceMenuPresetService,
             IConditionRegistryService conditionRegistryService,
-            IRuleResolutionService ruleResolutionService)
+            IFormDatabase formDatabase)
         {
             _ruleService = ruleService;
             _texturePackService = texturePackService;
             _bodySlideService = bodySlideService;
             _raceMenuPresetService = raceMenuPresetService;
-
             _conditionRegistryService = conditionRegistryService;
-            _ruleResolutionService = ruleResolutionService;
+            FormDatabase = formDatabase;
 
             AddRuleCommand = new RelayCommand(AddRule);
-            DuplicateRuleCommand = new RelayCommand(DuplicateRule, () => SelectedRule is not null);
-            DeleteRuleCommand = new RelayCommand(DeleteRule, () => SelectedRule is not null);
-            AddConditionCommand = new RelayCommand(AddCondition, () => SelectedRule is not null);
-            RemoveConditionCommand = new RelayCommand(RemoveCondition, () => SelectedRule is not null && SelectedCondition is not null);
-            MoveConditionUpCommand = new RelayCommand(MoveConditionUp, CanMoveConditionUp);
-            MoveConditionDownCommand = new RelayCommand(MoveConditionDown, CanMoveConditionDown);
+            _duplicateRuleCommand = new RelayCommand(DuplicateRule, () => SelectedRule is not null);
+            _deleteRuleCommand = new RelayCommand(DeleteRule, () => SelectedRule is not null);
+            _addTextureCandidateCommand = new RelayCommand(AddTextureCandidate, CanAddTextureCandidate);
+            RemoveTextureCandidateCommand = new RelayCommand<string>(RemoveTextureCandidate, candidate => SelectedRule is not null && !string.IsNullOrWhiteSpace(candidate));
+            _addBodySlideCandidateCommand = new RelayCommand(AddBodySlideCandidate, CanAddBodySlideCandidate);
+            RemoveBodySlideCandidateCommand = new RelayCommand<string>(RemoveBodySlideCandidate, candidate => SelectedRule is not null && !string.IsNullOrWhiteSpace(candidate));
 
-            foreach (var definition in _conditionRegistryService.GetDefinitions().OrderBy(d => d.Priority).ThenBy(d => d.DisplayName))
-                AvailableConditionTypes.Add(definition.Name);
+            foreach (var type in _conditionRegistryService.GetSupportedConditionTypes())
+                AvailableConditionTypes.Add(type);
 
             foreach (var rule in _ruleService.GetRules())
             {
@@ -104,11 +125,15 @@ namespace DBDStudio.ViewModels
 
         private void AddRule()
         {
-            var rule = new Rule { Name = "New Rule" };
+            var baseName = "New Rule";
+            var uniqueName = CreateUniqueRuleName(baseName);
+            var rule = new Rule { Name = uniqueName };
             _ruleService.Add(rule);
-            AttachRule(rule);
-            Rules.Add(rule);
-            SelectedRule = rule;
+
+            var addedRule = _ruleService.GetRules().Last();
+            AttachRule(addedRule);
+            Rules.Add(addedRule);
+            SelectedRule = addedRule;
             RefreshConflictWarnings();
         }
 
@@ -117,23 +142,14 @@ namespace DBDStudio.ViewModels
             if (SelectedRule is null)
                 return;
 
-            var copy = new Rule
-            {
-                Name = SelectedRule.Name + " (Copy)",
-            };
-            foreach (var texture in SelectedRule.TextureCandidates)
-                copy.TextureCandidates.Add(texture);
-            foreach (var preset in SelectedRule.BodySlideCandidates)
-                copy.BodySlideCandidates.Add(preset);
-            foreach (var preset in SelectedRule.RaceMenuCandidates)
-                copy.RaceMenuCandidates.Add(preset);
-            foreach (var condition in SelectedRule.Conditions)
-                copy.Conditions.Add(new Condition { Type = condition.Type, Operator = condition.Operator, Value = condition.Value, Group = condition.Group });
-
+            var copy = SelectedRule.DeepClone();
+            copy.Name = CreateUniqueCopyName(SelectedRule.Name);
             _ruleService.Add(copy);
-            AttachRule(copy);
-            Rules.Add(copy);
-            SelectedRule = copy;
+
+            var addedRule = _ruleService.GetRules().Last();
+            AttachRule(addedRule);
+            Rules.Add(addedRule);
+            SelectedRule = addedRule;
             RefreshConflictWarnings();
         }
 
@@ -146,85 +162,126 @@ namespace DBDStudio.ViewModels
             DetachRule(SelectedRule);
             _ruleService.Remove(SelectedRule);
             Rules.Remove(SelectedRule);
+
             SelectedRule = Rules.Count > 0 ? Rules[Math.Max(0, index - 1)] : null;
             RefreshConflictWarnings();
         }
 
-        private void AddCondition()
+        private bool CanAddTextureCandidate()
         {
-            if (SelectedRule is null)
+            return SelectedRule is not null
+                && !string.IsNullOrWhiteSpace(SelectedTextureCandidateToAdd)
+                && !SelectedRule.TextureCandidates.Contains(SelectedTextureCandidateToAdd, StringComparer.Ordinal);
+        }
+
+        private void AddTextureCandidate()
+        {
+            if (!CanAddTextureCandidate() || SelectedRule is null || SelectedTextureCandidateToAdd is null)
                 return;
 
-            var defaultType = AvailableConditionTypes.Count > 0 ? AvailableConditionTypes[0] : "Race";
-            var condition = new Condition { Type = defaultType, Operator = "==", Value = string.Empty, Group = 0 };
-            condition.PropertyChanged += OnConditionChanged;
-            SelectedRule.Conditions.Add(condition);
-            SelectedCondition = condition;
-            UpdateDerivedPriorityPreview();
+            SelectedRule.TextureCandidates.Add(SelectedTextureCandidateToAdd);
+            SelectedTextureCandidateToAdd = null;
+        }
+
+        private void RemoveTextureCandidate(string? candidate)
+        {
+            if (SelectedRule is null || string.IsNullOrWhiteSpace(candidate))
+                return;
+
+            SelectedRule.TextureCandidates.Remove(candidate);
+            _addTextureCandidateCommand.RaiseCanExecuteChanged();
+        }
+
+        private bool CanAddBodySlideCandidate()
+        {
+            return SelectedRule is not null
+                && !string.IsNullOrWhiteSpace(SelectedBodySlideCandidateToAdd)
+                && !SelectedRule.BodySlideCandidates.Contains(SelectedBodySlideCandidateToAdd, StringComparer.Ordinal);
+        }
+
+        private void AddBodySlideCandidate()
+        {
+            if (!CanAddBodySlideCandidate() || SelectedRule is null || SelectedBodySlideCandidateToAdd is null)
+                return;
+
+            SelectedRule.BodySlideCandidates.Add(SelectedBodySlideCandidateToAdd);
+            SelectedBodySlideCandidateToAdd = null;
+        }
+
+        private void RemoveBodySlideCandidate(string? candidate)
+        {
+            if (SelectedRule is null || string.IsNullOrWhiteSpace(candidate))
+                return;
+
+            SelectedRule.BodySlideCandidates.Remove(candidate);
+            _addBodySlideCandidateCommand.RaiseCanExecuteChanged();
+        }
+
+        private void AttachRule(Rule rule)
+        {
+            rule.Conditions.CollectionChanged += OnRuleConditionsCollectionChanged;
+            foreach (var condition in rule.Conditions)
+                condition.PropertyChanged += OnConditionChanged;
+
+            UpdateRulePriorityPreview(rule);
+        }
+
+        private void DetachRule(Rule rule)
+        {
+            rule.Conditions.CollectionChanged -= OnRuleConditionsCollectionChanged;
+            foreach (var condition in rule.Conditions)
+                condition.PropertyChanged -= OnConditionChanged;
+        }
+
+        private void OnRuleConditionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems is not null) {
+                foreach (var oldItem in e.OldItems.OfType<Condition>()) {
+                    oldItem.PropertyChanged -= OnConditionChanged;
+                }
+            }
+
+            if (e.NewItems is not null) {
+                foreach (var newItem in e.NewItems.OfType<Condition>()) {
+                    newItem.PropertyChanged += OnConditionChanged;
+                }
+            }
+
+            RebuildPriorityPreviews();
             UpdateRaceMenuWarning();
         }
 
-        private void RemoveCondition()
+        private void OnConditionChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (SelectedRule is null || SelectedCondition is null)
-                return;
-
-            SelectedCondition.PropertyChanged -= OnConditionChanged;
-            SelectedRule.Conditions.Remove(SelectedCondition);
-            SelectedCondition = null;
-            UpdateDerivedPriorityPreview();
-            UpdateRaceMenuWarning();
+            if (e.PropertyName is nameof(Condition.ConditionType) or nameof(Condition.Operator) or nameof(Condition.Conjunction)) {
+                RebuildPriorityPreviews();
+                UpdateRaceMenuWarning();
+            }
         }
-
-        private void MoveConditionUp()
-        {
-            if (SelectedRule is null || SelectedCondition is null)
-                return;
-
-            var index = SelectedRule.Conditions.IndexOf(SelectedCondition);
-            if (index > 0)
-                SelectedRule.Conditions.Move(index, index - 1);
-        }
-
-        private void MoveConditionDown()
-        {
-            if (SelectedRule is null || SelectedCondition is null)
-                return;
-
-            var index = SelectedRule.Conditions.IndexOf(SelectedCondition);
-            if (index < SelectedRule.Conditions.Count - 1)
-                SelectedRule.Conditions.Move(index, index + 1);
-        }
-
-        private bool CanMoveConditionUp()
-            => SelectedRule is not null && SelectedCondition is not null
-               && SelectedRule.Conditions.IndexOf(SelectedCondition) > 0;
-
-        private bool CanMoveConditionDown()
-            => SelectedRule is not null && SelectedCondition is not null
-               && SelectedRule.Conditions.IndexOf(SelectedCondition) < SelectedRule.Conditions.Count - 1;
 
         private void UpdateRaceMenuWarning()
         {
-            if (SelectedRule is null || SelectedRule.RaceMenuCandidates.Count == 0)
+            if (SelectedRule is null || string.IsNullOrWhiteSpace(SelectedRule.RaceMenuCandidate))
             {
                 RaceMenuAssignmentWarning = string.Empty;
                 return;
             }
 
-            var hasReferenceCondition = SelectedRule.Conditions.Any(c =>
-                string.Equals(c?.Type, "ReferenceID", StringComparison.OrdinalIgnoreCase));
-            var hasActorBaseCondition = SelectedRule.Conditions.Any(c =>
-                string.Equals(c?.Type, "ActorBase", StringComparison.OrdinalIgnoreCase));
-            RaceMenuAssignmentWarning = hasReferenceCondition || hasActorBaseCondition
+            var hasReferenceCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsReference);
+            var hasNpcCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsNPC);
+
+            RaceMenuAssignmentWarning = hasReferenceCondition || hasNpcCondition
                 ? string.Empty
-                : "RaceMenu presets require either:\n- ReferenceID condition\n- ActorBase condition";
+                : "RaceMenu assignments work best with IsReference or IsNPC conditions.";
         }
 
         private void RefreshConflictWarnings()
         {
             ConflictWarnings.Clear();
-            var groupedByName = Rules.GroupBy(rule => rule.Name, StringComparer.OrdinalIgnoreCase).Where(group => group.Count() > 1);
+            var groupedByName = Rules
+                .GroupBy(rule => rule.Name, StringComparer.OrdinalIgnoreCase)
+                .Where(group => group.Count() > 1);
+
             foreach (var duplicate in groupedByName)
                 ConflictWarnings.Add($"Duplicate rule name detected: {duplicate.Key}");
 
@@ -232,42 +289,67 @@ namespace DBDStudio.ViewModels
                 ConflictWarnings.Add("No obvious naming conflicts found.");
         }
 
-        private void AttachRule(Rule rule)
+        private void RebuildPriorityPreviews()
         {
-            foreach (var condition in rule.Conditions)
-                condition.PropertyChanged += OnConditionChanged;
-
-            rule.PriorityPreview = BuildPriorityPreview(rule);
+            foreach (var rule in Rules)
+                UpdateRulePriorityPreview(rule);
         }
 
-        private void DetachRule(Rule rule)
+        private void UpdateRulePriorityPreview(Rule rule)
         {
-            foreach (var condition in rule.Conditions)
-                condition.PropertyChanged -= OnConditionChanged;
+            var maxPriority = 0;
+            foreach (var condition in rule.Conditions) {
+                var priority = _conditionRegistryService.GetPriority(condition.ConditionType);
+                if (priority > maxPriority)
+                    maxPriority = priority;
+            }
+
+            rule.PriorityPreview = $"Derived from max condition priority: {maxPriority}";
         }
 
-        private void OnConditionChanged(object? sender, PropertyChangedEventArgs e)
+        private string CreateUniqueRuleName(string baseName)
         {
-            if (e.PropertyName is nameof(Condition.Type) or nameof(Condition.Operator) or nameof(Condition.Value) or nameof(Condition.Group))
+            if (!Rules.Any(r => string.Equals(r.Name, baseName, StringComparison.OrdinalIgnoreCase)))
+                return baseName;
+
+            var index = 2;
+            while (true)
             {
-                UpdateDerivedPriorityPreview();
-                UpdateRaceMenuWarning();
+                var candidate = $"{baseName} {index}";
+                if (!Rules.Any(r => string.Equals(r.Name, candidate, StringComparison.OrdinalIgnoreCase)))
+                    return candidate;
+
+                index++;
             }
         }
 
-        private void UpdateDerivedPriorityPreview()
+        private string CreateUniqueCopyName(string originalName)
         {
-            if (SelectedRule is null)
-                return;
+            var firstCopyName = $"{originalName} (Copy)";
+            if (!Rules.Any(r => string.Equals(r.Name, firstCopyName, StringComparison.OrdinalIgnoreCase)))
+                return firstCopyName;
 
-            SelectedRule.PriorityPreview = BuildPriorityPreview(SelectedRule);
-            OnPropertyChanged(nameof(DerivedPriority));
+            var index = 2;
+            while (true)
+            {
+                var name = $"{originalName} (Copy {index})";
+                if (!Rules.Any(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)))
+                    return name;
+
+                index++;
+            }
         }
 
-        private string BuildPriorityPreview(Rule rule)
+        private void RefreshCommandStates()
         {
-            var priority = _ruleResolutionService.GetDerivedPriority(rule);
-            return $"Derived from max condition priority: {priority}";
+            _duplicateRuleCommand.RaiseCanExecuteChanged();
+            _deleteRuleCommand.RaiseCanExecuteChanged();
+            _addTextureCandidateCommand.RaiseCanExecuteChanged();
+            _addBodySlideCandidateCommand.RaiseCanExecuteChanged();
+            if (RemoveTextureCandidateCommand is RelayCommand<string> removeTexture)
+                removeTexture.RaiseCanExecuteChanged();
+            if (RemoveBodySlideCandidateCommand is RelayCommand<string> removeBodySlide)
+                removeBodySlide.RaiseCanExecuteChanged();
         }
     }
 }

@@ -43,7 +43,6 @@ namespace DBDStudio.Services
                 return;
             }
 
-            existing.FileName = rule.FileName;
             existing.TextureCandidates.Clear();
             foreach (var item in rule.TextureCandidates) {
                 existing.TextureCandidates.Add(item);
@@ -54,14 +53,11 @@ namespace DBDStudio.Services
                 existing.BodySlideCandidates.Add(item);
             }
 
-            existing.RaceMenuCandidates.Clear();
-            foreach (var item in rule.RaceMenuCandidates) {
-                existing.RaceMenuCandidates.Add(item);
-            }
+            existing.RaceMenuCandidate = rule.RaceMenuCandidate;
 
             existing.Conditions.Clear();
             foreach (var condition in rule.Conditions) {
-                existing.Conditions.Add(condition);
+                existing.Conditions.Add(condition.DeepClone());
             }
         }
 
@@ -77,8 +73,7 @@ namespace DBDStudio.Services
         {
             var clone = new Rule {
                 Name = rule.Name,
-                FileName = rule.FileName,
-                PriorityPreview = rule.PriorityPreview
+                RaceMenuCandidate = rule.RaceMenuCandidate
             };
 
             foreach (var candidate in rule.TextureCandidates) {
@@ -89,12 +84,8 @@ namespace DBDStudio.Services
                 clone.BodySlideCandidates.Add(candidate);
             }
 
-            foreach (var candidate in rule.RaceMenuCandidates) {
-                clone.RaceMenuCandidates.Add(candidate);
-            }
-
             foreach (var condition in rule.Conditions) {
-                clone.Conditions.Add(condition);
+                clone.Conditions.Add(condition.DeepClone());
             }
 
             return clone;

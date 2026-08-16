@@ -1,0 +1,156 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:fluent="using:FluentIcons.Avalonia"
+    xmlns:controls="using:DBDStudio.Views.Controls"
+    xmlns:rules="using:DBDStudio.Models.Rules"
+    xmlns:mutagen="using:DBDStudio.Models.Mutagen"
+    x:Class="DBDStudio.Views.Controls.ConditionTable"
+    x:DataType="controls:ConditionTable">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="rules:ConditionValue+Form">
+            <controls:FormSearchControl
+                FormDatabase="{Binding $parent[controls:ConditionTable].FormDatabase}"
+                SelectedFormRecord="{Binding Value, Mode=TwoWay}"
+                FilteredFormType="{Binding FilteredFormType}"
+                MinWidth="220" />
+        </DataTemplate>
+
+        <DataTemplate DataType="rules:ConditionValue+Integer">
+            <TextBox Text="{Binding Value}" MinWidth="90" />
+        </DataTemplate>
+
+        <DataTemplate DataType="rules:ConditionValue+Float">
+            <TextBox Text="{Binding Value}" MinWidth="90" />
+        </DataTemplate>
+
+        <DataTemplate DataType="rules:ConditionValue+Boolean">
+            <CheckBox IsChecked="{Binding Value}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center" />
+        </DataTemplate>
+
+        <DataTemplate DataType="rules:ConditionValue+Sex">
+            <ComboBox
+                ItemsSource="{Binding Choices}"
+                SelectedItem="{Binding SelectedSex, Mode=TwoWay}"
+                MinWidth="110" />
+        </DataTemplate>
+
+        <DataTemplate DataType="rules:ConditionValue+String">
+            <TextBox Text="{Binding Value}" MinWidth="140" />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <Grid RowDefinitions="*,Auto">
+        <DataGrid Grid.Row="0"
+            ItemsSource="{Binding $parent[controls:ConditionTable].Conditions}"
+            SelectedItem="{Binding $parent[controls:ConditionTable].SelectedCondition, Mode=TwoWay}"
+            AutoGenerateColumns="False"
+            IsReadOnly="False"
+            CanUserResizeColumns="True"
+            GridLinesVisibility="Horizontal"
+            MinHeight="140">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Type" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="rules:Condition">
+                            <ComboBox
+                                ItemsSource="{Binding $parent[controls:ConditionTable].AvailableConditionTypes}"
+                                SelectedItem="{Binding ConditionType}"
+                                HorizontalAlignment="Stretch"
+                                Margin="1" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Op" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="rules:Condition">
+                            <ComboBox
+                                ItemsSource="{Binding $parent[controls:ConditionTable].AvailableOperatorSymbols}"
+                                SelectedItem="{Binding OperatorSymbol}"
+                                HorizontalAlignment="Stretch"
+                                Margin="1" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Values" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="rules:Condition">
+                            <ItemsControl ItemsSource="{Binding Values}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Stretch"
+                                            Spacing="6" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Conjunction" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="rules:Condition">
+                            <ComboBox
+                                ItemsSource="{Binding $parent[controls:ConditionTable].AvailableConjunctionLabels}"
+                                SelectedItem="{Binding ConjunctionLabel}"
+                                HorizontalAlignment="Stretch"
+                                Margin="1" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="" MinWidth="160">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="rules:Condition">
+                            <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="2">
+
+                                <Button Tag="{Binding}"
+                                    Click="OnMoveUpClick"
+                                    ToolTip.Tip="Move Up"
+                                    Classes="icon">
+                                    <fluent:SymbolIcon Symbol="CaretUp" />
+                                </Button>
+
+                                <Button Tag="{Binding}"
+                                    Click="OnMoveDownClick"
+                                    ToolTip.Tip="Move Down"
+                                    Classes="icon">
+                                    <fluent:SymbolIcon Symbol="CaretDown" />
+                                </Button>
+
+                                <Button Tag="{Binding}"
+                                    Click="OnDuplicateClick"
+                                    ToolTip.Tip="Duplicate"
+                                    Classes="icon">
+                                    <fluent:SymbolIcon Symbol="Copy" />
+                                </Button>
+
+                                <Button Tag="{Binding}"
+                                    Click="OnDeleteClick"
+                                    ToolTip.Tip="Delete"
+                                    Classes="icon"
+                                    Foreground="#D13438">
+                                    <fluent:SymbolIcon Symbol="Delete" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="1"
+            HorizontalAlignment="Left"
+            Orientation="Horizontal"
+            Spacing="4">
+            <Button Content="Add Condition" Click="OnAddConditionClick" />
+        </StackPanel>
+    </Grid>
+</UserControl>
