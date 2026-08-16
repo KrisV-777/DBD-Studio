@@ -1,8 +1,5 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -10,10 +7,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
-using DBDStudio.Interfaces;
 using DBDStudio.Interfaces.Mutagen;
-using DBDStudio.Models;
 using Noggog;
+using DBDStudio.Models.Mutagen;
 
 namespace DBDStudio.Views.Controls
 {

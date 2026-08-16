@@ -1,7 +1,7 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:DBDStudio.Views.Controls"
-    xmlns:models="using:DBDStudio.Models"
+    xmlns:models="using:DBDStudio.Models.Mutagen"
     x:Class="DBDStudio.Views.Controls.FormSearchResults">
 
     <Border Background="{DynamicResource ThemeBackgroundLowBrush}"

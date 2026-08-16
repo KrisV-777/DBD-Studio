@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-
-using DBDStudio.Models;
+using DBDStudio.Models.Mutagen;
 
 namespace DBDStudio.Views.Controls
 {

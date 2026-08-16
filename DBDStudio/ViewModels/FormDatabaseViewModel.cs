@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Windows.Input;
 using Avalonia.Threading;
 using DBDStudio.Interfaces.Mutagen;
-using DBDStudio.Models;
+using DBDStudio.Models.Mutagen;
 using Noggog;
 
 namespace DBDStudio.ViewModels
@@ -165,12 +165,7 @@ namespace DBDStudio.ViewModels
             Plugins
                 .Where(p => p.IsEnabled)
                 .SelectMany(p => p.Records)
-                .Where(r => string.IsNullOrEmpty(_searchText) ||
-                    r.Name.Contains(_searchText, StringComparison.CurrentCultureIgnoreCase) ||
-                    r.EditorId.Contains(_searchText, StringComparison.CurrentCultureIgnoreCase) ||
-                    r.FormId.ToString().Contains(_searchText, StringComparison.CurrentCultureIgnoreCase) ||
-                    r.Plugin.Contains(_searchText, StringComparison.CurrentCultureIgnoreCase) ||
-                    r.RecordType.Contains(_searchText, StringComparison.CurrentCultureIgnoreCase))
+                .Where(r => r.MatchQuery(_searchText))
                 .ToList()
                 .ForEach(observableRecords.Add);
 

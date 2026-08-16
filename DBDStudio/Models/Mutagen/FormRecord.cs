@@ -1,4 +1,4 @@
-namespace DBDStudio.Models
+namespace DBDStudio.Models.Mutagen
 {
     public sealed class FormRecord : IEquatable<FormRecord>, IComparable<FormRecord>
     {

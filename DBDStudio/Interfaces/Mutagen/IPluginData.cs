@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using DBDStudio.Models;
+using DBDStudio.Models.Mutagen;
 using Mutagen.Bethesda.Plugins;
 
 namespace DBDStudio.Interfaces.Mutagen
