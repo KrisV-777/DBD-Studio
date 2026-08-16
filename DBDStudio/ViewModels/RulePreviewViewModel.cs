@@ -3,6 +3,7 @@ using System.Windows.Input;
 using DBDStudio.Interfaces;
 using DBDStudio.Interfaces.Mutagen;
 using DBDStudio.Models;
+using DBDStudio.Models.Mutagen;
 
 namespace DBDStudio.ViewModels
 {

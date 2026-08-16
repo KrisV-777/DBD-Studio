@@ -13,6 +13,7 @@ namespace DBDStudio.Interfaces.Mutagen
 
     public enum FormType
     {
+        None,
         ActorRef,
         NPC,
         Perk,
@@ -20,7 +21,7 @@ namespace DBDStudio.Interfaces.Mutagen
         FormList,
         Faction,
         CombatStyle,
-        Keyword
+        Keyword,
     }
 
     public interface IPluginData : INotifyPropertyChanged

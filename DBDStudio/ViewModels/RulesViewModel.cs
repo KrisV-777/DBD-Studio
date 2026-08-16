@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows.Input;
 using DBDStudio.Interfaces;
 using DBDStudio.Models;
+using DBDStudio.Models.Rules;
 
 namespace DBDStudio.ViewModels
 {
@@ -103,7 +104,7 @@ namespace DBDStudio.ViewModels
 
         private void AddRule()
         {
-            var rule = new Rule { Name = "New Rule", FileName = "New Rule.yaml" };
+            var rule = new Rule { Name = "New Rule" };
             _ruleService.Add(rule);
             AttachRule(rule);
             Rules.Add(rule);
@@ -119,7 +120,6 @@ namespace DBDStudio.ViewModels
             var copy = new Rule
             {
                 Name = SelectedRule.Name + " (Copy)",
-                FileName = SelectedRule.FileName + ".copy"
             };
             foreach (var texture in SelectedRule.TextureCandidates)
                 copy.TextureCandidates.Add(texture);

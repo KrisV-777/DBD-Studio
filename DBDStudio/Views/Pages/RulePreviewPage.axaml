@@ -20,7 +20,7 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="Reference Search" FontWeight="SemiBold" />
                     <controls:FormSearchControl FormDatabase="{Binding FormDatabase}"
-                                                SelectedFormReference="{Binding SelectedReference}" />
+                        SelectedFormRecord="{Binding SelectedReference}" />
                 </StackPanel>
             </Border>
 
