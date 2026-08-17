@@ -36,31 +36,6 @@ namespace DBDStudio.Services
 
         public void Add(Rule rule) => _rules.Add(CloneRule(rule));
 
-        public void Update(Rule rule)
-        {
-            var existing = _rules.FirstOrDefault(x => x.Name == rule.Name);
-            if (existing is null) {
-                return;
-            }
-
-            existing.TextureCandidates.Clear();
-            foreach (var item in rule.TextureCandidates) {
-                existing.TextureCandidates.Add(item);
-            }
-
-            existing.BodySlideCandidates.Clear();
-            foreach (var item in rule.BodySlideCandidates) {
-                existing.BodySlideCandidates.Add(item);
-            }
-
-            existing.RaceMenuCandidate = rule.RaceMenuCandidate;
-
-            existing.Conditions.Clear();
-            foreach (var condition in rule.Conditions) {
-                existing.Conditions.Add(condition.DeepClone());
-            }
-        }
-
         public void Remove(Rule rule)
         {
             var existing = _rules.FirstOrDefault(x => x.Name == rule.Name);

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Styling;
 using DBDStudio.Models;
+using DBDStudio.Interfaces.Mutagen;
 
 namespace DBDStudio.ViewModels
 {
@@ -13,6 +14,7 @@ namespace DBDStudio.ViewModels
         private readonly ITexturePackService _texturePackService;
         private readonly IBodySlideService _bodySlideService;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
+        private readonly IFormDatabase _databaseService;
         private readonly MainWindowViewModel? _mainWindowViewModel;
 
         public static readonly string[] ThemeOptions = ["Light", "Dark", "System"];
@@ -22,18 +24,21 @@ namespace DBDStudio.ViewModels
             ITexturePackService texturePackService,
             IBodySlideService bodySlideService,
             IRaceMenuPresetService raceMenuPresetService,
+            IFormDatabase databaseService,
             MainWindowViewModel? mainWindowViewModel = null)
         {
             _appSettings = settingsService;
             _texturePackService = texturePackService;
             _bodySlideService = bodySlideService;
             _raceMenuPresetService = raceMenuPresetService;
+            _databaseService = databaseService;
             _mainWindowViewModel = mainWindowViewModel;
 
             _appSettings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
             _texturePackService.TexturePackListChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
             _bodySlideService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(BodySlidePresetsFound));
             _raceMenuPresetService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(RaceMenuPresetsFound));
+            _databaseService.DatabaseChanged += (_, _) => OnPropertyChanged(nameof(ModsFound));
 
             var openUrl = (string url) => Process.Start(new ProcessStartInfo {
                 FileName = url,
@@ -113,6 +118,7 @@ namespace DBDStudio.ViewModels
         public int BodySlidePresetsFound => _bodySlideService.Presets.Count;
 
         public int RaceMenuPresetsFound => _raceMenuPresetService.Presets.Count;
+        public string ModsFound => $"{_databaseService.Plugins.Aggregate(0, (sum, plugin) => sum + 1)} ({_databaseService.Plugins.Aggregate(0, (sum, plugin) => sum + plugin.Records.Count)})";
 
         public double BaseFontSize
         {

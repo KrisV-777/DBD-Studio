@@ -6,13 +6,28 @@ namespace DBDStudio.Models
 {
     public sealed class Rule : ModelBase
     {
-        public string Name { get; set; } = string.Empty;
-        public string PriorityPreview { get; set; } = string.Empty;
+        private string _name = string.Empty;
+        private string? _raceMenuCandidate = null;
+
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
+        public string PriorityPreview { get; set; } = string.Empty; // TODO: Delete this <
+
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<string> TextureCandidates { get; } = [];
+
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<string> BodySlideCandidates { get; } = [];
-        public string? RaceMenuCandidate { get; set; }
+
+        public string? RaceMenuCandidate
+        {
+            get => _raceMenuCandidate;
+            set => SetProperty(ref _raceMenuCandidate, value);
+        }
+
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<Condition> Conditions { get; } = [];
 

@@ -37,7 +37,7 @@ namespace DBDStudio.ViewModels
             _raceMenuPresetService = raceMenuPresetService;
 
             // Create SettingsViewModel with reference to this MainWindowViewModel
-            Settings = new SettingsViewModel(settingsService, texturePackService, bodySlideService, raceMenuPresetService, this);
+            Settings = new SettingsViewModel(settingsService, texturePackService, bodySlideService, raceMenuPresetService, _formDatabase, this);
             TexturePacks = new TexturePacksViewModel(texturePackService);
             BodySlide = new BodySlideViewModel(bodySlideService);
             RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);

@@ -7,7 +7,6 @@ namespace DBDStudio.Interfaces
     {
         IReadOnlyList<Rule> GetRules();
         void Add(Rule rule);
-        void Update(Rule rule);
         void Remove(Rule rule);
     }
 }
