@@ -18,7 +18,6 @@ namespace DBDStudio.ViewModels
         private readonly ITexturePackService _texturePackService;
         private readonly IBodySlideService _bodySlideService;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
-        private readonly IConditionRegistryService _conditionRegistryService;
         private Rule? _selectedRule;
         private string _raceMenuAssignmentWarning = string.Empty;
         private string? _selectedTextureCandidateToAdd;
@@ -33,7 +32,7 @@ namespace DBDStudio.ViewModels
         public ObservableCollection<string> AvailableTexturePacks => [.. _texturePackService.TexturePacks.Select(p => p.Name)];
         public ObservableCollection<string> AvailableBodySlidePresets => [.. _bodySlideService.Presets.Select(p => p.Preset)];
         public ObservableCollection<string> AvailableRaceMenuPresets => [.. _raceMenuPresetService.Presets.Select(p => p.Name)];
-        public ObservableCollection<ConditionType> AvailableConditionTypes { get; } = [];
+        public ObservableCollection<ConditionType> AvailableConditionTypes { get; } = new(Enum.GetValues<ConditionType>());
         public ObservableCollection<string> ConflictWarnings { get; } = [];
 
         public IFormDatabase FormDatabase { get; }
@@ -92,14 +91,12 @@ namespace DBDStudio.ViewModels
             ITexturePackService texturePackService,
             IBodySlideService bodySlideService,
             IRaceMenuPresetService raceMenuPresetService,
-            IConditionRegistryService conditionRegistryService,
             IFormDatabase formDatabase)
         {
             _ruleService = ruleService;
             _texturePackService = texturePackService;
             _bodySlideService = bodySlideService;
             _raceMenuPresetService = raceMenuPresetService;
-            _conditionRegistryService = conditionRegistryService;
             FormDatabase = formDatabase;
 
             AddRuleCommand = new RelayCommand(AddRule);
@@ -109,9 +106,6 @@ namespace DBDStudio.ViewModels
             RemoveTextureCandidateCommand = new RelayCommand<string>(RemoveTextureCandidate, candidate => SelectedRule is not null && !string.IsNullOrWhiteSpace(candidate));
             _addBodySlideCandidateCommand = new RelayCommand(AddBodySlideCandidate, CanAddBodySlideCandidate);
             RemoveBodySlideCandidateCommand = new RelayCommand<string>(RemoveBodySlideCandidate, candidate => SelectedRule is not null && !string.IsNullOrWhiteSpace(candidate));
-
-            foreach (var type in _conditionRegistryService.GetSupportedConditionTypes())
-                AvailableConditionTypes.Add(type);
 
             foreach (var rule in _ruleService.GetRules())
             {
@@ -222,8 +216,6 @@ namespace DBDStudio.ViewModels
             rule.Conditions.CollectionChanged += OnRuleConditionsCollectionChanged;
             foreach (var condition in rule.Conditions)
                 condition.PropertyChanged += OnConditionChanged;
-
-            UpdateRulePriorityPreview(rule);
         }
 
         private void DetachRule(Rule rule)
@@ -247,14 +239,12 @@ namespace DBDStudio.ViewModels
                 }
             }
 
-            RebuildPriorityPreviews();
             UpdateRaceMenuWarning();
         }
 
         private void OnConditionChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName is nameof(Condition.ConditionType) or nameof(Condition.Operator) or nameof(Condition.Conjunction)) {
-                RebuildPriorityPreviews();
                 UpdateRaceMenuWarning();
             }
         }
@@ -287,24 +277,6 @@ namespace DBDStudio.ViewModels
 
             if (ConflictWarnings.Count == 0)
                 ConflictWarnings.Add("No obvious naming conflicts found.");
-        }
-
-        private void RebuildPriorityPreviews()
-        {
-            foreach (var rule in Rules)
-                UpdateRulePriorityPreview(rule);
-        }
-
-        private void UpdateRulePriorityPreview(Rule rule)
-        {
-            var maxPriority = 0;
-            foreach (var condition in rule.Conditions) {
-                var priority = _conditionRegistryService.GetPriority(condition.ConditionType);
-                if (priority > maxPriority)
-                    maxPriority = priority;
-            }
-
-            rule.PriorityPreview = $"Derived from max condition priority: {maxPriority}";
         }
 
         private string CreateUniqueRuleName(string baseName)

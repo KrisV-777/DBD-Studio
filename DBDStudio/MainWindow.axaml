@@ -26,9 +26,6 @@
         <DataTemplate DataType="{x:Type vm:RulesViewModel}">
             <pages:RulesPage />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:RulePreviewViewModel}">
-            <pages:RulePreviewPage />
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:FormDatabaseViewModel}">
             <pages:FormDatabasePage />
         </DataTemplate>
@@ -72,7 +69,6 @@
                         <ListBoxItem Padding="10,9" Content="BodySlide Presets" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="RaceMenu Presets" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="Rules" Classes="default" />
-                        <ListBoxItem Padding="10,9" Content="Rule Preview" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="Form Database" Classes="default" />
                         <ListBoxItem Padding="10,9" Content="Preview / Export" Classes="default" />
                     </ListBox>

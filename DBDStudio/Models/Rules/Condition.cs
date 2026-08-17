@@ -3,6 +3,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
+using System.Diagnostics;
 
 namespace DBDStudio.Models.Rules
 {
@@ -34,7 +35,7 @@ namespace DBDStudio.Models.Rules
                 if (!SetProperty(ref _type, value))
                     return;
 
-                SyncValuesForType(value, preserveCompatibleValues: false);
+                SyncValuesForType(value, preserveCompatibleValues: true);
             }
         }
 
@@ -169,6 +170,10 @@ namespace DBDStudio.Models.Rules
                 to.Value = from.Value;
                 break;
             case ConditionValue.Form from when target is ConditionValue.Form to:
+                if (from.FilteredFormType == to.FilteredFormType)
+                    to.Value = from.Value;
+                break;
+            case ConditionValue.Sex from when target is ConditionValue.Sex to:
                 to.Value = from.Value;
                 break;
             }

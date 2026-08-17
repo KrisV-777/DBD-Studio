@@ -14,7 +14,6 @@ namespace DBDStudio.Models
             get => _name;
             set => SetProperty(ref _name, value);
         }
-        public string PriorityPreview { get; set; } = string.Empty; // TODO: Delete this <
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<string> TextureCandidates { get; } = [];
@@ -31,11 +30,11 @@ namespace DBDStudio.Models
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<Condition> Conditions { get; } = [];
 
+
         public Rule DeepClone()
         {
             var clone = new Rule {
                 Name = Name,
-                PriorityPreview = PriorityPreview,
                 RaceMenuCandidate = RaceMenuCandidate
             };
 

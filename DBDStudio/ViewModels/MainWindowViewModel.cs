@@ -12,8 +12,6 @@ namespace DBDStudio.ViewModels
         private readonly ITexturePackService _texturePackService;
         private readonly IBodySlideService _bodySlideService;
         private readonly IRuleService _ruleService;
-        private readonly IConditionRegistryService _conditionRegistryService;
-        private readonly IRuleResolutionService _ruleResolutionService;
         private readonly IFormDatabase _formDatabase;
         private readonly IRaceMenuPresetService _raceMenuPresetService;
 
@@ -22,8 +20,6 @@ namespace DBDStudio.ViewModels
             ITexturePackService texturePackService,
             IBodySlideService bodySlideService,
             IRuleService ruleService,
-            IConditionRegistryService conditionRegistryService,
-            IRuleResolutionService ruleResolutionService,
             IFormDatabase formDatabase,
             IRaceMenuPresetService raceMenuPresetService)
         {
@@ -31,8 +27,6 @@ namespace DBDStudio.ViewModels
             _texturePackService = texturePackService;
             _bodySlideService = bodySlideService;
             _ruleService = ruleService;
-            _conditionRegistryService = conditionRegistryService;
-            _ruleResolutionService = ruleResolutionService;
             _formDatabase = formDatabase;
             _raceMenuPresetService = raceMenuPresetService;
 
@@ -41,9 +35,8 @@ namespace DBDStudio.ViewModels
             TexturePacks = new TexturePacksViewModel(texturePackService);
             BodySlide = new BodySlideViewModel(bodySlideService);
             RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
-            Rules = new RulesViewModel(ruleService, texturePackService, bodySlideService, raceMenuPresetService, conditionRegistryService, _formDatabase);
+            Rules = new RulesViewModel(ruleService, texturePackService, bodySlideService, raceMenuPresetService, _formDatabase);
             Preview = new PreviewViewModel();
-            RulePreview = new RulePreviewViewModel(_formDatabase, ruleService, ruleResolutionService);
             LoadOrderExplorer = new FormDatabaseViewModel(_formDatabase);
         }
 
@@ -53,7 +46,6 @@ namespace DBDStudio.ViewModels
         public RaceMenuPresetsViewModel RaceMenuPresets { get; }
         public RulesViewModel Rules { get; }
         public PreviewViewModel Preview { get; }
-        public RulePreviewViewModel RulePreview { get; }
         public FormDatabaseViewModel LoadOrderExplorer { get; }
 
         public int SelectedPageIndex
@@ -79,9 +71,8 @@ namespace DBDStudio.ViewModels
             2 => BodySlide,
             3 => RaceMenuPresets,
             4 => Rules,
-            5 => RulePreview,
-            6 => LoadOrderExplorer,
-            7 => Preview,
+            5 => LoadOrderExplorer,
+            6 => Preview,
             _ => Settings
         };
     }

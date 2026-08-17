@@ -5,12 +5,12 @@ using System.Text.Json.Serialization;
 namespace DBDStudio.Models.Rules
 {
     [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-    [JsonDerivedType(typeof(ConditionValue.String), "string")]
-    [JsonDerivedType(typeof(ConditionValue.Integer), "integer")]
-    [JsonDerivedType(typeof(ConditionValue.Float), "float")]
-    [JsonDerivedType(typeof(ConditionValue.Boolean), "boolean")]
-    [JsonDerivedType(typeof(ConditionValue.Sex), "sex")]
-    [JsonDerivedType(typeof(ConditionValue.Form), "form")]
+    [JsonDerivedType(typeof(String), "string")]
+    [JsonDerivedType(typeof(Integer), "integer")]
+    [JsonDerivedType(typeof(Float), "float")]
+    [JsonDerivedType(typeof(Boolean), "boolean")]
+    [JsonDerivedType(typeof(Sex), "sex")]
+    [JsonDerivedType(typeof(Form), "form")]
     public abstract class ConditionValue
     {
         public sealed class String : ConditionValue
