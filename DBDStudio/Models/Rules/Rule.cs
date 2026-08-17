@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using DBDStudio.Models.Rules;
+using System.Text.Json.Serialization;
 
 namespace DBDStudio.Models
 {
@@ -7,9 +8,12 @@ namespace DBDStudio.Models
     {
         public string Name { get; set; } = string.Empty;
         public string PriorityPreview { get; set; } = string.Empty;
+        [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<string> TextureCandidates { get; } = [];
+        [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<string> BodySlideCandidates { get; } = [];
         public string? RaceMenuCandidate { get; set; }
+        [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<Condition> Conditions { get; } = [];
 
         public Rule DeepClone()

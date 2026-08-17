@@ -46,6 +46,7 @@ namespace DBDStudio.Views.Controls
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
+            this.GetObservable(SelectedFormRecordProperty).Subscribe(OnSelectedFormRecordChanged);
         }
 
         #region Properties
@@ -98,6 +99,7 @@ namespace DBDStudio.Views.Controls
                 .ToArray() ?? [];
 
             FindOverlayLayer();
+            SyncQueryFromSelectedRecord();
         }
 
         private void OnUnloaded(object? sender, RoutedEventArgs e)
@@ -296,6 +298,23 @@ namespace DBDStudio.Views.Controls
         #endregion
 
         #region Commit / Validation
+
+        private void OnSelectedFormRecordChanged(FormRecord? _) => SyncQueryFromSelectedRecord();
+
+        private void SyncQueryFromSelectedRecord()
+        {
+            if (_isApplyingSelection)
+                return;
+
+            _isApplyingSelection = true;
+
+            try {
+                QueryText = SelectedFormRecord?.FormReference.ToString() ?? string.Empty;
+                SetAndRaise(SearchTooltipProperty, ref _searchTooltip, SelectedFormRecord?.EditorId ?? string.Empty);
+            } finally {
+                _isApplyingSelection = false;
+            }
+        }
 
         private void Commit()
         {

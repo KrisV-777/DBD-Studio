@@ -40,7 +40,7 @@ namespace DBDStudio.Interfaces
 
         IRenderedTexturePack Copy();
         bool Is(TexturePackState state);
-        bool IsPrimordial();
+        bool IsPrimordialAny();
     }
 
     /// <summary>

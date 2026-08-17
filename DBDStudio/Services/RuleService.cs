@@ -6,7 +6,7 @@ using DBDStudio.Utility.Persistence;
 
 namespace DBDStudio.Services
 {
-    public sealed class MockRuleService : IRuleService, IPersistable
+    public sealed class RuleService : IRuleService, IPersistable
     {
         private readonly List<Rule> _rules = [];
 

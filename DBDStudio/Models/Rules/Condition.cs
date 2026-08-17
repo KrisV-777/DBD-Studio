@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
 
 namespace DBDStudio.Models.Rules
@@ -33,7 +34,7 @@ namespace DBDStudio.Models.Rules
                 if (!SetProperty(ref _type, value))
                     return;
 
-                SyncValuesForType(value, preserveCompatibleValues: true);
+                SyncValuesForType(value, preserveCompatibleValues: false);
             }
         }
 
@@ -47,12 +48,20 @@ namespace DBDStudio.Models.Rules
             }
         }
 
-        public ObservableCollection<ConditionValue> Values { get; } = [new ConditionValue.Form()];
+        /// <summary>
+        /// Gets or sets the list of values for this condition. The number and type of values depends on the ConditionType.
+        /// </summary>
+        /// <remarks>
+        /// TODO: Should be treated as Read-Only but serialization requires a setter to populate the collection.
+        /// Using JsonObjectCreationHandling.Populate causes the values to double, Id need a "ReplaceOneByOne" behavior
+        /// instead of "ClearAndAddAll" which is not supported by System.Text.Json. Will have to look for a better
+        /// solution in the future.
+        /// </remarks>
+        public ObservableCollection<ConditionValue> Values { get; set; } = [new ConditionValue.Form()];
 
         public string OperatorSymbol
         {
-            get => _operator switch
-            {
+            get => _operator switch {
                 Operator.Equals => "==",
                 Operator.NotEquals => "!=",
                 Operator.GreaterThan => ">",
@@ -63,8 +72,7 @@ namespace DBDStudio.Models.Rules
             };
             set
             {
-                var parsed = value switch
-                {
+                var parsed = value switch {
                     "==" => Operator.Equals,
                     "!=" => Operator.NotEquals,
                     ">" => Operator.GreaterThan,
@@ -90,16 +98,14 @@ namespace DBDStudio.Models.Rules
 
         public string ConjunctionLabel
         {
-            get => _conjunction switch
-            {
+            get => _conjunction switch {
                 Conjunction.And => "AND",
                 Conjunction.Or => "OR",
                 _ => "AND"
             };
             set
             {
-                var parsed = value?.ToUpperInvariant() switch
-                {
+                var parsed = value?.ToUpperInvariant() switch {
                     "AND" => Conjunction.And,
                     "OR" => Conjunction.Or,
                     _ => _conjunction
@@ -149,23 +155,22 @@ namespace DBDStudio.Models.Rules
 
         private static void TryCopyValue(ConditionValue source, ConditionValue target)
         {
-            switch (source)
-            {
-                case ConditionValue.String from when target is ConditionValue.String to:
-                    to.Value = from.Value;
-                    break;
-                case ConditionValue.Integer from when target is ConditionValue.Integer to:
-                    to.Value = from.Value;
-                    break;
-                case ConditionValue.Float from when target is ConditionValue.Float to:
-                    to.Value = from.Value;
-                    break;
-                case ConditionValue.Boolean from when target is ConditionValue.Boolean to:
-                    to.Value = from.Value;
-                    break;
-                case ConditionValue.Form from when target is ConditionValue.Form to:
-                    to.Value = from.Value;
-                    break;
+            switch (source) {
+            case ConditionValue.String from when target is ConditionValue.String to:
+                to.Value = from.Value;
+                break;
+            case ConditionValue.Integer from when target is ConditionValue.Integer to:
+                to.Value = from.Value;
+                break;
+            case ConditionValue.Float from when target is ConditionValue.Float to:
+                to.Value = from.Value;
+                break;
+            case ConditionValue.Boolean from when target is ConditionValue.Boolean to:
+                to.Value = from.Value;
+                break;
+            case ConditionValue.Form from when target is ConditionValue.Form to:
+                to.Value = from.Value;
+                break;
             }
         }
     }

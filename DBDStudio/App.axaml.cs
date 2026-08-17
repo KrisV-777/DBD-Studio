@@ -49,7 +49,7 @@ namespace DBDStudio
             services.AddPersistable<ITexturePackService, TexturePackService>();
             services.AddPersistable<IBodySlideService, BodySlideService>();
             services.AddPersistable<IRaceMenuPresetService, RaceMenuPresetService>();
-            services.AddPersistable<IRuleService, MockRuleService>();
+            services.AddPersistable<IRuleService, RuleService>();
             services.AddSingleton<IConditionRegistryService, ConditionRegistryService>();
             services.AddSingleton<IRuleResolutionService, RuleResolutionService>();
             services.AddSingleton<IFormDatabase, FormDatabase>();

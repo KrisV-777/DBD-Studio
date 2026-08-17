@@ -1,8 +1,16 @@
 ﻿using DBDStudio.Models.Mutagen;
 using DBDStudio.Interfaces.Mutagen;
+using System.Text.Json.Serialization;
 
 namespace DBDStudio.Models.Rules
 {
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(ConditionValue.String), "string")]
+    [JsonDerivedType(typeof(ConditionValue.Integer), "integer")]
+    [JsonDerivedType(typeof(ConditionValue.Float), "float")]
+    [JsonDerivedType(typeof(ConditionValue.Boolean), "boolean")]
+    [JsonDerivedType(typeof(ConditionValue.Sex), "sex")]
+    [JsonDerivedType(typeof(ConditionValue.Form), "form")]
     public abstract class ConditionValue
     {
         public sealed class String : ConditionValue
@@ -31,7 +39,7 @@ namespace DBDStudio.Models.Rules
 
             public bool Value { get; set; }
 
-            public IReadOnlyList<string> Choices => ChoicesInternal;
+            public static IReadOnlyList<string> Choices => ChoicesInternal;
 
             public string SelectedSex
             {

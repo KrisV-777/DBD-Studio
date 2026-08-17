@@ -25,9 +25,6 @@ namespace DBDStudio.Services
 
         public IReadOnlyList<ConditionType> GetSupportedConditionTypes() => SupportedTypes;
 
-        public int GetPriority(ConditionType type)
-        {
-            return Priorities.TryGetValue(type, out var priority) ? priority : 0;
-        }
+        public int GetPriority(ConditionType type) => Priorities.TryGetValue(type, out var priority) ? priority : 0;
     }
 }

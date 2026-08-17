@@ -127,13 +127,13 @@ namespace DBDStudio.Services
 
         public void Remove(IRenderedTexturePack pack)
         {
-            Debug.Assert(!pack.IsPrimordial(), "Cannot remove a primordial pack.");
+            Debug.Assert(!pack.IsPrimordialAny(), "Cannot remove a primordial pack.");
             UpdateList(null, pack);
         }
 
         public void Reset(IRenderedTexturePack pack)
         {
-            Debug.Assert(pack.IsPrimordial(), "Cannot reset a non-primordial pack.");
+            Debug.Assert(pack.IsPrimordialAny(), "Cannot reset a non-primordial pack.");
             UpdateList(new TexturePackData(pack.Primordial!.Clone(), pack.Primordial!), pack);
         }
 

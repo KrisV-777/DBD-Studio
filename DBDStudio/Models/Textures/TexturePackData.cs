@@ -101,7 +101,7 @@ namespace DBDStudio.Models.Textures
         #region Methods
 
         public bool Is(TexturePackState state) => State == state;
-        public bool IsPrimordial() => Is(TexturePackState.Primordial) || Is(TexturePackState.Modified);
+        public bool IsPrimordialAny() => Is(TexturePackState.Primordial) || Is(TexturePackState.Modified);
 
         #endregion
 
