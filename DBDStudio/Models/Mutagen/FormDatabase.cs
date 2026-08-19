@@ -23,7 +23,8 @@ namespace DBDStudio.Models.Mutagen
             _settings = settings;
             _settings.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName == nameof(ApplicationSettings.SkyrimDataFolder) || e.PropertyName == nameof(ApplicationSettings.ModsFolder)) {
+                if (e.PropertyName == nameof(ApplicationSettings.SkyrimDataFolder)
+                    || e.PropertyName == nameof(ApplicationSettings.ModsFolder)) {
                     LoadDatabase();
                 }
             };

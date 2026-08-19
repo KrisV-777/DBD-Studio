@@ -1,19 +1,14 @@
 using System.Collections.ObjectModel;
-using DBDStudio.Models.Rules;
 using System.Text.Json.Serialization;
+using DBDStudio.Interfaces.Rules;
 
-namespace DBDStudio.Models
+namespace DBDStudio.Models.Component
 {
-    public sealed class Rule : ModelBase
+    public sealed class Rule : DBDComponent
     {
-        private string _name = string.Empty;
         private string? _raceMenuCandidate = null;
 
-        public string Name
-        {
-            get => _name;
-            set => SetProperty(ref _name, value);
-        }
+        #region Properties
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<string> TextureCandidates { get; } = [];
@@ -28,10 +23,13 @@ namespace DBDStudio.Models
         }
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-        public ObservableCollection<Condition> Conditions { get; } = [];
+        public ObservableCollection<ICondition> Conditions { get; } = [];
 
+        #endregion
 
-        public Rule DeepClone()
+        #region Constructors
+
+        internal override DBDComponent Copy()
         {
             var clone = new Rule {
                 Name = Name,
@@ -49,5 +47,28 @@ namespace DBDStudio.Models
 
             return clone;
         }
+
+        internal override void Import(DBDComponent source)
+        {
+            if (source is not Rule sourceRule)
+                throw new ArgumentException("Source must be of type Rule.", nameof(source));
+
+            Name = sourceRule.Name;
+            RaceMenuCandidate = sourceRule.RaceMenuCandidate;
+
+            TextureCandidates.Clear();
+            foreach (var candidate in sourceRule.TextureCandidates)
+                TextureCandidates.Add(candidate);
+
+            BodySlideCandidates.Clear();
+            foreach (var candidate in sourceRule.BodySlideCandidates)
+                BodySlideCandidates.Add(candidate);
+
+            Conditions.Clear();
+            foreach (var condition in sourceRule.Conditions)
+                Conditions.Add(condition.DeepClone());
+        }
+
+        #endregion
     }
 }

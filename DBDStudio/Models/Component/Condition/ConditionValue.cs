@@ -2,7 +2,7 @@
 using DBDStudio.Interfaces.Mutagen;
 using System.Text.Json.Serialization;
 
-namespace DBDStudio.Models.Rules
+namespace DBDStudio.Models.Component.Condition
 {
     [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
     [JsonDerivedType(typeof(String), "string")]

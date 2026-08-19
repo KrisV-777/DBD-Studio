@@ -1,31 +1,40 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.ComponentModel;
-using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
-using System.Diagnostics;
 
-namespace DBDStudio.Models.Rules
+namespace DBDStudio.Models.Component.Condition
 {
     public sealed class Condition : ModelBase, ICondition
     {
-        private static readonly ReadOnlyCollection<string> OperatorSymbolsInternal =
-            new(["<", "<=", "==", ">=", ">", "!="]);
+        private static readonly ReadOnlyCollection<KeyValuePair<Operator, string>> OperatorSymbolsInternal =
+            new([
+                new KeyValuePair<Operator, string>(Operator.LessThan, "<"),
+                new KeyValuePair<Operator, string>(Operator.LessThanOrEqual, "<="),
+                new KeyValuePair<Operator, string>(Operator.Equals, "=="),
+                new KeyValuePair<Operator, string>(Operator.GreaterThanOrEqual, ">="),
+                new KeyValuePair<Operator, string>(Operator.GreaterThan, ">"),
+                new KeyValuePair<Operator, string>(Operator.NotEquals, "!=")
+            ]);
 
-        private static readonly ReadOnlyCollection<string> ConjunctionLabelsInternal =
-            new(["AND", "OR"]);
+        private static readonly ReadOnlyCollection<KeyValuePair<Conjunction, string>> ConjunctionLabelsInternal =
+            new([
+                new KeyValuePair<Conjunction, string>(Conjunction.And, "AND"),
+                new KeyValuePair<Conjunction, string>(Conjunction.Or, "OR")
+            ]);
+
+        #region Fields
 
         private ConditionType _type = ConditionType.IsReference;
         private Operator _operator = Operator.Equals;
         private Conjunction _conjunction = Conjunction.And;
 
-        public Condition()
-        {
-            SyncValuesForType(_type, preserveCompatibleValues: false);
-        }
+        #endregion
 
-        public static IReadOnlyList<string> OperatorSymbols => OperatorSymbolsInternal;
-        public static IReadOnlyList<string> ConjunctionLabels => ConjunctionLabelsInternal;
+        #region Properties
+
+        public static IReadOnlyList<string> OperatorSymbols => OperatorSymbolsInternal.Aggregate(
+            new List<string>(), (list, pair) => { list.Add(pair.Value); return list; });
+        public static IReadOnlyList<string> ConjunctionLabels => ConjunctionLabelsInternal.Aggregate(
+            new List<string>(), (list, pair) => { list.Add(pair.Value); return list; });
 
         public ConditionType ConditionType
         {
@@ -36,16 +45,6 @@ namespace DBDStudio.Models.Rules
                     return;
 
                 SyncValuesForType(value, preserveCompatibleValues: true);
-            }
-        }
-
-        public Operator Operator
-        {
-            get => _operator;
-            set
-            {
-                if (SetProperty(ref _operator, value))
-                    OnPropertyChanged(nameof(OperatorSymbol));
             }
         }
 
@@ -60,31 +59,20 @@ namespace DBDStudio.Models.Rules
         /// </remarks>
         public ObservableCollection<ConditionValue> Values { get; set; } = [new ConditionValue.Form()];
 
-        public string OperatorSymbol
+        public Operator Operator
         {
-            get => _operator switch {
-                Operator.Equals => "==",
-                Operator.NotEquals => "!=",
-                Operator.GreaterThan => ">",
-                Operator.LessThan => "<",
-                Operator.GreaterThanOrEqual => ">=",
-                Operator.LessThanOrEqual => "<=",
-                _ => "=="
-            };
+            get => _operator;
             set
             {
-                var parsed = value switch {
-                    "==" => Operator.Equals,
-                    "!=" => Operator.NotEquals,
-                    ">" => Operator.GreaterThan,
-                    "<" => Operator.LessThan,
-                    ">=" => Operator.GreaterThanOrEqual,
-                    "<=" => Operator.LessThanOrEqual,
-                    _ => _operator
-                };
-
-                Operator = parsed;
+                if (SetProperty(ref _operator, value))
+                    OnPropertyChanged(nameof(OperatorSymbol));
             }
+        }
+
+        public string OperatorSymbol
+        {
+            get => OperatorSymbolsInternal.FirstOrDefault(pair => pair.Key == _operator).Value ?? "==";
+            set => Operator = OperatorSymbolsInternal.FirstOrDefault(pair => pair.Value == value).Key;
         }
 
         public Conjunction Conjunction
@@ -99,24 +87,20 @@ namespace DBDStudio.Models.Rules
 
         public string ConjunctionLabel
         {
-            get => _conjunction switch {
-                Conjunction.And => "AND",
-                Conjunction.Or => "OR",
-                _ => "AND"
-            };
-            set
-            {
-                var parsed = value?.ToUpperInvariant() switch {
-                    "AND" => Conjunction.And,
-                    "OR" => Conjunction.Or,
-                    _ => _conjunction
-                };
-
-                Conjunction = parsed;
-            }
+            get => ConjunctionLabelsInternal.FirstOrDefault(pair => pair.Key == _conjunction).Value ?? "AND";
+            set => Conjunction = ConjunctionLabelsInternal.FirstOrDefault(pair => pair.Value == value).Key;
         }
 
-        public Condition DeepClone()
+        #endregion
+
+        #region Constructors
+
+        public Condition()
+        {
+            SyncValuesForType(_type, preserveCompatibleValues: false);
+        }
+
+        public ICondition DeepClone()
         {
             var clone = new Condition {
                 _type = _type,
@@ -131,7 +115,11 @@ namespace DBDStudio.Models.Rules
             return clone;
         }
 
-        public void SyncValuesForType(ConditionType type, bool preserveCompatibleValues)
+        #endregion
+
+        #region Private Methods
+
+        private void SyncValuesForType(ConditionType type, bool preserveCompatibleValues)
         {
             var nextValues = ConditionDefinition.GetValuesForType(type).ToArray();
             var formTypes = ConditionDefinition.GetFormTypeForType(type).ToArray();
@@ -178,5 +166,7 @@ namespace DBDStudio.Models.Rules
                 break;
             }
         }
+
+        #endregion
     }
 }

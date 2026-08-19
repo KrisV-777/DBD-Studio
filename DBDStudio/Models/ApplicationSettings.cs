@@ -5,7 +5,7 @@ using DBDStudio.Utility.Persistence;
 
 namespace DBDStudio.Models
 {
-    public sealed class ApplicationSettings : INotifyPropertyChanged, IPersistable
+    public sealed class ApplicationSettings : ModelBase, IPersistable
     {
         private string _workspaceFilePath = BuildDefaultWorkspacePath();
         private string _skyrimDataFolder = string.Empty;
@@ -63,8 +63,6 @@ namespace DBDStudio.Models
             set => SetProperty(ref _theme, value);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public object? SaveState()
         {
             return new ApplicationSettingsPersistenceState {
@@ -91,16 +89,6 @@ namespace DBDStudio.Models
             RaceMenuPresetsFolder = settings.RaceMenuPresetsFolder;
             BaseFontSize = settings.BaseFontSize;
             Theme = settings.Theme;
-        }
-
-        private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) {
-                return;
-            }
-
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private static string BuildDefaultWorkspacePath()

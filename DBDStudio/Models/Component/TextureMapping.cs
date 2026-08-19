@@ -1,6 +1,7 @@
-namespace DBDStudio.Models.Textures
+namespace DBDStudio.Models.Component.Textures
 {
-    public sealed class TextureMapping(string vanillaTexture, string replacementTexture, string? absolutePath) : ModelBase
+    public sealed class TextureMapping(string vanillaTexture, string replacementTexture, string? absolutePath)
+        : ModelBase, IEquatable<TextureMapping>
     {
         // TOOD: absolutePath can be invalid, should have some UI clue that the owning pack cannot be exported until fixed
         // TODO: ^^^ needs a feature to edit absolute path
@@ -47,26 +48,20 @@ namespace DBDStudio.Models.Textures
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TextureMapping"/> class with the specified vanilla texture, replacement texture, and source file.
+        /// Creates a clone of the current <see cref="TextureMapping"/> instance.
         /// </summary>
         /// <returns>A new <see cref="TextureMapping"/> instance that is a copy of the current instance.</returns>
         public TextureMapping Clone() => (TextureMapping)MemberwiseClone();
 
         #endregion
+        public bool Equals(TextureMapping? other) =>
+            other is not null && string.Equals(_vanillaTexture, other._vanillaTexture, StringComparison.OrdinalIgnoreCase);
 
-        #region Equality
+        public override bool Equals(object? obj) => Equals(obj as TextureMapping);
 
-        public bool Equals(TextureMapping? other) => other is not null && _vanillaTexture == other._vanillaTexture;
-        public override bool Equals(object? obj) => obj is TextureMapping other && Equals(other);
-        public static bool operator ==(TextureMapping? left, TextureMapping? right) => left?.Equals(right) ?? right is null;
-        public static bool operator !=(TextureMapping? left, TextureMapping? right) => !(left == right);
-        public override int GetHashCode() => _vanillaTexture.GetHashCode();
-        public int CompareTo(TextureMapping? other) => other is null ? 1 : _vanillaTexture.CompareTo(other._vanillaTexture, StringComparison.OrdinalIgnoreCase);
-        public static bool operator <(TextureMapping? left, TextureMapping? right) => left is null ? right is not null : left.CompareTo(right) < 0;
-        public static bool operator >(TextureMapping? left, TextureMapping? right) => left is not null && left.CompareTo(right) > 0;
-        public static bool operator <=(TextureMapping? left, TextureMapping? right) => !(left > right);
-        public static bool operator >=(TextureMapping? left, TextureMapping? right) => !(left < right);
-
-        #endregion
+        public override int GetHashCode() => HashCode.Combine(
+            _vanillaTexture?.ToLowerInvariant(),
+            _replacementTexture?.ToLowerInvariant(),
+            _absolutePath?.ToLowerInvariant());
     }
 }

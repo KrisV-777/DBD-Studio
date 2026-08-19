@@ -8,18 +8,10 @@ using FormType = DBDStudio.Interfaces.Mutagen.FormType;
 
 namespace DBDStudio.Models.Mutagen
 {
-    public sealed class PluginData(
-        ModKey key,
-        string pluginName,
-        string path,
-        bool isEnabled,
-        long lastWriteTicksUtc) : ModelBase, IPluginData
+    public sealed class PluginData(ModKey key, string pluginName, string path, bool isEnabled, long lastWriteTicksUtc)
+        : ModelBase, IPluginData
     {
         #region Fields
-        private readonly ModKey _key = key;
-        private readonly string _pluginName = pluginName;
-        private readonly string _path = path;
-        private readonly long _lastWriteTicksUtc = lastWriteTicksUtc;
 
         private bool _isEnabled = isEnabled;
         private FormRecord[] _records = [];
@@ -31,9 +23,10 @@ namespace DBDStudio.Models.Mutagen
         #region Properties
 
         public ISkyrimModGetter? Mod => GetMod();
-        public ModKey Key => _key;
-        public string PluginName => _pluginName;
-        public string Path => _path;
+        public ModKey Key { get; init; } = key;
+        public string PluginName { get; init; } = pluginName;
+        public string Path { get; init; } = path;
+        public long LastWriteTicksUtc { get; init; } = lastWriteTicksUtc;
         public bool IsEnabled
         {
             get => _isEnabled;
@@ -41,7 +34,6 @@ namespace DBDStudio.Models.Mutagen
         }
         public IReadOnlyList<FormRecord> Records => Volatile.Read(ref _records);
         public IReadOnlyDictionary<FormType, IEnumerable<FormRecord>> RecordsByFormKey => Volatile.Read(ref _recordsByFormKey);
-        public long LastWriteTicksUtc => _lastWriteTicksUtc;
         public PluginLoadState LoadState => (PluginLoadState)Volatile.Read(ref _loadStateValue);
 
         #endregion

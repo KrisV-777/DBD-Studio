@@ -1,7 +1,7 @@
 ﻿using DBDStudio.Interfaces.Mutagen;
 using DBDStudio.Interfaces.Rules;
 
-namespace DBDStudio.Models.Rules
+namespace DBDStudio.Models.Component.Condition
 {
     public sealed class ConditionDefinition
     {
