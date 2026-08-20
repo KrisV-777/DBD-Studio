@@ -1,12 +1,17 @@
-using System.Collections.Generic;
-using DBDStudio.Models;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using DBDStudio.Models.Component;
 
 namespace DBDStudio.Interfaces
 {
     public interface IRuleService
     {
-        IReadOnlyList<Rule> GetRules();
-        void Add(Rule rule);
-        void Remove(Rule rule);
+        ObservableCollection<RuleConstruct> Rules { get; }
+
+        void Add(RuleConstruct? rule);
+        void Remove(RuleConstruct rule);
+        void Reset(RuleConstruct rule);
+        void Save(RuleConstruct rule);
+        void SaveAs(RuleConstruct rule, string filePath);
     }
 }

@@ -4,7 +4,7 @@ using DBDStudio.Interfaces.Mutagen;
 using DBDStudio.Utility;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins;
-using Mutagen.Bethesda.Plugins.Masters;
+using static DBDStudio.Interfaces.Mutagen.DatabaseChangedEventArgs;
 
 namespace DBDStudio.Models.Mutagen
 {
@@ -109,14 +109,14 @@ namespace DBDStudio.Models.Mutagen
             _loadTask = LoadPluginsAsync(rebuiltPlugins.ToHashSet(), loadToken);
 
             if (removedPlugins.Count > 0) {
-                DatabaseChanged?.Invoke(this, new DatabaseChangedEventArgs(DatabaseChangedEventArgs.DatabaseChangeType.PluginsRemoved, removedPlugins));
+                DatabaseChanged?.Invoke(this, new DatabaseChangedEventArgs(DatabaseChangeType.PluginsRemoved, removedPlugins));
             }
             if (newlyAdded.Count > 0) {
-                DatabaseChanged?.Invoke(this, new DatabaseChangedEventArgs(DatabaseChangedEventArgs.DatabaseChangeType.PluginsAdded, newlyAdded));
+                DatabaseChanged?.Invoke(this, new DatabaseChangedEventArgs(DatabaseChangeType.PluginsAdded, newlyAdded));
             }
         }
 
-        private static async Task LoadPluginsAsync(IReadOnlySet<PluginData> plugins, CancellationToken cancellationToken)
+        private async Task LoadPluginsAsync(IReadOnlySet<PluginData> plugins, CancellationToken cancellationToken)
         {
             try {
                 await Parallel.ForEachAsync(
@@ -129,6 +129,7 @@ namespace DBDStudio.Models.Mutagen
                     async (plugin, token) =>
                     {
                         await plugin.LoadMod();
+                        DatabaseChanged?.Invoke(this, new DatabaseChangedEventArgs(DatabaseChangeType.PluginLoaded, [plugin]));
                     });
             } catch (OperationCanceledException) {
                 Debug.Write("Plugin loading was canceled.");

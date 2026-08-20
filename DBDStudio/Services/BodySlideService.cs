@@ -4,19 +4,17 @@ using System.Xml.Linq;
 using System.Collections.ObjectModel;
 using DBDStudio.Interfaces;
 using DBDStudio.Models;
-using DBDStudio.Utility.Persistence;
 using Noggog;
 using System.Reactive.Linq;
 using DBDStudio.Utility;
+using DBDStudio.Models.Component;
 
 namespace DBDStudio.Services
 {
     public sealed class BodySlideService : IBodySlideService, IPersistable
     {
         private readonly ApplicationSettings _settings;
-        private readonly ObservableCollection<BodySlidePreset> _presets = [];
-
-        #region Constructor
+        public ObservableCollection<BodySlidePreset> Presets { get; } = [];
 
         public BodySlideService(ApplicationSettings settings)
         {
@@ -25,55 +23,29 @@ namespace DBDStudio.Services
             _settings.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName is nameof(ApplicationSettings.SkyrimDataFolder) or
-                    nameof(ApplicationSettings.ModsFolder) or nameof(ApplicationSettings.BodySlidePresetsFolder)) {
-                    Reset();
+                    nameof(ApplicationSettings.BodySlidePresetsFolder) or
+                    nameof(ApplicationSettings.ModsFolder)) {
+                    ReInitializePresets(DiscoverExternalPresets());
                 }
             };
         }
-
-        #endregion
-
-        #region IBodySlideService
-
-        public ObservableCollection<BodySlidePreset> Presets => _presets;
-
-        public void Reset() => ReInitializePresets(DiscoverExternalPresets());
-
-        #endregion
-
-        #region IPersistable
-
-        public string PersistenceKey => "bodySlidePresets";
-        public Type PersistenceStateType => typeof(List<BodySlidePreset>);
-
-        public object? SaveState() => _presets;
-
-        public void RestoreState(object? state)
-        {
-            if (state is not List<BodySlidePreset> savedPresets) {
-                return;
-            }
-            ReInitializePresets(savedPresets);
-        }
-
-        #endregion
 
         #region Private Methods
 
         private void ReInitializePresets(IEnumerable<BodySlidePreset> newPresets)
         {
-            var oldPresets = _presets.ToHashSet();
-            _presets.Clear();
+            var oldPresets = Presets.ToHashSet();
+            Presets.Clear();
 
             newPresets
-                .Where(p => !string.IsNullOrWhiteSpace(p.Preset) && File.Exists(p.SourceXml))
-                .OrderBy(p => p.Preset, StringComparer.OrdinalIgnoreCase)
+                .Where(p => !string.IsNullOrWhiteSpace(p.Name) && File.Exists(p.SourceXml))
+                .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                 .ForEach(p =>
                 {
                     if (oldPresets.TryGetValue(p, out var old))
                         p.IsPrivate = old.IsPrivate;
 
-                    _presets.Add(p);
+                    Presets.Add(p);
                 });
         }
 
@@ -88,13 +60,29 @@ namespace DBDStudio.Services
 
                 foreach (var element in document.Root?.Elements("Preset") ?? []) {
                     yield return new BodySlidePreset {
-                        Preset = (string?)element.Attribute("name") ?? string.Empty,
-                        Group = (string?)element.Element("Group")?.Attribute("name") ?? string.Empty,
+                        Name = (string?)element.Attribute("name") ?? string.Empty,
                         SourceXml = xmlFile,
                         IsPrivate = false
                     };
                 }
             }
+        }
+
+        #endregion
+
+        #region IPersistable
+
+        public string PersistenceKey => "bodySlidePresets";
+        public Type PersistenceStateType => typeof(List<BodySlidePreset>);
+
+        public object? SaveState() => Presets;
+
+        public void RestoreState(object? state)
+        {
+            if (state is not List<BodySlidePreset> savedPresets) {
+                return;
+            }
+            ReInitializePresets(savedPresets);
         }
 
         #endregion

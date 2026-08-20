@@ -1,5 +1,5 @@
-﻿using DBDStudio.Models;
-using DBDStudio.Models.Textures;
+﻿using DBDStudio.Interfaces;
+using DBDStudio.Models.Component;
 
 namespace DBDStudio.Utility.Persistence
 {
@@ -20,21 +20,6 @@ namespace DBDStudio.Utility.Persistence
         public string RaceMenuPresetsFolder { get; set; } = string.Empty;
         public double BaseFontSize { get; set; } = 14;
         public string Theme { get; set; } = "System";
-    }
-
-    public sealed class TexturePackPersistenceState
-    {
-        public List<TexturePack> Packs { get; set; } = [];
-    }
-
-    public sealed class RaceMenuPresetPersistenceState
-    {
-        public List<RaceMenuPreset> Presets { get; set; } = [];
-    }
-
-    public sealed class RulePersistenceState
-    {
-        public List<Rule> Rules { get; set; } = [];
     }
 
     public sealed class LoadOrderPersistenceState

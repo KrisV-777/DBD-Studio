@@ -100,7 +100,7 @@ namespace DBDStudio.Models.Component.Condition
             SyncValuesForType(_type, preserveCompatibleValues: false);
         }
 
-        public ICondition DeepClone()
+        public ICondition Copy()
         {
             var clone = new Condition {
                 _type = _type,

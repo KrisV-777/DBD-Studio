@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using DBDStudio.Models.Rules;
+using DBDStudio.Models.Component.Condition;
 
 namespace DBDStudio.Interfaces.Rules
 {
@@ -43,5 +43,7 @@ namespace DBDStudio.Interfaces.Rules
         ObservableCollection<ConditionValue> Values { get; }
 
         Conjunction Conjunction { get; set; }
+
+        ICondition Copy();
     }
 }

@@ -7,10 +7,10 @@ using DBDStudio.Utility.Persistence;
 
 namespace DBDStudio.Services
 {
-    public sealed class PersistenceManager(ApplicationSettings settings, IEnumerable<IPersistable> persistables)
+    public sealed class PersistenceService(ApplicationSettings settings, IEnumerable<IPersistable> persistables)
     {
         private readonly ApplicationSettings _settings = settings;
-        private readonly IReadOnlyList<IPersistable> _persistables = persistables.ToArray();
+        private readonly IReadOnlyList<IPersistable> _persistables = [.. persistables];
 
         public void Load()
         {
@@ -54,7 +54,7 @@ namespace DBDStudio.Services
         {
             var workspacePath = ResolveWorkspacePath();
             var snapshot = new PersistenceSnapshot {
-                Items = new Dictionary<string, object?>()
+                Items = []
             };
             foreach (var persistable in _persistables) {
                 snapshot.Items[persistable.PersistenceKey] = persistable.SaveState();

@@ -43,7 +43,7 @@ namespace DBDStudio.Models.Component
                 clone.BodySlideCandidates.Add(candidate);
 
             foreach (var condition in Conditions)
-                clone.Conditions.Add(condition.DeepClone());
+                clone.Conditions.Add(condition.Copy());
 
             return clone;
         }
@@ -66,7 +66,7 @@ namespace DBDStudio.Models.Component
 
             Conditions.Clear();
             foreach (var condition in sourceRule.Conditions)
-                Conditions.Add(condition.DeepClone());
+                Conditions.Add(condition.Copy());
         }
 
         #endregion

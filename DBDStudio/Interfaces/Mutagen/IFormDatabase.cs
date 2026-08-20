@@ -25,7 +25,8 @@ namespace DBDStudio.Interfaces.Mutagen
         public enum DatabaseChangeType
         {
             PluginsAdded,
-            PluginsRemoved
+            PluginsRemoved,
+            PluginLoaded
         }
 
         /// <summary>
