@@ -1,9 +1,6 @@
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Input;
 using DBDStudio.Interfaces;
-using DBDStudio.Models;
+using DBDStudio.Models.Component;
 
 namespace DBDStudio.ViewModels
 {
@@ -36,7 +33,7 @@ namespace DBDStudio.ViewModels
             var source = string.IsNullOrWhiteSpace(_searchText)
                 ? _bodySlideService.Presets.AsEnumerable()
                 : _bodySlideService.Presets.Where(p =>
-                    p.Preset.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                    p.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
                     p.SourceXml.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
             foreach (var preset in source)

@@ -1,7 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Windows.Input;
 using DBDStudio.Interfaces;
-using DBDStudio.Models.Textures;
+using DBDStudio.Models;
+using DBDStudio.Models.Component;
+using DBDStudio.Models.Component.Textures;
 using Noggog;
 
 namespace DBDStudio.ViewModels
@@ -9,11 +13,11 @@ namespace DBDStudio.ViewModels
     public sealed class TexturePacksViewModel : ViewModelBase
     {
         private readonly ITexturePackService _texturePackService;
-        private IRenderedTexturePack? _selectedPack;
+        private TexturePackConstruct? _selectedPack;
         private TextureMapping? _selectedMapping;
-        public ObservableCollection<IRenderedTexturePack> Packs { get; } = [];
+        public ObservableCollection<TexturePackConstruct> Packs { get; } = [];
 
-        public IRenderedTexturePack? SelectedPack
+        public TexturePackConstruct? SelectedPack
         {
             get => _selectedPack;
             set
@@ -46,47 +50,45 @@ namespace DBDStudio.ViewModels
 
             AddPackCommand = new RelayCommand(() => AddPack(null));
             DuplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
-            DeletePackCommand = new RelayCommand(RemovePack, () => SelectedPack?.Is(TexturePackState.Ephemeral) ?? false);
-            ResetPackCommand = new RelayCommand(ResetPack, () => SelectedPack?.Is(TexturePackState.Modified) ?? false);
+            DeletePackCommand = new RelayCommand(RemovePack, () => SelectedPack?.Is(ConstructState.Ephemeral) ?? false);
+            ResetPackCommand = new RelayCommand(ResetPack, () => SelectedPack?.Is(ConstructState.Modified) ?? false);
             AddMappingCommand = new RelayCommand(AddMapping, () => SelectedPack is not null);
             RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
 
-            _texturePackService.TexturePackListChanged += OnTexturePackListChanged;
+            _texturePackService.TexturePacks.CollectionChanged += OnTexturePackListChanged;
 
             Packs.AddRange(_texturePackService.TexturePacks);
             SelectedPack = Packs.Count > 0 ? Packs[0] : null;
         }
 
-        private void OnTexturePackListChanged(object? sender, TexturePackListChangedEventArgs e)
+        private void OnTexturePackListChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            System.Diagnostics.Debug.Assert(sender is ITexturePackService);
+            Debug.Assert(sender is ITexturePackService);
 
-            switch (e.Type) {
-            case TexturePackListChangedEventArgs.ChangeType.Added:
-                System.Diagnostics.Debug.Assert(e.AffectedPack is not null);
-                if (!Packs.Contains(e.AffectedPack)) {
-                    Packs.Add(e.AffectedPack);
-                    SelectedPack = e.AffectedPack;
+            switch (e.Action) {
+            case NotifyCollectionChangedAction.Add:
+                if (e.NewItems is not null) {
+                    foreach (TexturePackConstruct pack in e.NewItems) {
+                        if (!Packs.Contains(pack)) {
+                            Packs.Add(pack);
+                            SelectedPack = pack;
+                        }
+                    }
                 }
                 break;
-            case TexturePackListChangedEventArgs.ChangeType.Removed:
-                System.Diagnostics.Debug.Assert(e.AffectedPack is not null);
-                var newSelection = Packs.Count <= 1 ? null :
-                        Packs[Math.Clamp(Packs.IndexOf(e.AffectedPack), 1, Packs.Count - 1) - 1];
-                var wasSelected = ReferenceEquals(SelectedPack, e.AffectedPack);
-                if (Packs.Remove(e.AffectedPack) && wasSelected) {
-                    SelectedPack = newSelection;
+            case NotifyCollectionChangedAction.Remove:
+                if (e.OldItems is not null) {
+                    foreach (TexturePackConstruct pack in e.OldItems) {
+                        var newSelection = Packs.Count <= 1 ? null :
+                                Packs[Math.Clamp(Packs.IndexOf(pack), 1, Packs.Count - 1) - 1];
+                        var wasSelected = ReferenceEquals(SelectedPack, pack);
+                        if (Packs.Remove(pack) && wasSelected) {
+                            SelectedPack = newSelection;
+                        }
+                    }
                 }
                 break;
-            case TexturePackListChangedEventArgs.ChangeType.Updated:
-                System.Diagnostics.Debug.Assert(e.AffectedPack is not null);
-                var index = Packs.IndexOf(e.AffectedPack);
-                if (index >= 0) {
-                    Packs[index] = e.AffectedPack;
-                    SelectedPack = e.AffectedPack;
-                }
-                break;
-            case TexturePackListChangedEventArgs.ChangeType.Reset:
+            case NotifyCollectionChangedAction.Reset:
                 var currentSelection = SelectedPack?.Uid;
                 Packs.Clear();
                 Packs.AddRange(_texturePackService.TexturePacks);
@@ -107,9 +109,9 @@ namespace DBDStudio.ViewModels
             ((RelayCommand)RemoveMappingCommand).RaiseCanExecuteChanged();
         }
 
-        private void AddPack(IRenderedTexturePack? pack = null) => _texturePackService.Emplace(pack);
+        private TexturePackConstruct AddPack(string? withName = null) => _texturePackService.EmplaceNew(withName);
 
-        public void PopulatePackFromFolder(string folderPath, IRenderedTexturePack? pack = null)
+        public void PopulatePackFromFolder(string folderPath, TexturePackConstruct? pack = null)
         {
             var rootDirectory = new DirectoryInfo(folderPath);
             if (!rootDirectory.Exists)
@@ -119,107 +121,97 @@ namespace DBDStudio.ViewModels
             var texturesPath = Path.Combine(folderPath, "textures");
             var texturesDirectory = new DirectoryInfo(texturesPath);
             if (!texturesDirectory.Exists) {
-                System.Diagnostics.Debug.WriteLine($"Error: No 'textures' folder found in the selected directory. Expected structure: <folder>/textures/");
+                Debug.WriteLine($"Error: No 'textures' folder found in the selected directory. Expected structure: <folder>/textures/");
                 return;
             }
 
-            // Emplace the pack and perform the population action
-            _texturePackService.EmplaceAction(pack, (it) => {
-                try {
-                    if (pack is null) {
-                        // Newly created pack, set its name and description based on the folder
-                        it.Name = rootDirectory.Name;
-                        it.Description = $"Pack populated from folder:\n{rootDirectory.FullName}";
+            // If no pack was provided, create a new ephemeral pack
+            pack ??= AddPack(rootDirectory.Name);
+
+            try {
+                // Only search within the textures directory for performance (avoids scanning unrelated files in root)
+                var files = texturesDirectory.GetFiles("*.dds", SearchOption.AllDirectories);
+                var numMappings = pack.Mappings.Count;
+                var numMappingStart = numMappings;
+                var numReplaced = 0;
+
+                foreach (var file in files) {
+                    var relativePath = Path.GetRelativePath(texturesDirectory.FullName, file.FullName);
+                    var normalizedPath = relativePath.Replace("\\", "/");
+
+                    var mapping = new TextureMapping(
+                        vanillaTexture: normalizedPath,
+                        replacementTexture: normalizedPath,
+                        absolutePath: file.FullName
+                    );
+                    pack.Mappings.Add(mapping);
+
+                    if (numMappings != pack.Mappings.Count) {
+                        numMappings++;
+                    } else {
+                        numReplaced++;
                     }
-                    // Only search within the textures directory for performance (avoids scanning unrelated files in root)
-                    var files = texturesDirectory.GetFiles("*.dds", SearchOption.AllDirectories);
-                    var numMappings = it.Mappings.Count;
-                    var numMappingStart = numMappings;
-                    var numReplaced = 0;
-
-                    foreach (var file in files) {
-                        var relativePath = Path.GetRelativePath(texturesDirectory.FullName, file.FullName);
-                        var normalizedPath = relativePath.Replace("\\", "/");
-
-                        var mapping = new TextureMapping(
-                            vanillaTexture: normalizedPath,
-                            replacementTexture: normalizedPath,
-                            absolutePath: file.FullName
-                        );
-                        it.Mappings.Add(mapping);
-
-                        if (numMappings != it.Mappings.Count) {
-                            numMappings++;
-                        } else {
-                            numReplaced++;
-                        }
-                    }
-                    System.Diagnostics.Debug.WriteLine($"Populated pack '{it.Name}' with {numMappings - numMappingStart} new mappings and {numReplaced} replaced mappings.");
-                } catch (Exception ex) {
-                    System.Diagnostics.Debug.WriteLine($"An error occurred while populating the texture pack from the folder: {ex.Message}");
                 }
-            });
+                Debug.WriteLine($"Populated pack '{pack.Name}' with {numMappings - numMappingStart} new mappings and {numReplaced} replaced mappings.");
+            } catch (Exception ex) {
+                Debug.WriteLine($"An error occurred while populating the texture pack from the folder: {ex.Message}");
+            }
         }
 
         private void DuplicatePack()
         {
-            System.Diagnostics.Debug.Assert(SelectedPack is not null);
-
-            AddPack(SelectedPack.Copy());
+            Debug.Assert(SelectedPack is not null);
+            AddPack(SelectedPack.Name);
         }
 
         private void RemovePack()
         {
-            System.Diagnostics.Debug.Assert(SelectedPack is not null);
-            System.Diagnostics.Debug.Assert(SelectedPack!.Is(TexturePackState.Ephemeral));
+            Debug.Assert(SelectedPack is not null);
+            Debug.Assert(SelectedPack!.Is(ConstructState.Ephemeral));
 
             _texturePackService.Remove(SelectedPack);
         }
 
         private void ResetPack()
         {
-            System.Diagnostics.Debug.Assert(SelectedPack is not null);
-            System.Diagnostics.Debug.Assert(SelectedPack?.Is(TexturePackState.Modified) ?? false);
+            Debug.Assert(SelectedPack is not null);
+            Debug.Assert(SelectedPack?.Is(ConstructState.Modified) ?? false);
 
             _texturePackService.Reset(SelectedPack);
         }
 
         private void AddMapping()
         {
-            System.Diagnostics.Debug.Assert(SelectedPack is not null);
-            _texturePackService.EmplaceAction(SelectedPack, (it) => {
-                var mapping = new TextureMapping (
-                    vanillaTexture: "",
-                    replacementTexture: "",
-                    absolutePath: ""
-                );
-                if (it.Mappings.Contains(mapping)) {
-                    System.Diagnostics.Debug.WriteLine("Skipping default mapping addition because an identical mapping already exists.");
-                    return;
-                }
-                it.Mappings.Add(mapping);
-                SelectedMapping = mapping;
-            });
+            Debug.Assert(SelectedPack is not null);
+            var mapping = new TextureMapping(
+                vanillaTexture: "",
+                replacementTexture: "",
+                absolutePath: ""
+            );
+            if (SelectedPack.Mappings.Contains(mapping)) {
+                Debug.WriteLine("Skipping default mapping addition because an identical mapping already exists.");
+                return;
+            }
+            SelectedPack.Mappings.Add(mapping);
+            SelectedMapping = mapping;
         }
 
         private void RemoveMapping()
         {
-            System.Diagnostics.Debug.Assert(SelectedPack is not null);
-            System.Diagnostics.Debug.Assert(SelectedMapping is not null);
+            Debug.Assert(SelectedPack is not null);
+            Debug.Assert(SelectedMapping is not null);
 
-            _texturePackService.EmplaceAction(SelectedPack, (it) => {
-                it.Mappings.Remove(SelectedMapping);
-                SelectedMapping = null;
-            });
+            SelectedPack.Mappings.Remove(SelectedMapping);
+            SelectedMapping = null;
         }
 
-        public void SetSelectedMappingReplacementTexture(TextureMapping mapping, string filePath)
+        public static void SetSelectedMappingReplacementTexture(TextureMapping mapping, string filePath)
         {
             var texturesIndex = filePath.LastIndexOf(
                 $"{Path.DirectorySeparatorChar}textures{Path.DirectorySeparatorChar}",
                 StringComparison.OrdinalIgnoreCase);
             if (texturesIndex == -1) {
-                System.Diagnostics.Debug.WriteLine($"Error: The selected texture file '{filePath}' is not located within a 'textures' folder. Expected structure: <folder>/textures/**");
+                Debug.WriteLine($"Error: The selected texture file '{filePath}' is not located within a 'textures' folder. Expected structure: <folder>/textures/**");
                 return;
             }
             // Move index to the character after "textures/"
@@ -234,15 +226,15 @@ namespace DBDStudio.ViewModels
         public void ExportPack(string outputZipPath)
         {
             if (SelectedPack is null) {
-                System.Diagnostics.Debug.WriteLine("Error: No texture pack selected for export.");
+                Debug.WriteLine("Error: No texture pack selected for export.");
                 return;
             }
 
             try {
                 _texturePackService.Export(SelectedPack, outputZipPath);
-                System.Diagnostics.Debug.WriteLine($"Successfully exported texture pack '{SelectedPack.Name}' to '{outputZipPath}'.");
+                Debug.WriteLine($"Successfully exported texture pack '{SelectedPack.Name}' to '{outputZipPath}'.");
             } catch (Exception ex) {
-                System.Diagnostics.Debug.WriteLine($"An error occurred while exporting the texture pack: {ex.Message}");
+                Debug.WriteLine($"An error occurred while exporting the texture pack: {ex.Message}");
             }
         }
     }

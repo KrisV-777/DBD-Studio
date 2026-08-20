@@ -82,10 +82,11 @@ namespace DBDStudio.Services
             }
         }
 
-        public void Add(RuleConstruct? rule)
+        public RuleConstruct EmplaceNew(string? withName = null)
         {
-            var newRule = CreateNewRule(rule?.Name);
+            var newRule = CreateNewRule(withName);
             Rules.Add(newRule);
+            return newRule;
         }
 
         public void Remove(RuleConstruct rule)

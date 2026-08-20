@@ -35,7 +35,7 @@ namespace DBDStudio.ViewModels
             _mainWindowViewModel = mainWindowViewModel;
 
             _appSettings.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
-            _texturePackService.TexturePackListChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
+            _texturePackService.TexturePacks.CollectionChanged += (_, _) => OnPropertyChanged(nameof(TexturePacksFound));
             _bodySlideService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(BodySlidePresetsFound));
             _raceMenuPresetService.Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(RaceMenuPresetsFound));
             _databaseService.DatabaseChanged += (_, _) => OnPropertyChanged(nameof(ModsFound));

@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using DBDStudio.Models.Component.Condition;
+using System.ComponentModel;
 
 namespace DBDStudio.Interfaces.Rules
 {
@@ -34,7 +35,7 @@ namespace DBDStudio.Interfaces.Rules
         Or
     }
 
-    public interface ICondition
+    public interface ICondition : INotifyPropertyChanged
     {
         ConditionType ConditionType { get; set; }
 

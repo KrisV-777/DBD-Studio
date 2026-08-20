@@ -86,10 +86,11 @@ namespace DBDStudio.Services
             }
         }
 
-        public void Add(TexturePackConstruct? pack)
+        public TexturePackConstruct EmplaceNew(string? withName = null)
         {
-            pack = CreateNewPack(pack?.Name);
+            var pack = CreateNewPack(withName);
             TexturePacks.Add(pack);
+            return pack;
         }
 
         public void Remove(TexturePackConstruct pack)
@@ -110,7 +111,7 @@ namespace DBDStudio.Services
 
         public void Export(TexturePackConstruct pack, string zipFileLocation)
         {
-            if (!File.Exists(zipFileLocation)) {
+            if (string.IsNullOrWhiteSpace(zipFileLocation)) {
                 throw new ArgumentException("The specified zip file location is invalid.", nameof(zipFileLocation));
             } else if (pack.Underlying.Mappings.Count == 0) {
                 Debug.WriteLine("Error: Cannot export a pack with no mappings.");

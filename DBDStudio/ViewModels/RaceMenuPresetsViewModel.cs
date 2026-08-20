@@ -4,12 +4,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using DBDStudio.Interfaces;
 using DBDStudio.Models;
+using DBDStudio.Models.Component;
 
 namespace DBDStudio.ViewModels
 {
     public sealed class RaceMenuPresetsViewModel : ViewModelBase
     {
         private readonly IRaceMenuPresetService _raceMenuPresetService;
+        public ObservableCollection<RaceMenuPreset> FilteredPresets { get; } = [];
         private string _searchText = string.Empty;
 
         public RaceMenuPresetsViewModel(IRaceMenuPresetService raceMenuPresetService)
@@ -29,9 +31,6 @@ namespace DBDStudio.ViewModels
             }
         }
 
-        public ObservableCollection<RaceMenuPreset> FilteredPresets { get; } = [];
-        public static IReadOnlyList<string> SexOptions { get; } = ["Male", "Female"];
-
         private void ApplyFilter()
         {
             FilteredPresets.Clear();
@@ -40,7 +39,7 @@ namespace DBDStudio.ViewModels
                 ? _raceMenuPresetService.Presets.AsEnumerable()
                 : _raceMenuPresetService.Presets.Where(p =>
                     p.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                    p.JsSlotFile.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                    p.JslotFile.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
                     p.Sex.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
             foreach (var preset in source)

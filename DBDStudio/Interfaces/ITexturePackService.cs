@@ -18,10 +18,10 @@ namespace DBDStudio.Interfaces
         /// <summary>
         /// Emplaces a texture pack into the collection.
         /// </summary>
-        /// <param name="pack">The texture pack to emplace. If null, a new ephemeral pack will be created.</param>
+        /// <param name="withName">The name to assign to the new texture pack. If null, a default name will be used.</param>
         /// <returns>The emplaced texture pack.</returns>
         /// <remarks>If the pack is already present in the collection, it will be replaced with the new instance.</remarks>
-        void Add(TexturePackConstruct? pack);
+        TexturePackConstruct EmplaceNew(string? withName = null);
 
         /// <summary>
         /// Removes a texture pack from the collection.

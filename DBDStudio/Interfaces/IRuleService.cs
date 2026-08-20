@@ -8,7 +8,7 @@ namespace DBDStudio.Interfaces
     {
         ObservableCollection<RuleConstruct> Rules { get; }
 
-        void Add(RuleConstruct? rule);
+        RuleConstruct EmplaceNew(string? withName = null);
         void Remove(RuleConstruct rule);
         void Reset(RuleConstruct rule);
         void Save(RuleConstruct rule);
