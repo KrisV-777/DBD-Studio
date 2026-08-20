@@ -5,7 +5,7 @@ namespace DBDStudio.Models.Component
         private string _sex = Models.Sex.Female;
 
         public required new string Name { get; init; }
-        public required string JsSlotFile { get; init; }
+        public required string JslotFile { get; init; }
         public string Sex
         {
             get => _sex;
