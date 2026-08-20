@@ -36,7 +36,6 @@ namespace DBDStudio.ViewModels
             BodySlide = new BodySlideViewModel(bodySlideService);
             RaceMenuPresets = new RaceMenuPresetsViewModel(raceMenuPresetService);
             Rules = new RulesViewModel(ruleService, texturePackService, bodySlideService, raceMenuPresetService, _formDatabase);
-            Preview = new PreviewViewModel();
             LoadOrderExplorer = new FormDatabaseViewModel(_formDatabase);
         }
 
@@ -45,7 +44,6 @@ namespace DBDStudio.ViewModels
         public BodySlideViewModel BodySlide { get; }
         public RaceMenuPresetsViewModel RaceMenuPresets { get; }
         public RulesViewModel Rules { get; }
-        public PreviewViewModel Preview { get; }
         public FormDatabaseViewModel LoadOrderExplorer { get; }
 
         public int SelectedPageIndex
@@ -72,7 +70,6 @@ namespace DBDStudio.ViewModels
             3 => RaceMenuPresets,
             4 => Rules,
             5 => LoadOrderExplorer,
-            6 => Preview,
             _ => Settings
         };
     }

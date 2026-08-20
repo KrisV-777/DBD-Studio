@@ -29,9 +29,6 @@
         <DataTemplate DataType="{x:Type vm:FormDatabaseViewModel}">
             <pages:FormDatabasePage />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:PreviewViewModel}">
-            <pages:PreviewPage />
-        </DataTemplate>
     </Window.DataTemplates>
 
     <DockPanel>
