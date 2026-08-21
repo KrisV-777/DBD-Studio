@@ -178,31 +178,6 @@ namespace DBDStudio.ViewModels
                 }
                 break;
 
-            case NotifyCollectionChangedAction.Replace:
-                if (e.OldItems is null || e.NewItems is null) {
-                    break;
-                }
-
-                var oldRule = e.OldItems.OfType<RuleConstruct>().FirstOrDefault();
-                var newRule = e.NewItems.OfType<RuleConstruct>().FirstOrDefault();
-                if (oldRule is null || newRule is null) {
-                    break;
-                }
-
-                var replaceIndex = Rules.IndexOf(oldRule);
-                if (replaceIndex < 0) {
-                    break;
-                }
-
-                var wasPreviouslySelected = ReferenceEquals(SelectedRenderedRule, oldRule);
-                DetachRule(oldRule);
-                AttachRule(newRule);
-                Rules[replaceIndex] = newRule;
-                if (wasPreviouslySelected) {
-                    SelectedRenderedRule = newRule;
-                }
-                break;
-
             case NotifyCollectionChangedAction.Reset:
                 var currentSelection = SelectedRenderedRule?.Uid;
                 foreach (var rule in Rules) {
@@ -406,8 +381,16 @@ namespace DBDStudio.ViewModels
                 return;
             }
 
-            var hasReferenceCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsReference);
-            var hasNpcCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsNPC);
+            var hasReferenceCondition = SelectedRule.Conditions
+                .Where(c => c.ConditionType == ConditionType.IsReference)
+                .Any(c => c.Values
+                    .Where(v => v is ConditionValue.Form)
+                    .Any(v => (v as ConditionValue.Form)!.Value?.FormReference.MaybeValid() ?? false));
+            var hasNpcCondition = SelectedRule.Conditions
+                .Where(c => c.ConditionType == ConditionType.IsNPC)
+                .Any(c => c.Values
+                    .Where(v => v is ConditionValue.Form)
+                    .Any(v => (v as ConditionValue.Form)!.Value?.FormReference.MaybeValid() ?? false));
 
             if (!hasReferenceCondition && !hasNpcCondition) {
                 RaceMenuAssignmentWarning = "RaceMenu assignments require IsReference or IsNPC conditions.";
