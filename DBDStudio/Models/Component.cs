@@ -1,9 +1,12 @@
-﻿namespace DBDStudio.Models
+﻿using System.Text.Json.Serialization;
+
+namespace DBDStudio.Models
 {
     public abstract class DBDComponent : ModelBase
     {
         protected string _name = string.Empty;
         protected DateTimeOffset _lastUpdatedUtc = DateTimeOffset.UtcNow;
+        private int _mutationTrackingSuspendDepth = 0;
 
         #region Properties
 
@@ -31,6 +34,7 @@
         /// Gets the date and time when the component was last updated, converted to local time.
         /// </summary>
         /// <remarks>This is a computed property derived from <see cref="LastUpdatedUtc"/>.</remarks>
+        [JsonIgnore]
         public DateTimeOffset LastUpdatedLocal => LastUpdatedUtc.ToLocalTime();
 
         #endregion
@@ -38,6 +42,29 @@
         #region Methods
 
         public bool IsMoreRecentThan(DBDComponent? other) => other is not null && LastUpdatedUtc > other.LastUpdatedUtc;
+
+        protected void MarkUpdated()
+        {
+            if (_mutationTrackingSuspendDepth > 0) {
+                return;
+            }
+            _lastUpdatedUtc = DateTimeOffset.UtcNow;
+            OnPropertyChanged(nameof(LastUpdatedUtc));
+            OnPropertyChanged(nameof(LastUpdatedLocal));
+        }
+
+        protected void BeginMutationTrackingSuspend()
+            => _mutationTrackingSuspendDepth++;
+
+        protected void EndMutationTrackingSuspend()
+            => _mutationTrackingSuspendDepth = Math.Max(0, _mutationTrackingSuspendDepth - 1);
+
+        internal void RestoreLastUpdatedUtc(DateTimeOffset lastUpdatedUtc)
+        {
+            _lastUpdatedUtc = lastUpdatedUtc;
+            OnPropertyChanged(nameof(LastUpdatedUtc));
+            OnPropertyChanged(nameof(LastUpdatedLocal));
+        }
 
         internal abstract DBDComponent Copy();
 
@@ -51,7 +78,8 @@
         {
             PropertyChanged += (sender, e) =>
             {
-                if (e.PropertyName != nameof(LastUpdatedUtc) && e.PropertyName != nameof(LastUpdatedLocal)) {
+                if (_mutationTrackingSuspendDepth == 0 &&
+                    e.PropertyName is not nameof(LastUpdatedUtc) and not nameof(LastUpdatedLocal)) {
                     _lastUpdatedUtc = DateTimeOffset.UtcNow;
                     OnPropertyChanged(nameof(LastUpdatedUtc));
                     OnPropertyChanged(nameof(LastUpdatedLocal));

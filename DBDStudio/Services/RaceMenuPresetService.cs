@@ -28,19 +28,12 @@ namespace DBDStudio.Services
 
         private void ReInitializePresets(IEnumerable<RaceMenuPreset> newPresets)
         {
-            var oldPresets = Presets.ToHashSet();
             Presets.Clear();
 
             newPresets
                 .Where(p => !string.IsNullOrWhiteSpace(p.Name) && File.Exists(p.JslotFile))
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                .ForEach(p =>
-                {
-                    if (oldPresets.TryGetValue(p, out var old))
-                        p.Sex = old.Sex;
-
-                    Presets.Add(p);
-                });
+                .ForEach(p => Presets.Add(p));
         }
 
         private IEnumerable<RaceMenuPreset> DiscoverExternalPresets()
@@ -49,13 +42,9 @@ namespace DBDStudio.Services
                     new DirectoryIterator.IteratorDetails(_settings.SkyrimDataFolder, 0),
                     new DirectoryIterator.IteratorDetails(_settings.ModsFolder, 1),
                 ], _settings.RaceMenuPresetsFolder, "*.jslot")) {
-                var presetFilePath = presetFile.FullName;
-                var inferedFemale = presetFile.FullName.Contains("fem", StringComparison.OrdinalIgnoreCase);
-
                 yield return new RaceMenuPreset {
                     Name = presetFile.Name,
-                    JslotFile = presetFilePath,
-                    Sex = inferedFemale ? Sex.Female : Sex.Male
+                    JslotFile = presetFile.FullName,
                 };
             }
         }

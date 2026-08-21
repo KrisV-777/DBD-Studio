@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:fluent="using:FluentIcons.Avalonia"
     xmlns:vm="using:DBDStudio.ViewModels"
@@ -15,35 +15,112 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="210,4,*">
+    <Grid ColumnDefinitions="230,4,*">
 
         <Border Grid.Column="0"
             BorderThickness="0,0,1,0"
             BorderBrush="{DynamicResource SystemBaseMediumLowColor}">
-            <DockPanel>
-                <Border DockPanel.Dock="Bottom"
-                    BorderThickness="0,1,0,0"
-                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                    Padding="8">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Content="+ Add"
-                            Command="{Binding AddRuleCommand}" />
-                        <Button Content="Duplicate"
-                            Command="{Binding DuplicateRuleCommand}" />
-                        <Button Content="Delete"
-                            Command="{Binding DeleteRuleCommand}" />
-                    </StackPanel>
-                </Border>
 
-                <ListBox ItemsSource="{Binding Rules}"
-                    SelectedItem="{Binding SelectedRule}">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Row="0"
+                    Margin="12"
+                    Spacing="10">
+                    <TextBlock Text="Rules"
+                        Classes="h2" />
+
+                    <StackPanel Orientation="Horizontal"
+                        Spacing="6">
+                        <Button Command="{Binding AddRuleCommand}"
+                            ToolTip.Tip="Create a new rule"
+                            Classes="icon">
+                            <fluent:SymbolIcon Symbol="Add" />
+                        </Button>
+
+                        <Button Command="{Binding DuplicateRuleCommand}"
+                            ToolTip.Tip="Duplicate selected rule"
+                            Classes="icon">
+                            <fluent:SymbolIcon Symbol="Copy" />
+                        </Button>
+
+                        <StackPanel Orientation="Horizontal"
+                            Spacing="6"
+                            IsVisible="{Binding SelectedRenderedRule, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Button Command="{Binding DeleteRuleCommand}"
+                                IsVisible="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                ToolTip.Tip="Delete selected rule"
+                                Classes="icon"
+                                Foreground="#D13438">
+                                <fluent:SymbolIcon Symbol="Delete" />
+                            </Button>
+
+                            <Button
+                                IsVisible="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
+                                IsEnabled="False"
+                                Classes="icon"
+                                Opacity="0.45">
+                                <fluent:SymbolIcon Symbol="ArrowUndo" />
+                            </Button>
+
+                            <Button Command="{Binding ResetRuleCommand}"
+                                IsVisible="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                ToolTip.Tip="Reset edited rule to its original file state"
+                                Classes.icon="True"
+                                Classes.construct-state="True"
+                                Classes.ephemeral="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
+                                Classes.diskedited="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                Name="ResetSelectedRuleButton">
+                                <fluent:SymbolIcon Symbol="ArrowUndo" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <ListBox Grid.Row="1"
+                    Margin="8,0"
+                    ItemsSource="{Binding Rules}"
+                    SelectedItem="{Binding SelectedRenderedRule}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" Padding="4,2" />
+                            <Border Margin="4,2"
+                                Padding="6,4"
+                                CornerRadius="6"
+                                Classes.construct-state="True"
+                                Classes.ephemeral="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                Classes.disk="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
+                                Classes.diskedited="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                        Text="{Binding Name}"
+                                        Classes="default"
+                                        Padding="0,2"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <Ellipse Grid.Column="1"
+                                        Width="8"
+                                        Height="8"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,0,0"
+                                        Classes.construct-state="True"
+                                        Classes.ephemeral="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                        Classes.disk="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
+                                        Classes.diskedited="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                        IsVisible="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=!is-primordial}" />
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </DockPanel>
+
+                <Border Grid.Row="2"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    Padding="12">
+                    <TextBlock Text="{Binding Rules.Count, StringFormat='{}{0} rules'}"
+                        Opacity="0.6"
+                        HorizontalAlignment="Center" />
+                </Border>
+            </Grid>
         </Border>
 
         <GridSplitter Grid.Column="1"
@@ -58,34 +135,40 @@
                 Opacity="0.45"
                 IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNull}}" />
 
-            <DockPanel
-                IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Border DockPanel.Dock="Bottom"
-                    BorderThickness="0,1,0,0"
-                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                    Padding="16,10">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Conflict Preview"
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            Opacity="0.65" />
-                        <ItemsControl ItemsSource="{Binding ConflictWarnings}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}"
-                                        FontSize="12"
-                                        Foreground="{DynamicResource SystemErrorTextColor}"
-                                        Opacity="0.85"
-                                        Margin="0,1" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
+            <Grid
+                IsVisible="{Binding SelectedRule, Converter={x:Static ObjectConverters.IsNotNull}}"
+                RowDefinitions="*,Auto">
 
-                <ScrollViewer Padding="16,12,16,0">
+                <ScrollViewer Grid.Row="0" Padding="16,12,16,0">
                     <StackPanel Spacing="16">
-                        <!-- Name -->
+                        <Grid ColumnDefinitions="*">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Rule"
+                                        Classes="h1" />
+
+                                    <Border Margin="8,4,2,4"
+                                        Padding="8,2"
+                                        CornerRadius="10"
+                                        VerticalAlignment="Center"
+                                        Name="RuleStateBadge"
+                                        Classes.construct-state="True"
+                                        Classes.ephemeral="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                        Classes.disk="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
+                                        Classes.diskedited="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}">
+                                        <TextBlock Text="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=label}"
+                                            Name="RuleStateLabel"
+                                            Classes.construct-state="True"
+                                            Classes.ephemeral="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
+                                            Classes.disk="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
+                                            Classes.diskedited="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}"
+                                            FontSize="{DynamicResource CaptionFontSize}"
+                                            FontWeight="SemiBold" />
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
                         <StackPanel Spacing="6">
                             <TextBlock Text="Rule Name"
                                 FontWeight="SemiBold"
@@ -94,7 +177,6 @@
                                 PlaceholderText="Descriptive rule name…" />
                         </StackPanel>
 
-                        <!-- Texture Assignments -->
                         <StackPanel Spacing="6">
                             <TextBlock Text="Texture Assignments"
                                 FontWeight="SemiBold"
@@ -139,7 +221,6 @@
                             </ItemsControl>
                         </StackPanel>
 
-                        <!-- BodySlide Assignments -->
                         <StackPanel Spacing="6">
                             <TextBlock Text="BodySlide Assignments"
                                 FontWeight="SemiBold"
@@ -184,7 +265,6 @@
                             </ItemsControl>
                         </StackPanel>
 
-                        <!-- RaceMenu Assignment -->
                         <StackPanel Spacing="6">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Text="RaceMenu Assignment"
@@ -223,7 +303,35 @@
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
-            </DockPanel>
+
+                <Border Grid.Row="1"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                    Padding="16,12,16,12">
+                    <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8">
+                        <Button Click="OnSaveRuleClick"
+                            ToolTip.Tip="Save rule"
+                            Classes="accent"
+                            IsEnabled="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=!is-primordial}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <fluent:SymbolIcon Symbol="Save" />
+                                <TextBlock Text="Save" VerticalAlignment="Center" Classes="default" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Click="OnSaveRuleAsClick"
+                            ToolTip.Tip="Save rule as"
+                            Classes="accent">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <fluent:SymbolIcon Symbol="Save" />
+                                <TextBlock Text="Save As" VerticalAlignment="Center" Classes="default" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

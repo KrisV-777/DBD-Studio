@@ -4,18 +4,18 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using DBDStudio.Interfaces.Mutagen;
 using DBDStudio.Interfaces.Rules;
-using DBDStudio.Models.Rules;
+using DBDStudio.Models.Component.Condition;
 using DBDStudio.ViewModels;
 
 namespace DBDStudio.Views.Controls
 {
     public partial class ConditionTable : UserControl
     {
-        public static readonly StyledProperty<ObservableCollection<Condition>?> ConditionsProperty =
-            AvaloniaProperty.Register<ConditionTable, ObservableCollection<Condition>?>(nameof(Conditions));
+        public static readonly StyledProperty<ObservableCollection<ICondition>?> ConditionsProperty =
+            AvaloniaProperty.Register<ConditionTable, ObservableCollection<ICondition>?>(nameof(Conditions));
 
-        public static readonly StyledProperty<Condition?> SelectedConditionProperty =
-            AvaloniaProperty.Register<ConditionTable, Condition?>(nameof(SelectedCondition));
+        public static readonly StyledProperty<ICondition?> SelectedConditionProperty =
+            AvaloniaProperty.Register<ConditionTable, ICondition?>(nameof(SelectedCondition));
 
         public static readonly StyledProperty<IFormDatabase?> FormDatabaseProperty =
             AvaloniaProperty.Register<ConditionTable, IFormDatabase?>(nameof(FormDatabase));
@@ -27,13 +27,13 @@ namespace DBDStudio.Views.Controls
             InitializeComponent();
         }
 
-        public ObservableCollection<Condition>? Conditions
+        public ObservableCollection<ICondition>? Conditions
         {
             get => GetValue(ConditionsProperty);
             set => SetValue(ConditionsProperty, value);
         }
 
-        public Condition? SelectedCondition
+        public ICondition? SelectedCondition
         {
             get => GetValue(SelectedConditionProperty);
             set => SetValue(SelectedConditionProperty, value);
@@ -55,7 +55,7 @@ namespace DBDStudio.Views.Controls
             if (conditions is null)
                 return;
 
-            var condition = new Condition {
+            ICondition condition = new Condition {
                 ConditionType = AvailableConditionTypes.Count > 0 ? AvailableConditionTypes[0] : ConditionType.IsReference,
                 Operator = Operator.Equals,
                 Conjunction = Conjunction.And
@@ -68,7 +68,7 @@ namespace DBDStudio.Views.Controls
         private void OnMoveUpClick(object? sender, RoutedEventArgs e)
         {
             var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not Condition condition || conditions is null)
+            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -82,7 +82,7 @@ namespace DBDStudio.Views.Controls
         private void OnMoveDownClick(object? sender, RoutedEventArgs e)
         {
             var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not Condition condition || conditions is null)
+            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -96,14 +96,14 @@ namespace DBDStudio.Views.Controls
         private void OnDuplicateClick(object? sender, RoutedEventArgs e)
         {
             var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not Condition condition || conditions is null)
+            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
                 return;
 
             var index = conditions.IndexOf(condition);
             if (index < 0)
                 return;
 
-            var copy = condition.DeepClone();
+            var copy = condition.Copy();
             conditions.Insert(index + 1, copy);
             SelectedCondition = copy;
         }
@@ -111,7 +111,7 @@ namespace DBDStudio.Views.Controls
         private void OnDeleteClick(object? sender, RoutedEventArgs e)
         {
             var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not Condition condition || conditions is null)
+            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -128,7 +128,7 @@ namespace DBDStudio.Views.Controls
             SelectedCondition = conditions[nextIndex];
         }
 
-        private ObservableCollection<Condition>? ResolveConditions()
+        private ObservableCollection<ICondition>? ResolveConditions()
         {
             if (Conditions is not null)
                 return Conditions;

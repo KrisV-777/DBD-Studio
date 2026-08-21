@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
+using DBDStudio.Models.Component;
 
 namespace DBDStudio.Models
 {
@@ -29,6 +31,7 @@ namespace DBDStudio.Models
 
         public DateTimeOffset LastUpdatedUtc => Underlying.LastUpdatedUtc;
 
+        [JsonIgnore]
         public DateTimeOffset LastUpdatedLocal => LastUpdatedUtc.ToLocalTime();
 
         #endregion
@@ -37,7 +40,7 @@ namespace DBDStudio.Models
 
         private ConstructState? _stateCache = null;
 
-        public ConstructState State
+        public virtual ConstructState State
         {
             get
             {
@@ -54,6 +57,14 @@ namespace DBDStudio.Models
         public bool Is(ConstructState state) => State == state;
         public bool IsPrimordialAny() => Is(ConstructState.Primordial) || Is(ConstructState.Modified);
 
+        protected void RefreshStateCacheAndNotify()
+        {
+            if (_stateCache != State) {
+                _stateCache = State;
+                OnPropertyChanged(nameof(State));
+            }
+        }
+
         #endregion
 
         #region Constructors
@@ -69,16 +80,15 @@ namespace DBDStudio.Models
                 Primordial = null;
             }
 
+            _stateCache = State;
+
             Underlying.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName != nameof(Underlying.LastUpdatedUtc) && e.PropertyName != nameof(Underlying.LastUpdatedLocal)) {
                     OnPropertyChanged(nameof(LastUpdatedUtc));
                     OnPropertyChanged(nameof(LastUpdatedLocal));
                 }
-                if (_stateCache != State) {
-                    _stateCache = State;
-                    OnPropertyChanged(nameof(State));
-                }
+                RefreshStateCacheAndNotify();
                 OnPropertyChanged(e.PropertyName);
             };
         }
@@ -89,6 +99,7 @@ namespace DBDStudio.Models
                 throw new InvalidOperationException("Cannot reset a construct that has no primordial representation.");
             }
             Underlying.Import(Primordial);
+            Underlying.RestoreLastUpdatedUtc(Primordial.LastUpdatedUtc);
         }
 
         #endregion

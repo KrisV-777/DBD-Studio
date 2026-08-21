@@ -37,7 +37,6 @@ namespace DBDStudio.ViewModels
         public ObservableCollection<string> AvailableBodySlidePresets => [.. _bodySlideService.Presets.Select(p => p.Name)];
         public ObservableCollection<string> AvailableRaceMenuPresets => [.. _raceMenuPresetService.Presets.Select(p => p.Name)];
         public ObservableCollection<ConditionType> AvailableConditionTypes { get; } = new(Enum.GetValues<ConditionType>());
-        public ObservableCollection<string> ConflictWarnings { get; } = [];
 
         public IFormDatabase FormDatabase { get; }
 
@@ -49,7 +48,9 @@ namespace DBDStudio.ViewModels
                 if (ReferenceEquals(_selectedRenderedRule, value))
                     return;
 
+                DetachSelectedRenderedRule(_selectedRenderedRule);
                 _selectedRenderedRule = value;
+                AttachSelectedRenderedRule(_selectedRenderedRule);
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(SelectedRule));
                 OnPropertyChanged(nameof(SelectedRuleState));
@@ -133,7 +134,6 @@ namespace DBDStudio.ViewModels
             }
 
             SelectedRenderedRule = Rules.Count > 0 ? Rules[0] : null;
-            RefreshConflictWarnings();
         }
 
         public void SaveRuleAs(string filePath)
@@ -178,6 +178,31 @@ namespace DBDStudio.ViewModels
                 }
                 break;
 
+            case NotifyCollectionChangedAction.Replace:
+                if (e.OldItems is null || e.NewItems is null) {
+                    break;
+                }
+
+                var oldRule = e.OldItems.OfType<RuleConstruct>().FirstOrDefault();
+                var newRule = e.NewItems.OfType<RuleConstruct>().FirstOrDefault();
+                if (oldRule is null || newRule is null) {
+                    break;
+                }
+
+                var replaceIndex = Rules.IndexOf(oldRule);
+                if (replaceIndex < 0) {
+                    break;
+                }
+
+                var wasPreviouslySelected = ReferenceEquals(SelectedRenderedRule, oldRule);
+                DetachRule(oldRule);
+                AttachRule(newRule);
+                Rules[replaceIndex] = newRule;
+                if (wasPreviouslySelected) {
+                    SelectedRenderedRule = newRule;
+                }
+                break;
+
             case NotifyCollectionChangedAction.Reset:
                 var currentSelection = SelectedRenderedRule?.Uid;
                 foreach (var rule in Rules) {
@@ -199,8 +224,35 @@ namespace DBDStudio.ViewModels
             OnPropertyChanged(nameof(SelectedRule));
             OnPropertyChanged(nameof(SelectedRuleState));
             RefreshCommandStates();
-            RefreshConflictWarnings();
             UpdateRaceMenuWarning();
+        }
+
+        private void AttachSelectedRenderedRule(RuleConstruct? rule)
+        {
+            if (rule is null) {
+                return;
+            }
+
+            rule.PropertyChanged += OnSelectedRenderedRulePropertyChanged;
+        }
+
+        private void DetachSelectedRenderedRule(RuleConstruct? rule)
+        {
+            if (rule is null) {
+                return;
+            }
+
+            rule.PropertyChanged -= OnSelectedRenderedRulePropertyChanged;
+        }
+
+        private void OnSelectedRenderedRulePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not RuleConstruct || e.PropertyName != "State") {
+                return;
+            }
+
+            OnPropertyChanged(nameof(SelectedRuleState));
+            RefreshCommandStates();
         }
 
         private RuleConstruct AddRule() => _ruleService.EmplaceNew(null);
@@ -209,7 +261,12 @@ namespace DBDStudio.ViewModels
         {
             if (SelectedRenderedRule is null)
                 return;
-            _ruleService.EmplaceNew(SelectedRenderedRule.Name);
+
+            var sourceRule = SelectedRenderedRule;
+            var duplicate = _ruleService.EmplaceNew(sourceRule.Name);
+            var duplicateName = duplicate.Name;
+            duplicate.Underlying.Import(sourceRule.Underlying);
+            duplicate.Underlying.Name = duplicateName;
         }
 
         private void DeleteRule()
@@ -311,17 +368,12 @@ namespace DBDStudio.ViewModels
                 return;
             }
 
-            if (e.PropertyName == nameof(Rule.Name)) {
-                RefreshConflictWarnings();
-            }
-
             UpdateRaceMenuWarning();
         }
 
         private void OnCandidateCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             UpdateRaceMenuWarning();
-            RefreshConflictWarnings();
         }
 
         private void OnRuleConditionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -357,25 +409,23 @@ namespace DBDStudio.ViewModels
             var hasReferenceCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsReference);
             var hasNpcCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsNPC);
 
-            RaceMenuAssignmentWarning = hasReferenceCondition || hasNpcCondition
-                ? string.Empty
-                : "RaceMenu assignments work best with IsReference or IsNPC conditions.";
-        }
-
-        private void RefreshConflictWarnings()
-        {
-            ConflictWarnings.Clear();
-            var groupedByName = Rules
-                .GroupBy(rule => rule.Name, StringComparer.OrdinalIgnoreCase)
-                .Where(group => group.Count() > 1);
-
-            foreach (var duplicate in groupedByName) {
-                ConflictWarnings.Add($"Duplicate rule name detected: {duplicate.Key}");
+            if (!hasReferenceCondition && !hasNpcCondition) {
+                RaceMenuAssignmentWarning = "RaceMenu assignments require IsReference or IsNPC conditions.";
+                return;
             }
 
-            if (ConflictWarnings.Count == 0) {
-                ConflictWarnings.Add("No obvious naming conflicts found.");
+            var hasPlayerCondition = SelectedRule.Conditions
+                .Any(c => c.Values
+                    .Where(v => v is ConditionValue.Form)
+                    .Any(v => (v as ConditionValue.Form)!.Value?.FormId is 0x14 or 0x20));
+            var hasSexCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsSex);
+
+            if (hasPlayerCondition && !hasSexCondition) {
+                RaceMenuAssignmentWarning = "RaceMenu assignments need a IsSex condition to work with the player.";
+                return;
             }
+
+            RaceMenuAssignmentWarning = string.Empty;
         }
 
         private void RefreshCommandStates()

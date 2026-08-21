@@ -45,7 +45,7 @@ namespace DBDStudio
         {
             var services = new ServiceCollection();
             services.AddPersistable<ApplicationSettings>();
-            services.AddSingleton<PersistenceManager>();
+            services.AddSingleton<PersistenceService>();
             services.AddPersistable<ITexturePackService, TexturePackService>();
             services.AddPersistable<IBodySlideService, BodySlideService>();
             services.AddPersistable<IRaceMenuPresetService, RaceMenuPresetService>();
@@ -55,7 +55,7 @@ namespace DBDStudio
             Services = services.BuildServiceProvider();
 
             var settings = Services.GetRequiredService<ApplicationSettings>();
-            var persistenceManager = Services.GetRequiredService<PersistenceManager>();
+            var persistenceManager = Services.GetRequiredService<PersistenceService>();
             var database = Services.GetRequiredService<IFormDatabase>();
             persistenceManager.Load();
 

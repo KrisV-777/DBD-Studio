@@ -39,8 +39,7 @@ namespace DBDStudio.ViewModels
                 ? _raceMenuPresetService.Presets.AsEnumerable()
                 : _raceMenuPresetService.Presets.Where(p =>
                     p.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                    p.JslotFile.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                    p.Sex.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+                    p.JslotFile.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
             foreach (var preset in source)
                 FilteredPresets.Add(preset);

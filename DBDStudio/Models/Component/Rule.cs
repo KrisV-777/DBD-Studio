@@ -1,12 +1,22 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
+using DBDStudio.Models.Component.Condition;
 
 namespace DBDStudio.Models.Component
 {
     public sealed class Rule : DBDComponent
     {
         private string? _raceMenuCandidate = null;
+
+        public Rule()
+        {
+            TextureCandidates.CollectionChanged += (_, _) => MarkUpdated();
+            BodySlideCandidates.CollectionChanged += (_, _) => MarkUpdated();
+            Conditions.CollectionChanged += OnConditionsChanged;
+        }
 
         #region Properties
 
@@ -24,6 +34,29 @@ namespace DBDStudio.Models.Component
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public ObservableCollection<ICondition> Conditions { get; } = [];
+
+        private void OnConditionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems is not null) {
+                foreach (var oldItem in e.OldItems.OfType<ICondition>()) {
+                    oldItem.PropertyChanged -= OnConditionPropertyChanged;
+                }
+            }
+
+            if (e.NewItems is not null) {
+                foreach (var newItem in e.NewItems.OfType<ICondition>()) {
+                    newItem.PropertyChanged += OnConditionPropertyChanged;
+                }
+            }
+
+            MarkUpdated();
+        }
+
+        private void OnConditionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(Conditions));
+            MarkUpdated();
+        }
 
         #endregion
 
@@ -45,6 +78,8 @@ namespace DBDStudio.Models.Component
             foreach (var condition in Conditions)
                 clone.Conditions.Add(condition.Copy());
 
+            clone.RestoreLastUpdatedUtc(LastUpdatedUtc);
+
             return clone;
         }
 
@@ -53,20 +88,25 @@ namespace DBDStudio.Models.Component
             if (source is not Rule sourceRule)
                 throw new ArgumentException("Source must be of type Rule.", nameof(source));
 
-            Name = sourceRule.Name;
-            RaceMenuCandidate = sourceRule.RaceMenuCandidate;
+            BeginMutationTrackingSuspend();
+            try {
+                Name = sourceRule.Name;
+                RaceMenuCandidate = sourceRule.RaceMenuCandidate;
 
-            TextureCandidates.Clear();
-            foreach (var candidate in sourceRule.TextureCandidates)
-                TextureCandidates.Add(candidate);
+                TextureCandidates.Clear();
+                foreach (var candidate in sourceRule.TextureCandidates)
+                    TextureCandidates.Add(candidate);
 
-            BodySlideCandidates.Clear();
-            foreach (var candidate in sourceRule.BodySlideCandidates)
-                BodySlideCandidates.Add(candidate);
+                BodySlideCandidates.Clear();
+                foreach (var candidate in sourceRule.BodySlideCandidates)
+                    BodySlideCandidates.Add(candidate);
 
-            Conditions.Clear();
-            foreach (var condition in sourceRule.Conditions)
-                Conditions.Add(condition.Copy());
+                Conditions.Clear();
+                foreach (var condition in sourceRule.Conditions)
+                    Conditions.Add(condition.Copy());
+            } finally {
+                EndMutationTrackingSuspend();
+            }
         }
 
         #endregion

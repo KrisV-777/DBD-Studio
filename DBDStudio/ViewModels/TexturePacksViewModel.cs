@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Windows.Input;
 using DBDStudio.Interfaces;
 using DBDStudio.Models;
@@ -24,7 +25,10 @@ namespace DBDStudio.ViewModels
             {
                 if (ReferenceEquals(_selectedPack, value))
                     return;
+
+                DetachSelectedPack(_selectedPack);
                 _selectedPack = value;
+                AttachSelectedPack(_selectedPack);
                 OnPropertyChanged();
                 SelectedMapping = null;
                 RefreshCommandStates();
@@ -63,8 +67,6 @@ namespace DBDStudio.ViewModels
 
         private void OnTexturePackListChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            Debug.Assert(sender is ITexturePackService);
-
             switch (e.Action) {
             case NotifyCollectionChangedAction.Add:
                 if (e.NewItems is not null) {
@@ -107,6 +109,33 @@ namespace DBDStudio.ViewModels
             ((RelayCommand)ResetPackCommand).RaiseCanExecuteChanged();
             ((RelayCommand)AddMappingCommand).RaiseCanExecuteChanged();
             ((RelayCommand)RemoveMappingCommand).RaiseCanExecuteChanged();
+        }
+
+        private void AttachSelectedPack(TexturePackConstruct? pack)
+        {
+            if (pack is null) {
+                return;
+            }
+
+            pack.PropertyChanged += OnSelectedPackPropertyChanged;
+        }
+
+        private void DetachSelectedPack(TexturePackConstruct? pack)
+        {
+            if (pack is null) {
+                return;
+            }
+
+            pack.PropertyChanged -= OnSelectedPackPropertyChanged;
+        }
+
+        private void OnSelectedPackPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not TexturePackConstruct || e.PropertyName != "State") {
+                return;
+            }
+
+            RefreshCommandStates();
         }
 
         private TexturePackConstruct AddPack(string? withName = null) => _texturePackService.EmplaceNew(withName);
@@ -161,7 +190,12 @@ namespace DBDStudio.ViewModels
         private void DuplicatePack()
         {
             Debug.Assert(SelectedPack is not null);
-            AddPack(SelectedPack.Name);
+
+            var sourcePack = SelectedPack;
+            var duplicate = AddPack(sourcePack.Name);
+            var duplicateName = duplicate.Name;
+            duplicate.Underlying.Import(sourcePack.Underlying);
+            duplicate.Underlying.Name = duplicateName;
         }
 
         private void RemovePack()

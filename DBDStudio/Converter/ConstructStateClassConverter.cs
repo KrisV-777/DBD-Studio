@@ -1,29 +1,32 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using Avalonia.Data.Converters;
-using DBDStudio.Interfaces;
-using DBDStudio.Models.Rules;
+using DBDStudio.Models;
 
 namespace DBDStudio.Converters
 {
-    public sealed class RuleStateClassConverter : IValueConverter
+    public sealed class ConstructStateClassConverter : IValueConverter
     {
-        private static RuleState ResolveState(object? value)
+        private static ConstructState ResolveState(object? value)
         {
             if (value is null) {
-                return RuleState.None;
+                return ConstructState.None;
             }
 
-            if (value is RuleState state) {
+            if (value is ConstructState state) {
                 return state;
             }
 
-            if (value is RenderedRuleData renderedRule) {
-                return renderedRule.State;
+            var stateProperty = value.GetType().GetProperty("State");
+            if (stateProperty?.PropertyType == typeof(ConstructState)) {
+                var rawState = stateProperty.GetValue(value);
+                if (rawState is ConstructState reflectedState) {
+                    return reflectedState;
+                }
             }
 
-            Debug.WriteLine($"[RuleStateClassConverter] Unrecognized value type: {value.GetType().FullName}");
-            return RuleState.None;
+            Debug.WriteLine($"[ConstructStateClassConverter] Unrecognized value type: {value.GetType().FullName}");
+            return ConstructState.None;
         }
 
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -37,23 +40,23 @@ namespace DBDStudio.Converters
 
             if (string.Equals(mode, "label", StringComparison.OrdinalIgnoreCase)) {
                 return state switch {
-                    RuleState.Ephemeral => "Ephemeral Rule",
-                    RuleState.Modified => "Modified Primordial Rule",
-                    RuleState.Primordial => "Primordial Rule",
-                    _ => "No Rule"
+                    ConstructState.Ephemeral => "Ephemeral",
+                    ConstructState.Modified => "Modified",
+                    ConstructState.Primordial => "Primordial",
+                    _ => "Unknown?"
                 };
             }
 
             if (string.Equals(mode, "is-ephemeral", StringComparison.OrdinalIgnoreCase)) {
-                return (state == RuleState.Ephemeral) ^ invert;
+                return (state == ConstructState.Ephemeral) ^ invert;
             }
 
             if (string.Equals(mode, "is-primordial-edited", StringComparison.OrdinalIgnoreCase)) {
-                return (state == RuleState.Modified) ^ invert;
+                return (state == ConstructState.Modified) ^ invert;
             }
 
             if (string.Equals(mode, "is-primordial", StringComparison.OrdinalIgnoreCase)) {
-                return (state == RuleState.Primordial) ^ invert;
+                return (state == ConstructState.Primordial) ^ invert;
             }
 
             return false;

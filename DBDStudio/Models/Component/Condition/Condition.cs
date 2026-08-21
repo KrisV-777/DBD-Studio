@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using DBDStudio.Interfaces.Rules;
+using Noggog;
 
 namespace DBDStudio.Models.Component.Condition
 {
@@ -137,9 +140,12 @@ namespace DBDStudio.Models.Component.Condition
                 TryCopyValue(currentValues[i], nextValues[i]);
             }
 
+            Values.ForEach(value => value.PropertyChanged -= OnValuePropertyChanged);
             Values.Clear();
-            foreach (var value in nextValues)
+            foreach (var value in nextValues) {
+                value.PropertyChanged += OnValuePropertyChanged;
                 Values.Add(value);
+            }
         }
 
         private static void TryCopyValue(ConditionValue source, ConditionValue target)
@@ -166,6 +172,9 @@ namespace DBDStudio.Models.Component.Condition
                 break;
             }
         }
+
+        private void OnValuePropertyChanged(object? sender, PropertyChangedEventArgs e)
+            => OnPropertyChanged(nameof(Values));
 
         #endregion
     }

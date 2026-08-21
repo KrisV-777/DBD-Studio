@@ -35,6 +35,11 @@ namespace DBDStudio.Converter.Json
                 WriteIndented = true
             };
 
+            options.Converters.Add(new ConditionJsonConverter());
+            options.Converters.Add(new IConditionJsonConverter());
+            options.Converters.Add(new FormRecordJsonConverter());
+            options.Converters.Add(new TextureMappingJsonConverter());
+
             return options;
         }
     }

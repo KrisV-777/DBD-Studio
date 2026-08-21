@@ -9,7 +9,7 @@
 
     <ScrollViewer>
 
-        <StackPanel Margin="28,20" Spacing="24" MaxWidth="730">
+        <StackPanel Margin="16" Spacing="24" MaxWidth="730">
 
             <!-- Welcome -->
 

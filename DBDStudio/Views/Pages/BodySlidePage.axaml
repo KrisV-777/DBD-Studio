@@ -5,17 +5,17 @@
     x:Class="DBDStudio.Views.Pages.BodySlidePage"
     x:DataType="vm:BodySlideViewModel">
 
-    <Grid Margin="16"
-        RowDefinitions="Auto,*">
+    <Grid Margin="12"
+        RowDefinitions="Auto,*,Auto">
 
         <!-- Header / Search -->
         <Grid Grid.Row="0"
-            ColumnDefinitions="*,*"
+            ColumnDefinitions="*,300"
             Margin="0,0,0,12">
 
             <TextBlock Grid.Column="0"
                 Text="BodySlide Presets"
-                Classes="h1"
+                Classes="h2"
                 FontWeight="SemiBold"
                 VerticalAlignment="Center" />
 
@@ -27,36 +27,52 @@
         </Grid>
 
         <!-- Loaded Presets Table -->
-        <DataGrid Grid.Row="1"
-            ItemsSource="{Binding FilteredPresets}"
-            AutoGenerateColumns="False"
-            CanUserResizeColumns="True"
-            GridLinesVisibility="Horizontal">
+        <Border Grid.Row="1"
+            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="8">
 
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Preset"
-                    Binding="{Binding Preset}"
-                    IsReadOnly="True"
-                    Width="*" />
+            <DataGrid ItemsSource="{Binding FilteredPresets}"
+                AutoGenerateColumns="False"
+                CanUserResizeColumns="True"
+                GridLinesVisibility="Horizontal">
 
-                <DataGridTextColumn Header="XML File"
-                    Binding="{Binding SourceXml}"
-                    IsReadOnly="True"
-                    Width="*" />
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Preset"
+                        Binding="{Binding Name}"
+                        IsReadOnly="True"
+                        Width="*" />
 
-                <DataGridTemplateColumn Header="Private"
-                    Width="Auto"
-                    MinWidth="72">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <CheckBox
-                                IsChecked="{Binding IsPrivate, Mode=TwoWay}"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                    <DataGridTextColumn Header="XML File"
+                        Binding="{Binding SourceXml}"
+                        IsReadOnly="True"
+                        Width="*" />
+
+                    <DataGridTemplateColumn Header="Private"
+                        Width="Auto"
+                        MinWidth="72">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox
+                                    IsChecked="{Binding IsPrivate, Mode=TwoWay}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Border Grid.Row="2"
+            Margin="0,10,0,0"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+            Padding="12,8">
+            <TextBlock Text="{Binding FilteredPresets.Count, StringFormat='{}{0} presets'}"
+                Opacity="0.6"
+                HorizontalAlignment="Center" />
+        </Border>
     </Grid>
 </UserControl>

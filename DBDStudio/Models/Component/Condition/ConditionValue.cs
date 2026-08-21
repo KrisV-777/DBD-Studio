@@ -1,6 +1,7 @@
 ﻿using DBDStudio.Models.Mutagen;
 using DBDStudio.Interfaces.Mutagen;
 using System.Text.Json.Serialization;
+using System.ComponentModel;
 
 namespace DBDStudio.Models.Component.Condition
 {
@@ -11,53 +12,87 @@ namespace DBDStudio.Models.Component.Condition
     [JsonDerivedType(typeof(Boolean), "boolean")]
     [JsonDerivedType(typeof(Sex), "sex")]
     [JsonDerivedType(typeof(Form), "form")]
-    public abstract class ConditionValue
+    public abstract class ConditionValue : ModelBase
     {
         public sealed class String : ConditionValue
         {
-            public string Value { get; set; } = string.Empty;
+            private string _value = string.Empty;
+            public string Value
+            {
+                get => _value;
+                set => SetProperty(ref _value, value);
+            }
         }
 
         public sealed class Integer : ConditionValue
         {
-            public int Value { get; set; }
+            private int _value;
+            public int Value
+            {
+                get => _value;
+                set => SetProperty(ref _value, value);
+            }
         }
 
         public sealed class Float : ConditionValue
         {
-            public float Value { get; set; }
+            private float _value;
+            public float Value
+            {
+                get => _value;
+                set => SetProperty(ref _value, value);
+            }
         }
 
         public sealed class Boolean : ConditionValue
         {
-            public bool Value { get; set; }
+            private bool _value;
+            public bool Value
+            {
+                get => _value;
+                set => SetProperty(ref _value, value);
+            }
         }
 
         public sealed class Sex : ConditionValue
         {
-            private static readonly IReadOnlyList<string> ChoicesInternal = ["Male", "Female"];
+            private static readonly IReadOnlyList<string> ChoicesInternal = Models.Sex.Sexes;
 
-            public bool Value { get; set; }
+            private bool _value;
+            public bool Value
+            {
+                get => _value;
+                set
+                {
+                    if (SetProperty(ref _value, value)) {
+                        OnPropertyChanged(nameof(SelectedSex));
+                    }
+                }
+            }
 
             public static IReadOnlyList<string> Choices => ChoicesInternal;
 
             public string SelectedSex
             {
-                get => Value ? "Male" : "Female";
-                set => Value = string.Equals(value, "Male", StringComparison.OrdinalIgnoreCase);
+                get => Value ? Models.Sex.Male : Models.Sex.Female;
+                set => Value = string.Equals(value, Models.Sex.Male, StringComparison.OrdinalIgnoreCase);
             }
         }
 
         public sealed class Form : ConditionValue
         {
-            public FormRecord? Value { get; set; }
+            private FormRecord? _value;
+            public FormRecord? Value
+            {
+                get => _value;
+                set => SetProperty(ref _value, value);
+            }
             public FormType FilteredFormType { get; set; } = FormType.None;
         }
 
         public ConditionValue DeepClone()
         {
-            return this switch
-            {
+            return this switch {
                 String it => new String { Value = it.Value },
                 Integer it => new Integer { Value = it.Value },
                 Float it => new Float { Value = it.Value },

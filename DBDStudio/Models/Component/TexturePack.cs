@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using DBDStudio.Collections;
 using DBDStudio.Models.Component.Textures;
+using System.Text.Json.Serialization;
 
 namespace DBDStudio.Models.Component
 {
@@ -17,6 +18,11 @@ namespace DBDStudio.Models.Component
     {
         private string _description = string.Empty;
         private bool _isPrivate = false;
+
+        public TexturePack()
+        {
+            Mappings.CollectionChanged += OnMappingsChanged;
+        }
 
         #region Properties
 
@@ -41,7 +47,30 @@ namespace DBDStudio.Models.Component
         /// <summary>
         /// Gets the collection of texture mappings contained within this texture pack.
         /// </summary>
+        [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
         public UniqueObservableCollection<TextureMapping> Mappings { get; private set; } = [];
+
+        private void OnMappingsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems is not null) {
+                foreach (var oldItem in e.OldItems.OfType<TextureMapping>()) {
+                    oldItem.PropertyChanged -= OnMappingPropertyChanged;
+                }
+            }
+
+            if (e.NewItems is not null) {
+                foreach (var newItem in e.NewItems.OfType<TextureMapping>()) {
+                    newItem.PropertyChanged += OnMappingPropertyChanged;
+                }
+            }
+
+            MarkUpdated();
+        }
+
+        private void OnMappingPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            MarkUpdated();
+        }
 
         #endregion
 
@@ -63,13 +92,19 @@ namespace DBDStudio.Models.Component
             if (source is not TexturePack other)
                 throw new ArgumentException("Source must be a TexturePack.", nameof(source));
 
-            _name = other._name;
-            _description = other._description;
-            _isPrivate = other._isPrivate;
+            BeginMutationTrackingSuspend();
+            try {
+                Name = other.Name;
+                Description = other.Description;
+                IsPrivate = other.IsPrivate;
 
-            Mappings = [.. other.Mappings.Select(mapping => mapping.Clone())];
-
-            _lastUpdatedUtc = other._lastUpdatedUtc;
+                Mappings.Clear();
+                foreach (var mapping in other.Mappings.Select(mapping => mapping.Clone())) {
+                    Mappings.Add(mapping);
+                }
+            } finally {
+                EndMutationTrackingSuspend();
+            }
         }
 
         #endregion

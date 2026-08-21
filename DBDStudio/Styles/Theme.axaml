@@ -24,58 +24,87 @@
     </Styles.Resources>
 
     <!-- State background in pack list items -->
-    <Style Selector="Border.pack-state.disk">
+    <Style Selector="Border.construct-state.disk">
         <Setter Property="Background" Value="{DynamicResource TexturePackDiskListBackgroundBrush}" />
     </Style>
 
-    <Style Selector="Border.pack-state.diskedited">
+    <Style Selector="Border.construct-state.diskedited">
         <Setter Property="Background" Value="{DynamicResource TexturePackDiskEditedListBackgroundBrush}" />
     </Style>
 
-    <Style Selector="Border.pack-state.ephemeral">
+    <Style Selector="Border.construct-state.ephemeral">
         <Setter Property="Background" Value="{DynamicResource TexturePackEphemeralListBackgroundBrush}" />
     </Style>
 
     <!-- State dot in pack list items -->
-    <Style Selector="Ellipse.pack-state.disk">
+    <Style Selector="Ellipse.construct-state.disk">
         <Setter Property="Fill" Value="{DynamicResource TexturePackDiskAccentBrush}" />
     </Style>
 
-    <Style Selector="Ellipse.pack-state.diskedited">
+    <Style Selector="Ellipse.construct-state.diskedited">
         <Setter Property="Fill" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
     </Style>
 
-    <Style Selector="Ellipse.pack-state.ephemeral">
+    <Style Selector="Ellipse.construct-state.ephemeral">
         <Setter Property="Fill" Value="{DynamicResource TexturePackEphemeralAccentBrush}" />
     </Style>
 
     <!-- Selected pack badge -->
-    <Style Selector="Border#PackStateBadge.pack-state.disk">
+    <Style Selector="Border#PackStateBadge.construct-state.disk">
         <Setter Property="Background" Value="{DynamicResource TexturePackDiskBadgeBackgroundBrush}" />
     </Style>
 
-    <Style Selector="Border#PackStateBadge.pack-state.diskedited">
+    <Style Selector="Border#PackStateBadge.construct-state.diskedited">
         <Setter Property="Background" Value="{DynamicResource TexturePackDiskEditedBadgeBackgroundBrush}" />
     </Style>
 
-    <Style Selector="Border#PackStateBadge.pack-state.ephemeral">
+    <Style Selector="Border#PackStateBadge.construct-state.ephemeral">
         <Setter Property="Background" Value="{DynamicResource TexturePackEphemeralBadgeBackgroundBrush}" />
     </Style>
 
-    <Style Selector="TextBlock#PackStateLabel.pack-state.disk">
+    <Style Selector="TextBlock#PackStateLabel.construct-state.disk">
         <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskAccentBrush}" />
     </Style>
 
-    <Style Selector="TextBlock#PackStateLabel.pack-state.diskedited">
+    <Style Selector="TextBlock#PackStateLabel.construct-state.diskedited">
         <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
     </Style>
 
-    <Style Selector="TextBlock#PackStateLabel.pack-state.ephemeral">
+    <Style Selector="TextBlock#PackStateLabel.construct-state.ephemeral">
         <Setter Property="Foreground" Value="{DynamicResource TexturePackEphemeralAccentBrush}" />
     </Style>
 
     <!-- Reset icon color for edited packs -->
-    <Style Selector="Button#ResetSelectedPackButton.pack-state.diskedited">
+    <Style Selector="Button#ResetSelectedPackButton.construct-state.diskedited">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
+    </Style>
+
+    <!-- State background in rule list items -->
+    <Style Selector="Border#RuleStateBadge.construct-state.disk">
+        <Setter Property="Background" Value="{DynamicResource TexturePackDiskBadgeBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border#RuleStateBadge.construct-state.diskedited">
+        <Setter Property="Background" Value="{DynamicResource TexturePackDiskEditedBadgeBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Border#RuleStateBadge.construct-state.ephemeral">
+        <Setter Property="Background" Value="{DynamicResource TexturePackEphemeralBadgeBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#RuleStateLabel.construct-state.disk">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#RuleStateLabel.construct-state.diskedited">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#RuleStateLabel.construct-state.ephemeral">
+        <Setter Property="Foreground" Value="{DynamicResource TexturePackEphemeralAccentBrush}" />
+    </Style>
+
+    <Style Selector="Button#ResetSelectedRuleButton.construct-state.diskedited">
         <Setter Property="Foreground" Value="{DynamicResource TexturePackDiskEditedAccentBrush}" />
     </Style>
 

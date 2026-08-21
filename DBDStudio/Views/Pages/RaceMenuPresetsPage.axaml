@@ -4,16 +4,16 @@
     x:Class="DBDStudio.Views.Pages.RaceMenuPresetsPage"
     x:DataType="vm:RaceMenuPresetsViewModel">
 
-    <Grid Margin="16"
-        RowDefinitions="Auto,*">
+    <Grid Margin="12"
+        RowDefinitions="Auto,*,Auto">
 
         <Grid Grid.Row="0"
-            ColumnDefinitions="*,*"
+            ColumnDefinitions="*,300"
             Margin="0,0,0,12">
 
             <TextBlock Grid.Column="0"
                 Text="RaceMenu Presets"
-                Classes="h1"
+                Classes="h2"
                 FontWeight="SemiBold"
                 VerticalAlignment="Center" />
 
@@ -24,37 +24,39 @@
                 VerticalAlignment="Center" />
         </Grid>
 
-        <DataGrid Grid.Row="1"
-            ItemsSource="{Binding FilteredPresets}"
-            AutoGenerateColumns="False"
-            CanUserResizeColumns="True"
-            GridLinesVisibility="Horizontal">
+        <Border Grid.Row="1"
+            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="8">
 
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Name"
-                    Binding="{Binding Name}"
-                    IsReadOnly="True"
-                    Width="*" />
+            <DataGrid ItemsSource="{Binding FilteredPresets}"
+                AutoGenerateColumns="False"
+                CanUserResizeColumns="True"
+                GridLinesVisibility="Horizontal">
 
-                <DataGridTextColumn Header="File"
-                    Binding="{Binding JsSlotFile}"
-                    IsReadOnly="True"
-                    Width="*" />
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name"
+                        Binding="{Binding Name}"
+                        IsReadOnly="True"
+                        Width="*" />
 
-                <DataGridTemplateColumn Header="Sex"
-                    Width="Auto"
-                    MinWidth="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ComboBox
-                                ItemsSource="{x:Static vm:RaceMenuPresetsViewModel.SexOptions}"
-                                SelectedItem="{Binding Sex, Mode=TwoWay}"
-                                HorizontalAlignment="Stretch"
-                                Margin="1" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                    <DataGridTextColumn Header="File"
+                        Binding="{Binding JslotFile}"
+                        IsReadOnly="True"
+                        Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Border Grid.Row="2"
+            Margin="0,10,0,0"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+            Padding="12,8">
+            <TextBlock Text="{Binding FilteredPresets.Count, StringFormat='{}{0} presets'}"
+                Opacity="0.6"
+                HorizontalAlignment="Center" />
+        </Border>
     </Grid>
 </UserControl>

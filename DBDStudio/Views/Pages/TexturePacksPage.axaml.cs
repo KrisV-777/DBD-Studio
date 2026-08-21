@@ -6,7 +6,8 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using DBDStudio.Interfaces;
-using DBDStudio.Models.Textures;
+using DBDStudio.Models;
+using DBDStudio.Models.Component.Textures;
 using DBDStudio.ViewModels;
 
 namespace DBDStudio.Views.Pages
@@ -77,7 +78,7 @@ namespace DBDStudio.Views.Pages
                 return;
 
             var selectedFile = result[0].Path.LocalPath;
-            viewModel.SetSelectedMappingReplacementTexture(mapping, selectedFile);
+            TexturePacksViewModel.SetSelectedMappingReplacementTexture(mapping, selectedFile);
         }
 
         private async void OnAddFolderClick(object? sender, RoutedEventArgs e)
@@ -119,7 +120,7 @@ namespace DBDStudio.Views.Pages
         {
             if (DataContext is not TexturePacksViewModel viewModel)
                 return;
-            if (viewModel.SelectedPack is null || viewModel.SelectedPack.NumMappings == 0)
+            if (viewModel.SelectedPack is null || viewModel.SelectedPack.Mappings.Count == 0)
                 return;
 
             var topLevel = TopLevel.GetTopLevel(this);
@@ -174,12 +175,12 @@ namespace DBDStudio.Views.Pages
             var selectedPack = viewModel.SelectedPack;
 
             System.Diagnostics.Debug.Assert(selectedPack is not null);
-            System.Diagnostics.Debug.Assert(selectedPack.Is(TexturePackState.Ephemeral));
+            System.Diagnostics.Debug.Assert(selectedPack.Is(ConstructState.Ephemeral));
 
-            if (selectedPack.NumMappings > 0) {
+            if (selectedPack.Mappings.Count > 0) {
                 var shouldDelete = await ShowConfirmationDialogAsync(
                     "Delete Texture Pack",
-                    $"'{selectedPack.Name}' contains {selectedPack.NumMappings} mapping(s).\n\nDelete this workspace pack anyway?",
+                    $"'{selectedPack.Name}' contains {selectedPack.Mappings.Count} mapping(s).\n\nDelete this workspace pack anyway?",
                     "Delete",
                     "Cancel");
 
@@ -189,16 +190,6 @@ namespace DBDStudio.Views.Pages
             }
 
             viewModel.DeletePackCommand.Execute(null);
-        }
-
-        private void OnResetSelectedPackClick(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is not TexturePacksViewModel viewModel)
-                return;
-            System.Diagnostics.Debug.Assert(viewModel.SelectedPack is not null);
-            System.Diagnostics.Debug.Assert(viewModel.SelectedPack.Is(TexturePackState.Modified));
-
-            viewModel.ResetPackCommand.Execute(null);
         }
 
         private async Task<bool> ShowConfirmationDialogAsync(

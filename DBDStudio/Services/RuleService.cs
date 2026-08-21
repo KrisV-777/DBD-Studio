@@ -37,25 +37,6 @@ namespace DBDStudio.Services
 
             Rules.Clear();
 
-            try {
-                foreach (var rule in DiscoverExternalRules()) {
-                    // Duplicate rule, e.g. one from Skyrim Data VM and the other from a mod folder
-                    // Keep the more recently updated one, and discard the other.
-                    var existingRule = Rules.FirstOrDefault(r => r.Uid == rule.Uid);
-                    if (existingRule is not null) {
-                        if (rule.Underlying.IsMoreRecentThan(existingRule.Underlying)) {
-                            Rules.Remove(existingRule);
-                            Rules.Add(rule);
-                        }
-                    } else {
-                        Rules.Add(rule);
-                    }
-                    Debug.Assert(Rules.FirstOrDefault(r => r.Uid == rule.Uid) is not null);
-                }
-            } catch (Exception ex) {
-                Debug.WriteLine($"Failed to discover rules: {ex.Message}");
-            }
-
             // Reconcile the old packs with the newly discovered ones (all of which are primordial)
             // If an old pack is not present in the newly discovered packs, it is ephemeral and should be added back
             // If an old pack is present, then it was primordial before. Pick the more recently updated version
@@ -110,8 +91,19 @@ namespace DBDStudio.Services
             if (rule.Is(ConstructState.Ephemeral)) {
                 throw new InvalidOperationException("Cannot save an ephemeral rule.");
             }
-            SaveAs(rule, rule.SourceFilePath
-                ?? throw new InvalidOperationException("Cannot save a rule without a source file path."));
+
+            var sourcePath = rule.SourceFilePath ?? throw new InvalidOperationException("Cannot save a rule without a source file path.");
+            var normalizedPath = EnsureJsonExtension(sourcePath);
+            WriteRuleToDisk(rule.Underlying, normalizedPath);
+
+            var replacement = CreateSavedRule(rule.Underlying, normalizedPath);
+            var index = Rules.IndexOf(rule);
+            if (index >= 0) {
+                Rules[index] = replacement;
+                return;
+            }
+
+            Rules.Add(replacement);
         }
 
         public void SaveAs(RuleConstruct rule, string filePath)
@@ -121,18 +113,41 @@ namespace DBDStudio.Services
             }
 
             var normalizedPath = EnsureJsonExtension(filePath);
+            var sourceFileExisted = File.Exists(normalizedPath);
             WriteRuleToDisk(rule.Underlying, normalizedPath);
 
-            var current = rule as RuleConstruct;
-            if (current is not null) {
-                var sourcePath = IsPathDiscoverable(normalizedPath) ? normalizedPath : current.SourceFilePath;
-                Rules.Remove(current);
-                Rules.Add(new RuleConstruct(current.Underlying, isPrimordial: true) {
-                    SourceFilePath = sourcePath
-                });
+            var persistedRule = CreateSavedRule(rule.Underlying, normalizedPath);
+            var selectedIndex = Rules.IndexOf(rule);
+            var existingSourceIndex = sourceFileExisted
+                ? Rules
+                    .Select((existingRule, index) => new { existingRule, index })
+                    .FirstOrDefault(entry => PathsEqual(entry.existingRule.SourceFilePath, normalizedPath))
+                    ?.index ?? -1
+                : -1;
+
+            var replacementIndex = existingSourceIndex >= 0 ? existingSourceIndex : selectedIndex;
+            if (replacementIndex >= 0) {
+                Rules[replacementIndex] = persistedRule;
+
+                if (!ReferenceEquals(rule, persistedRule)
+                    && selectedIndex >= 0
+                    && selectedIndex != replacementIndex
+                    && Rules.Contains(rule)) {
+                    Rules.Remove(rule);
+                }
+                return;
             }
 
-            ResetRuleList();
+            Rules.Add(persistedRule);
+        }
+
+        private static RuleConstruct CreateSavedRule(Rule sourceRule, string sourcePath)
+        {
+            var current = new Rule();
+            current.Import(sourceRule);
+            return new RuleConstruct(current, isPrimordial: true) {
+                SourceFilePath = sourcePath
+            };
         }
 
         private RuleConstruct CreateNewRule(string? baseName = null)
@@ -208,6 +223,7 @@ namespace DBDStudio.Services
                 Directory.CreateDirectory(directory);
             }
 
+            JsonConfiguration.Mode = SerializationMode.Publish;
             var json = JsonSerializer.Serialize(rule, JsonConfiguration.Configuration);
             File.WriteAllText(outputPath, json);
         }
@@ -226,6 +242,22 @@ namespace DBDStudio.Services
             return filePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
                 ? filePath
                 : filePath + ".json";
+        }
+
+        private static bool PathsEqual(string? left, string? right)
+        {
+            if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right)) {
+                return false;
+            }
+
+            try {
+                return string.Equals(
+                    Path.GetFullPath(left),
+                    Path.GetFullPath(right),
+                    StringComparison.OrdinalIgnoreCase);
+            } catch (Exception) {
+                return string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         #region IPersistable
