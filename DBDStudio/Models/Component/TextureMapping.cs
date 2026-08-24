@@ -3,9 +3,6 @@ namespace DBDStudio.Models.Component.Textures
     public sealed class TextureMapping(string vanillaTexture, string replacementTexture, string? absolutePath)
         : ModelBase, IEquatable<TextureMapping>
     {
-        // TOOD: absolutePath can be invalid, should have some UI clue that the owning pack cannot be exported until fixed
-        // TODO: ^^^ needs a feature to edit absolute path
-
         #region Fields
 
         private string _vanillaTexture = vanillaTexture;
@@ -37,9 +34,9 @@ namespace DBDStudio.Models.Component.Textures
         /// <summary>
         /// Gets or sets the source file of the texture mapping, indicating where the mapping is located on the filesystem.
         /// </summary>
-        public string AbsolutePath
+        public string? AbsolutePath
         {
-            get => _absolutePath ?? string.Empty;
+            get => _absolutePath;
             set => SetProperty(ref _absolutePath, value);
         }
 
