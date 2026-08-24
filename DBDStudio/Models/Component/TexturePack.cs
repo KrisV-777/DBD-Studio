@@ -11,13 +11,12 @@ namespace DBDStudio.Models.Component
     /// </summary>
     /// <remarks>
     /// This class automatically tracks modifications by updating <see cref="LastUpdatedUtc"/> whenever any user-editable property changes.
-    /// Computed properties (e.g., <see cref="IsPrivate"/>, <see cref="LastUpdatedLocal"/>) are automatically notified
+    /// Computed properties (e.g., <see cref="LastUpdatedLocal"/>) are automatically notified
     /// when their dependencies change, ensuring UI bindings remain in sync.
     /// </remarks>
     public sealed class TexturePack : DBDComponent
     {
         private string _description = string.Empty;
-        private bool _isPrivate = false;
 
         public TexturePack()
         {
@@ -33,15 +32,6 @@ namespace DBDStudio.Models.Component
         {
             get => _description;
             set => SetProperty(ref _description, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the texture pack is public (accessible to random selection).
-        /// </summary>
-        public bool IsPrivate
-        {
-            get => _isPrivate;
-            set => SetProperty(ref _isPrivate, value);
         }
 
         /// <summary>
@@ -96,7 +86,6 @@ namespace DBDStudio.Models.Component
             try {
                 Name = other.Name;
                 Description = other.Description;
-                IsPrivate = other.IsPrivate;
 
                 Mappings.Clear();
                 foreach (var mapping in other.Mappings.Select(mapping => mapping.Clone())) {

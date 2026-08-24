@@ -40,13 +40,7 @@ namespace DBDStudio.Services
             newPresets
                 .Where(p => !string.IsNullOrWhiteSpace(p.Name) && File.Exists(p.SourceXml))
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                .ForEach(p =>
-                {
-                    if (oldPresets.TryGetValue(p, out var old))
-                        p.IsPrivate = old.IsPrivate;
-
-                    Presets.Add(p);
-                });
+                .ForEach(p => Presets.Add(p));
         }
 
         private IEnumerable<BodySlidePreset> DiscoverExternalPresets()
@@ -61,8 +55,7 @@ namespace DBDStudio.Services
                 foreach (var element in document.Root?.Elements("Preset") ?? []) {
                     yield return new BodySlidePreset {
                         Name = (string?)element.Attribute("name") ?? string.Empty,
-                        SourceXml = xmlFile,
-                        IsPrivate = false
+                        SourceXml = xmlFile
                     };
                 }
             }

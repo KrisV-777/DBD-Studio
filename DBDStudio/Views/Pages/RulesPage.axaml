@@ -186,7 +186,13 @@
                                 <ComboBox ItemsSource="{Binding AvailableTexturePacks}"
                                     SelectedItem="{Binding SelectedTextureCandidateToAdd}"
                                     HorizontalAlignment="Stretch"
-                                    MinWidth="220" />
+                                    MinWidth="220">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <Button Content="Add"
                                     Command="{Binding AddTextureCandidateCommand}" />
                             </StackPanel>
@@ -205,7 +211,11 @@
                                             Margin="0,0,6,6"
                                             Padding="8,4">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                                <TextBlock Text="(Private)"
+                                                    VerticalAlignment="Center"
+                                                    Opacity="0.6"
+                                                    IsVisible="{Binding IsExclusive}" />
                                                 <Button
                                                     Command="{Binding $parent[UserControl].DataContext.RemoveTextureCandidateCommand}"
                                                     CommandParameter="{Binding}"
@@ -230,7 +240,13 @@
                                 <ComboBox ItemsSource="{Binding AvailableBodySlidePresets}"
                                     SelectedItem="{Binding SelectedBodySlideCandidateToAdd}"
                                     HorizontalAlignment="Stretch"
-                                    MinWidth="220" />
+                                    MinWidth="220">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <Button Content="Add"
                                     Command="{Binding AddBodySlideCandidateCommand}" />
                             </StackPanel>
@@ -249,7 +265,11 @@
                                             Margin="0,0,6,6"
                                             Padding="8,4">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                                <TextBlock Text="(Private)"
+                                                    VerticalAlignment="Center"
+                                                    Opacity="0.6"
+                                                    IsVisible="{Binding IsExclusive}" />
                                                 <Button
                                                     Command="{Binding $parent[UserControl].DataContext.RemoveBodySlideCandidateCommand}"
                                                     CommandParameter="{Binding}"

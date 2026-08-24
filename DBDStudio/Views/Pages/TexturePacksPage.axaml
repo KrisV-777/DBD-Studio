@@ -104,30 +104,14 @@
                                 Classes.disk="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
                                 Classes.diskedited="{Binding State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}">
 
-                                <Grid ColumnDefinitions="Auto,*,Auto">
-
-                                    <StackPanel Grid.Column="0"
-                                        Orientation="Horizontal"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,6,0">
-
-                                        <fluent:SymbolIcon Symbol="Globe"
-                                            FontSize="{DynamicResource CaptionFontSize}"
-                                            IsVisible="{Binding !IsPrivate}" />
-
-                                        <fluent:SymbolIcon Symbol="LockClosed"
-                                            FontSize="{DynamicResource CaptionFontSize}"
-                                            IsVisible="{Binding IsPrivate}" />
-
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Column="1"
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
                                         Text="{Binding Name}"
                                         Classes="default"
                                         Padding="0,2"
                                         TextTrimming="CharacterEllipsis" />
 
-                                    <Ellipse Grid.Column="2"
+                                    <Ellipse Grid.Column="1"
                                         Width="8"
                                         Height="8"
                                         VerticalAlignment="Center"
@@ -186,11 +170,15 @@
                     Margin="0,0,0,18">
 
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Texture Pack"
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto"
+                            VerticalAlignment="Center">
+                            <!-- Header Info -->
+                            <TextBlock Grid.Column="0"
+                                Text="Texture Pack"
                                 Classes="h1" />
 
-                            <Border Margin="8,4,2,4"
+                            <Border Grid.Column="1"
+                                Margin="8,4,2,4"
                                 Padding="8,2"
                                 CornerRadius="10"
                                 VerticalAlignment="Center"
@@ -199,7 +187,8 @@
                                 Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
                                 Classes.disk="{Binding SelectedPack.State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
                                 Classes.diskedited="{Binding SelectedPack.State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}">
-                                <TextBlock Text="{Binding SelectedPack.State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=label}"
+                                <TextBlock
+                                    Text="{Binding SelectedPack.State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=label}"
                                     Name="PackStateLabel"
                                     Classes.construct-state="True"
                                     Classes.ephemeral="{Binding SelectedPack.State, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
@@ -208,7 +197,27 @@
                                     FontSize="{DynamicResource CaptionFontSize}"
                                     FontWeight="SemiBold" />
                             </Border>
-                        </StackPanel>
+
+                            <!-- Spacer -->
+                            <Rectangle Grid.Column="2" />
+
+                            <!-- Last Edited -->
+                            <StackPanel Grid.Column="3"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                VerticalAlignment="Center">
+
+                                <TextBlock Text="Last Updated:"
+                                    Classes="caption"
+                                    FontWeight="SemiBold"
+                                    VerticalAlignment="Center" />
+
+                                <TextBlock
+                                    Text="{Binding SelectedPack.LastUpdatedLocal, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                                    Classes="caption"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
 
                         <StackPanel Margin="0,12,0,0"
                             Spacing="10">
@@ -233,38 +242,6 @@
                                     Height="70"
                                     PlaceholderText="Description" />
                             </StackPanel>
-
-                            <Grid ColumnDefinitions="Auto,*,Auto"
-                                VerticalAlignment="Center">
-
-                                <!-- Left -->
-                                <CheckBox Grid.Column="0"
-                                    IsChecked="{Binding SelectedPack.IsPrivate}"
-                                    Content="Private pack"
-                                    ToolTip.Tip="Private packs are excluded from random selection and are only used when explicitly added to a rule." />
-
-                                <!-- Spacer -->
-                                <Rectangle Grid.Column="1" />
-
-                                <!-- Right -->
-                                <StackPanel Grid.Column="2"
-                                    Orientation="Horizontal"
-                                    Spacing="6"
-                                    VerticalAlignment="Center">
-
-                                    <TextBlock Text="Last Updated:"
-                                        Classes="caption"
-                                        FontWeight="SemiBold"
-                                        VerticalAlignment="Center" />
-
-                                    <TextBlock
-                                        Text="{Binding SelectedPack.LastUpdatedLocal, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
-                                        Classes="caption"
-                                        VerticalAlignment="Center" />
-
-                                </StackPanel>
-
-                            </Grid>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
