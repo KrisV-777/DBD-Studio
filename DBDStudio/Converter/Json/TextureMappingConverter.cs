@@ -20,23 +20,55 @@ namespace DBDStudio.Converter.Json
             writer.WriteEndObject();
         }
 
+        private static string? ReadStringProperty(ref Utf8JsonReader reader, string? propertyName, string targetName)
+        {
+            if (!string.Equals(propertyName, targetName, StringComparison.OrdinalIgnoreCase)) {
+                return null;
+            }
+
+            if (reader.TokenType != JsonTokenType.String)
+                throw new JsonException($"{targetName} must be a string.");
+
+            return reader.GetString();
+        }
+
         public override TextureMapping Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            using var document = JsonDocument.ParseValue(ref reader);
-            var root = document.RootElement;
-
-            var vanillaTexture =
-                root.GetProperty(nameof(TextureMapping.VanillaTexture)).GetString()
-                ?? throw new JsonException("Missing vanillaTexture.");
-
-            var replacementTexture =
-                root.GetProperty(nameof(TextureMapping.ReplacementTexture)).GetString()
-                ?? throw new JsonException("Missing replacementTexture.");
-
-            var absolutePath = root.GetProperty(nameof(TextureMapping.AbsolutePath)).GetString();
-            if (!string.IsNullOrEmpty(absolutePath) && !File.Exists(absolutePath)) {
-                absolutePath = null;
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                throw new JsonException("TextureMapping entries must be objects with VanillaTexture and ReplacementTexture properties.");
             }
+
+            string? vanillaTexture = null;
+            string? replacementTexture = null;
+            string? absolutePath = null;
+
+            while (reader.Read()) {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                    break;
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                    throw new JsonException("Invalid TextureMapping payload.");
+
+                var propertyName = reader.GetString();
+                if (!reader.Read())
+                    throw new JsonException("Invalid TextureMapping payload.");
+
+                if (ReadStringProperty(ref reader, propertyName, nameof(TextureMapping.VanillaTexture)) is string vt) {
+                    vanillaTexture = vt;
+                } else if (ReadStringProperty(ref reader, propertyName, nameof(TextureMapping.ReplacementTexture)) is string rt) {
+                    replacementTexture = rt;
+                } else if (ReadStringProperty(ref reader, propertyName, nameof(TextureMapping.AbsolutePath)) is string ap) {
+                    absolutePath = ap;
+                } else {
+                    reader.Skip();
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(vanillaTexture))
+                throw new JsonException("TextureMapping VanillaTexture is required.");
+            if (string.IsNullOrWhiteSpace(replacementTexture))
+                throw new JsonException("TextureMapping ReplacementTexture is required.");
+            if (string.IsNullOrEmpty(absolutePath) || !File.Exists(absolutePath))
+                absolutePath = null;
 
             return new TextureMapping(vanillaTexture, replacementTexture, absolutePath);
         }
