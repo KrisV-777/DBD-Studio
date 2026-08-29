@@ -470,7 +470,7 @@ namespace DBDStudio.ViewModels
             var hasPlayerCondition = SelectedRule.Conditions
                 .Any(c => c.Values
                     .Where(v => v is ConditionValue.Form)
-                    .Any(v => (v as ConditionValue.Form)!.Value?.FormId is 0x14 or 0x20));
+                    .Any(v => (v as ConditionValue.Form)!.Value?.FormId is 0x14 or 0x7));
             var hasSexCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsSex);
 
             if (hasPlayerCondition && !hasSexCondition) {
