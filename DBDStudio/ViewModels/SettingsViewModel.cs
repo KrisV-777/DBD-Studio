@@ -44,10 +44,10 @@ namespace DBDStudio.ViewModels
                 FileName = url,
                 UseShellExecute = true
             });
-            CmdOpenGithub = new RelayCommand(() => openUrl("https://github.com/"));
-            CmdOpenWiki = new RelayCommand(() => openUrl("https://github.com/wiki"));
-            CmdOpenNexus = new RelayCommand(() => openUrl("https://www.nexusmods.com/"));
-            CmdOpenKofi = new RelayCommand(() => openUrl("https://ko-fi.com/"));
+            CmdOpenGithub = new RelayCommand(() => openUrl("https://github.com/KrisV-777"));
+            CmdOpenWiki = new RelayCommand(() => openUrl("https://github.com/wiki"));   // TODO: Replace with actual wiki URL
+            CmdOpenNexus = new RelayCommand(() => openUrl("https://www.nexusmods.com/skyrimspecialedition/mods/157779"));
+            CmdOpenKofi = new RelayCommand(() => openUrl("https://ko-fi.com/kris777"));
         }
 
         public ICommand CmdOpenGithub { get; }
