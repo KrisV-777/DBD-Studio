@@ -123,8 +123,7 @@ namespace DBDStudio.Services
                     Directory.CreateDirectory(profileDir);
 
                     // Write config.json
-                    var jsonConfig = JsonConfiguration.Configuration;
-                    JsonConfiguration.Mode = SerializationMode.Publish;
+                    var jsonConfig = JsonConfiguration.BuildJsonConfiguration(SerializationMode.Publish);
                     var json = JsonSerializer.Serialize(pack.Underlying, jsonConfig);
                     File.WriteAllText(Path.Combine(profileDir, "config.json"), json);
 
@@ -207,8 +206,8 @@ namespace DBDStudio.Services
                     return null;
                 }
 
+                var jsonConfig = JsonConfiguration.BuildJsonConfiguration(SerializationMode.Local);
                 var json = File.ReadAllText(configFile.FullName);
-                var jsonConfig = JsonConfiguration.Configuration;
                 return JsonSerializer.Deserialize<TexturePack>(json, jsonConfig);
             } catch (Exception ex) when (ex is not JsonException) {
                 Debug.WriteLine($"Failed to read texture pack config '{configFile.FullName}': {ex.Message}");

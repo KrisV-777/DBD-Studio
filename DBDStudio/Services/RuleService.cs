@@ -144,24 +144,6 @@ namespace DBDStudio.Services
             });
         }
 
-        private static Rule? TryReadRule(FileInfo ruleFile)
-        {
-            try {
-                if (!ruleFile.Exists) {
-                    return null;
-                }
-
-                var json = File.ReadAllText(ruleFile.FullName);
-                return JsonSerializer.Deserialize<Rule>(json, JsonConfiguration.Configuration);
-            } catch (Exception ex) when (ex is not JsonException) {
-                Debug.WriteLine($"Failed to read rule file '{ruleFile.FullName}': {ex.Message}");
-            } catch (JsonException ex) {
-                Debug.WriteLine($"Failed to parse rule json '{ruleFile.FullName}': {ex.Message}");
-            }
-
-            return null;
-        }
-
         private static void WriteRuleToDisk(Rule rule, string filePath)
         {
             var outputPath = EnsureJsonExtension(filePath);
@@ -170,8 +152,8 @@ namespace DBDStudio.Services
                 Directory.CreateDirectory(directory);
             }
 
-            JsonConfiguration.Mode = SerializationMode.Publish;
-            var json = JsonSerializer.Serialize(rule, JsonConfiguration.Configuration);
+            var jsonConfig = JsonConfiguration.BuildJsonConfiguration(SerializationMode.Publish);
+            var json = JsonSerializer.Serialize(rule, jsonConfig);
             File.WriteAllText(outputPath, json);
         }
 

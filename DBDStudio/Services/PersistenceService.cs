@@ -20,9 +20,9 @@ namespace DBDStudio.Services
             }
 
             try {
-                JsonConfiguration.Mode = SerializationMode.Local;
+                var jsonConfig = JsonConfiguration.BuildJsonConfiguration(SerializationMode.Local);
                 var json = File.ReadAllText(workspacePath);
-                var snapshot = JsonSerializer.Deserialize<PersistenceSnapshot>(json, JsonConfiguration.Configuration);
+                var snapshot = JsonSerializer.Deserialize<PersistenceSnapshot>(json, jsonConfig);
                 if (snapshot is null || snapshot.SchemaVersion != PersistenceSnapshot.CurrentSchemaVersion) {
                     return;
                 }
@@ -35,9 +35,9 @@ namespace DBDStudio.Services
                     try {
                         object? state = null;
                         if (payload is JsonElement jsonElement) {
-                            state = JsonSerializer.Deserialize(jsonElement.GetRawText(), persistable.PersistenceStateType, JsonConfiguration.Configuration);
+                            state = JsonSerializer.Deserialize(jsonElement.GetRawText(), persistable.PersistenceStateType, jsonConfig);
                         } else if (payload is not null) {
-                            state = JsonSerializer.Deserialize(payload.ToString() ?? "{}", persistable.PersistenceStateType, JsonConfiguration.Configuration);
+                            state = JsonSerializer.Deserialize(payload.ToString() ?? "{}", persistable.PersistenceStateType, jsonConfig);
                         }
 
                         persistable.RestoreState(state);
@@ -60,8 +60,8 @@ namespace DBDStudio.Services
                 snapshot.Items[persistable.PersistenceKey] = persistable.SaveState();
             }
 
-            JsonConfiguration.Mode = SerializationMode.Local;
-            var json = JsonSerializer.Serialize(snapshot, JsonConfiguration.Configuration);
+            var jsonConfig = JsonConfiguration.BuildJsonConfiguration(SerializationMode.Local);
+            var json = JsonSerializer.Serialize(snapshot, jsonConfig);
             var directory = Path.GetDirectoryName(workspacePath);
             if (!string.IsNullOrWhiteSpace(directory)) {
                 Directory.CreateDirectory(directory);

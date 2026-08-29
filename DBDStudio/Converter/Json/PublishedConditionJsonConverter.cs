@@ -1,21 +1,20 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
 using DBDStudio.Models.Component.Condition;
 
 namespace DBDStudio.Converter.Json
 {
-    public sealed class ConditionJsonConverter : JsonConverter<Condition>
+    public sealed class PublishedConditionJsonConverter : JsonConverter<Condition>
     {
         public override Condition? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => JsonSerializer.Deserialize<Condition>(ref reader, options);
+            => throw new NotSupportedException("PublishedConditionJsonConverter does not support reading JSON.");
 
         public override void Write(Utf8JsonWriter writer, Condition value, JsonSerializerOptions options)
         {
-            if (JsonConfiguration.Mode == SerializationMode.Local) {
-                JsonSerializer.Serialize(writer, value, options);
-                return;
-            }
+            Debug.Assert(JsonConfiguration.Mode == SerializationMode.Publish);
+
             writer.WriteStartObject();
 
             writer.WriteString("Type", value.ConditionType.ToString());

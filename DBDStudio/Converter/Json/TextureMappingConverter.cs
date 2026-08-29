@@ -20,14 +20,18 @@ namespace DBDStudio.Converter.Json
             writer.WriteEndObject();
         }
 
-        private static string? ReadStringProperty(ref Utf8JsonReader reader, string? propertyName, string targetName)
+        private static string? ReadStringProperty(
+            ref Utf8JsonReader reader, string? propertyName, string targetName, bool noThrow = false)
         {
             if (!string.Equals(propertyName, targetName, StringComparison.OrdinalIgnoreCase)) {
                 return null;
             }
 
-            if (reader.TokenType != JsonTokenType.String)
+            if (reader.TokenType != JsonTokenType.String) {
+                if (noThrow)
+                    return null;
                 throw new JsonException($"{targetName} must be a string.");
+            }
 
             return reader.GetString();
         }
@@ -56,7 +60,7 @@ namespace DBDStudio.Converter.Json
                     vanillaTexture = vt;
                 } else if (ReadStringProperty(ref reader, propertyName, nameof(TextureMapping.ReplacementTexture)) is string rt) {
                     replacementTexture = rt;
-                } else if (ReadStringProperty(ref reader, propertyName, nameof(TextureMapping.AbsolutePath)) is string ap) {
+                } else if (ReadStringProperty(ref reader, propertyName, nameof(TextureMapping.AbsolutePath), true) is string ap) {
                     absolutePath = ap;
                 } else {
                     reader.Skip();

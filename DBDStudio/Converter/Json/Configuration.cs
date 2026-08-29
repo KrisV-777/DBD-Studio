@@ -17,17 +17,19 @@ namespace DBDStudio.Converter.Json
     public static class JsonConfiguration
     {
         /// <summary>
-        /// Gets the <see cref="JsonSerializerOptions"/> used for serialization and deserialization of JSON data.
-        /// </summary>
-        public static JsonSerializerOptions Configuration { get; } = CreateJsonSerializerOptions();
-
-        /// <summary>
         /// Gets or sets the serialization mode, which determines how certain properties are handled during serialization and deserialization.
         /// </summary>
-        public static SerializationMode Mode { get; set; } = SerializationMode.Local;
+        public static SerializationMode Mode { get; private set; } = SerializationMode.Local;
 
-        private static JsonSerializerOptions CreateJsonSerializerOptions()
+        /// <summary>
+        /// Builds the JsonSerializerOptions configured for the specified serialization mode.
+        /// </summary>
+        /// <param name="mode">The serialization mode to configure the JsonSerializerOptions for.</param>
+        /// <returns>The configured JsonSerializerOptions instance.</returns>
+        public static JsonSerializerOptions BuildJsonConfiguration(SerializationMode mode)
         {
+            Mode = mode;
+
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Strict) {
                 PropertyNameCaseInsensitive = true,
                 ReadCommentHandling = JsonCommentHandling.Skip,
@@ -35,9 +37,11 @@ namespace DBDStudio.Converter.Json
                 WriteIndented = true
             };
 
-            options.Converters.Add(new ConditionJsonConverter());
+            if (Mode == SerializationMode.Publish) {
+                options.Converters.Add(new PublishedConditionJsonConverter());
+                options.Converters.Add(new PublishedFormRecordJsonConverter());
+            }
             options.Converters.Add(new IConditionJsonConverter());
-            options.Converters.Add(new FormRecordJsonConverter());
             options.Converters.Add(new TextureMappingJsonConverter());
 
             return options;

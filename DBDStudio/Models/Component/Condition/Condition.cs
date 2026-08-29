@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
 using Noggog;
 
@@ -72,6 +73,7 @@ namespace DBDStudio.Models.Component.Condition
             }
         }
 
+        [JsonIgnore]
         public string OperatorSymbol
         {
             get => OperatorSymbolsInternal.FirstOrDefault(pair => pair.Key == _operator).Value ?? "==";
@@ -88,6 +90,7 @@ namespace DBDStudio.Models.Component.Condition
             }
         }
 
+        [JsonIgnore]
         public string ConjunctionLabel
         {
             get => ConjunctionLabelsInternal.FirstOrDefault(pair => pair.Key == _conjunction).Value ?? "AND";
