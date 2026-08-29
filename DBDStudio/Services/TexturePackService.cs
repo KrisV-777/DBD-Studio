@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DBDStudio.Converter.Json;
 using DBDStudio.Interfaces;
 using DBDStudio.Models;
@@ -63,27 +62,13 @@ namespace DBDStudio.Services
             // Reconcile the old packs with the newly discovered ones (all of which are primordial)
             // If an old pack is not present in the newly discovered packs, it is ephemeral and should be added back
             // If an old pack is present, then it was primordial before. Pick the more recently updated version
-            foreach (var oldPack in oldTexturePacks) {
-                var newPack = TexturePacks.FirstOrDefault(pack => pack.Uid == oldPack.Uid);
-                // Case 1: the pack does not already exist => ephemeral pack, add it back to the list
-                if (newPack is null) {
-                    var newConstruct = new TexturePackConstruct(oldPack, isPrimordial: false);
-                    TexturePacks.Add(newConstruct);
-                    continue;
-                }
-                // Case 2: the pack exists => primordial pack, take the more recently updated version
-                // Case 2.1: the pack was not changed since the last discovery => oldPack == newPack (no replacement needed)
-                // Case 2.2: the pack was changed since the last discovery but not exported => oldPack more recent (replace)
-                // Case 2.3: the pack was changed since the last discovery and exported => oldPack == newPack
-                // Case 2.4: the pack was changed outside of the app => unspecified
-                Debug.Assert(newPack.Primordial is not null);
-                Debug.Assert(newPack.Primordial.LastUpdatedUtc == newPack.Underlying.LastUpdatedUtc);
-                if (oldPack.IsMoreRecentThan(newPack.Primordial)) {
-                    var newConstruct = new TexturePackConstruct(oldPack, isPrimordial: true);
-                    TexturePacks.Remove(newPack);
-                    TexturePacks.Add(newConstruct);
-                }
-            }
+            ConstructCollectionReconciler.ReconcileByUid(
+                TexturePacks,
+                oldTexturePacks,
+                construct => construct.Uid,
+                construct => construct.Underlying,
+                construct => construct.Primordial,
+                (component, isPrimordial) => new TexturePackConstruct(component, isPrimordial));
         }
 
         public TexturePackConstruct EmplaceNew(string? withName = null)
@@ -171,27 +156,11 @@ namespace DBDStudio.Services
 
         private TexturePackConstruct CreateNewPack(string? baseName = null)
         {
-            // Strip a trailing " (N)" suffix, if present.
-            baseName = baseName is not null
-                ? System.Text.RegularExpressions.Regex.Replace(baseName, @"\s*\(\d+\)$", string.Empty)
-                : "New Pack";
-
-            var regex = new System.Text.RegularExpressions.Regex(
-                $@"^{System.Text.RegularExpressions.Regex.Escape(baseName)}\s\((\d+)\)$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            var hasBaseName = TexturePacks.Any(existingPack =>
-                existingPack.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase));
-
-            var maxSuffix = TexturePacks
-                .Select(existingPack => regex.Match(existingPack.Name))
-                .Where(match => match.Success)
-                .Select(match => int.Parse(match.Groups[1].Value))
-                .DefaultIfEmpty(hasBaseName ? 0 : -1)
-                .Max();
-
             return new TexturePackConstruct(new TexturePack {
-                Name = maxSuffix > -1 ? $"{baseName} ({maxSuffix + 1})" : baseName,
+                Name = UniqueNameGenerator.CreateUniqueName(
+                    baseName,
+                    "New Pack",
+                    TexturePacks.Select(existingPack => existingPack.Name)),
             });
         }
 

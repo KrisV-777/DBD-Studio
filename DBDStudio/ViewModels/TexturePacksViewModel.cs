@@ -16,6 +16,12 @@ namespace DBDStudio.ViewModels
         private readonly ITexturePackService _texturePackService;
         private TexturePackConstruct? _selectedPack;
         private TextureMapping? _selectedMapping;
+        private readonly RelayCommand _addPackCommand;
+        private readonly RelayCommand _duplicatePackCommand;
+        private readonly RelayCommand _deletePackCommand;
+        private readonly RelayCommand _resetPackCommand;
+        private readonly RelayCommand _addMappingCommand;
+        private readonly RelayCommand _removeMappingCommand;
         public ObservableCollection<TexturePackConstruct> Packs { get; } = [];
 
         public TexturePackConstruct? SelectedPack
@@ -52,12 +58,19 @@ namespace DBDStudio.ViewModels
         {
             _texturePackService = texturePackService;
 
-            AddPackCommand = new RelayCommand(() => AddPack(null));
-            DuplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
-            DeletePackCommand = new RelayCommand(RemovePack, () => SelectedPack?.Is(ConstructState.Ephemeral) ?? false);
-            ResetPackCommand = new RelayCommand(ResetPack, () => SelectedPack?.Is(ConstructState.Modified) ?? false);
-            AddMappingCommand = new RelayCommand(AddMapping, () => SelectedPack is not null);
-            RemoveMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
+            _addPackCommand = new RelayCommand(() => AddPack(null));
+            _duplicatePackCommand = new RelayCommand(DuplicatePack, () => SelectedPack is not null);
+            _deletePackCommand = new RelayCommand(RemovePack, () => SelectedPack?.Is(ConstructState.Ephemeral) ?? false);
+            _resetPackCommand = new RelayCommand(ResetPack, () => SelectedPack?.Is(ConstructState.Modified) ?? false);
+            _addMappingCommand = new RelayCommand(AddMapping, () => SelectedPack is not null);
+            _removeMappingCommand = new RelayCommand(RemoveMapping, () => SelectedPack is not null && SelectedMapping is not null);
+
+            AddPackCommand = _addPackCommand;
+            DuplicatePackCommand = _duplicatePackCommand;
+            DeletePackCommand = _deletePackCommand;
+            ResetPackCommand = _resetPackCommand;
+            AddMappingCommand = _addMappingCommand;
+            RemoveMappingCommand = _removeMappingCommand;
 
             _texturePackService.TexturePacks.CollectionChanged += OnTexturePackListChanged;
 
@@ -103,12 +116,12 @@ namespace DBDStudio.ViewModels
 
         private void RefreshCommandStates()
         {
-            ((RelayCommand)AddPackCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)DuplicatePackCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)DeletePackCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)ResetPackCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)AddMappingCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)RemoveMappingCommand).RaiseCanExecuteChanged();
+            _addPackCommand.RaiseCanExecuteChanged();
+            _duplicatePackCommand.RaiseCanExecuteChanged();
+            _deletePackCommand.RaiseCanExecuteChanged();
+            _resetPackCommand.RaiseCanExecuteChanged();
+            _addMappingCommand.RaiseCanExecuteChanged();
+            _removeMappingCommand.RaiseCanExecuteChanged();
         }
 
         private void AttachSelectedPack(TexturePackConstruct? pack)

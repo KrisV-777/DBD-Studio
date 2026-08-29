@@ -67,8 +67,7 @@ namespace DBDStudio.Views.Controls
 
         private void OnMoveUpClick(object? sender, RoutedEventArgs e)
         {
-            var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
+            if (!TryResolveRowContext(sender, out var conditions, out var condition))
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -81,8 +80,7 @@ namespace DBDStudio.Views.Controls
 
         private void OnMoveDownClick(object? sender, RoutedEventArgs e)
         {
-            var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
+            if (!TryResolveRowContext(sender, out var conditions, out var condition))
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -95,8 +93,7 @@ namespace DBDStudio.Views.Controls
 
         private void OnDuplicateClick(object? sender, RoutedEventArgs e)
         {
-            var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
+            if (!TryResolveRowContext(sender, out var conditions, out var condition))
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -110,8 +107,7 @@ namespace DBDStudio.Views.Controls
 
         private void OnDeleteClick(object? sender, RoutedEventArgs e)
         {
-            var conditions = ResolveConditions();
-            if (sender is not Button button || button.Tag is not ICondition condition || conditions is null)
+            if (!TryResolveRowContext(sender, out var conditions, out var condition))
                 return;
 
             var index = conditions.IndexOf(condition);
@@ -126,6 +122,21 @@ namespace DBDStudio.Views.Controls
 
             var nextIndex = Math.Min(index, conditions.Count - 1);
             SelectedCondition = conditions[nextIndex];
+        }
+
+        private bool TryResolveRowContext(object? sender, out ObservableCollection<ICondition> conditions, out ICondition condition)
+        {
+            conditions = null!;
+            condition = null!;
+
+            var resolvedConditions = ResolveConditions();
+            if (resolvedConditions is null || sender is not Button button || button.Tag is not ICondition rowCondition) {
+                return false;
+            }
+
+            conditions = resolvedConditions;
+            condition = rowCondition;
+            return true;
         }
 
         private ObservableCollection<ICondition>? ResolveConditions()

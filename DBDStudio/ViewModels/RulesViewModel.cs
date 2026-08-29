@@ -31,19 +31,16 @@ namespace DBDStudio.ViewModels
         private readonly RelayCommand _saveRuleCommand;
         private readonly RelayCommand _addTextureCandidateCommand;
         private readonly RelayCommand _addBodySlideCandidateCommand;
+        private readonly RelayCommand<Candidate> _removeTextureCandidateCommand;
+        private readonly RelayCommand<Candidate> _removeBodySlideCandidateCommand;
+        private readonly ObservableCollection<Candidate> _availableTexturePacks = [];
+        private readonly ObservableCollection<Candidate> _availableBodySlidePresets = [];
+        private readonly ObservableCollection<string> _availableRaceMenuPresets = [];
 
         public ObservableCollection<RuleConstruct> Rules { get; } = [];
-        public ObservableCollection<Candidate> AvailableTexturePacks => [
-            new Candidate { Name = "Any", IsExclusive = false },
-            .. _texturePackService.TexturePacks.Select(p => new Candidate {
-                Name = p.Name, IsExclusive = false
-            })];
-        public ObservableCollection<Candidate> AvailableBodySlidePresets => [
-            new Candidate { Name = "Any", IsExclusive = false },
-            .. _bodySlideService.Presets.Select(p => new Candidate {
-                Name = p.Name, IsExclusive = false
-            })];
-        public ObservableCollection<string> AvailableRaceMenuPresets => [.. _raceMenuPresetService.Presets.Select(p => p.Name)];
+        public ObservableCollection<Candidate> AvailableTexturePacks => _availableTexturePacks;
+        public ObservableCollection<Candidate> AvailableBodySlidePresets => _availableBodySlidePresets;
+        public ObservableCollection<string> AvailableRaceMenuPresets => _availableRaceMenuPresets;
         public ObservableCollection<ConditionType> AvailableConditionTypes { get; } = new(Enum.GetValues<ConditionType>());
 
         public IFormDatabase FormDatabase { get; }
@@ -130,13 +127,22 @@ namespace DBDStudio.ViewModels
             _resetRuleCommand = new RelayCommand(ResetRule, () => SelectedRenderedRule?.Is(ConstructState.Modified) ?? false);
             _saveRuleCommand = new RelayCommand(SaveRule, () => SelectedRenderedRule?.Is(ConstructState.Modified) ?? false);
             _addTextureCandidateCommand = new RelayCommand(AddTextureCandidate, CanAddTextureCandidate);
-            RemoveTextureCandidateCommand = new RelayCommand<Candidate>(RemoveTextureCandidate, candidate =>
+            _removeTextureCandidateCommand = new RelayCommand<Candidate>(RemoveTextureCandidate, candidate =>
                 SelectedRule is not null && candidate is not null && !string.IsNullOrWhiteSpace(candidate.Name));
+            RemoveTextureCandidateCommand = _removeTextureCandidateCommand;
             _addBodySlideCandidateCommand = new RelayCommand(AddBodySlideCandidate, CanAddBodySlideCandidate);
-            RemoveBodySlideCandidateCommand = new RelayCommand<Candidate>(RemoveBodySlideCandidate, candidate =>
+            _removeBodySlideCandidateCommand = new RelayCommand<Candidate>(RemoveBodySlideCandidate, candidate =>
                 SelectedRule is not null && candidate is not null && !string.IsNullOrWhiteSpace(candidate.Name));
+            RemoveBodySlideCandidateCommand = _removeBodySlideCandidateCommand;
 
             _ruleService.Rules.CollectionChanged += OnRuleListChanged;
+            _texturePackService.TexturePacks.CollectionChanged += (_, _) => RefreshAvailableTexturePacks();
+            _bodySlideService.Presets.CollectionChanged += (_, _) => RefreshAvailableBodySlidePresets();
+            _raceMenuPresetService.Presets.CollectionChanged += (_, _) => RefreshAvailableRaceMenuPresets();
+
+            RefreshAvailableTexturePacks();
+            RefreshAvailableBodySlidePresets();
+            RefreshAvailableRaceMenuPresets();
 
             Rules.AddRange(_ruleService.Rules);
             foreach (var rule in Rules) {
@@ -277,10 +283,7 @@ namespace DBDStudio.ViewModels
 
         private bool CanAddTextureCandidate()
         {
-            return SelectedRule is not null
-                && SelectedTextureCandidateToAdd is not null
-                && !string.IsNullOrWhiteSpace(SelectedTextureCandidateToAdd.Name)
-                && !SelectedRule.TextureCandidates.Any(c => string.Equals(c.Name, SelectedTextureCandidateToAdd.Name, StringComparison.Ordinal));
+            return SelectedRule is not null && CanAddCandidate(SelectedRule.TextureCandidates, SelectedTextureCandidateToAdd);
         }
 
         private void AddTextureCandidate()
@@ -288,10 +291,7 @@ namespace DBDStudio.ViewModels
             if (!CanAddTextureCandidate() || SelectedRenderedRule is null || SelectedTextureCandidateToAdd is null)
                 return;
 
-            SelectedRenderedRule.Underlying.TextureCandidates.Add(new Candidate {
-                Name = SelectedTextureCandidateToAdd.Name,
-                IsExclusive = SelectedTextureCandidateToAdd.IsExclusive
-            });
+            AddCandidate(SelectedRenderedRule.Underlying.TextureCandidates, SelectedTextureCandidateToAdd);
             SelectedTextureCandidateToAdd = null;
         }
 
@@ -300,20 +300,13 @@ namespace DBDStudio.ViewModels
             if (SelectedRenderedRule is null || candidate is null || string.IsNullOrWhiteSpace(candidate.Name))
                 return;
 
-            var existing = SelectedRenderedRule.Underlying.TextureCandidates
-                .FirstOrDefault(c => string.Equals(c.Name, candidate.Name, StringComparison.Ordinal));
-            if (existing is not null) {
-                SelectedRenderedRule.Underlying.TextureCandidates.Remove(existing);
-            }
+            RemoveCandidate(SelectedRenderedRule.Underlying.TextureCandidates, candidate);
             _addTextureCandidateCommand.RaiseCanExecuteChanged();
         }
 
         private bool CanAddBodySlideCandidate()
         {
-            return SelectedRule is not null
-                && SelectedBodySlideCandidateToAdd is not null
-                && !string.IsNullOrWhiteSpace(SelectedBodySlideCandidateToAdd.Name)
-                && !SelectedRule.BodySlideCandidates.Any(c => string.Equals(c.Name, SelectedBodySlideCandidateToAdd.Name, StringComparison.Ordinal));
+            return SelectedRule is not null && CanAddCandidate(SelectedRule.BodySlideCandidates, SelectedBodySlideCandidateToAdd);
         }
 
         private void AddBodySlideCandidate()
@@ -321,10 +314,7 @@ namespace DBDStudio.ViewModels
             if (!CanAddBodySlideCandidate() || SelectedRenderedRule is null || SelectedBodySlideCandidateToAdd is null)
                 return;
 
-            SelectedRenderedRule.Underlying.BodySlideCandidates.Add(new Candidate {
-                Name = SelectedBodySlideCandidateToAdd.Name,
-                IsExclusive = SelectedBodySlideCandidateToAdd.IsExclusive
-            });
+            AddCandidate(SelectedRenderedRule.Underlying.BodySlideCandidates, SelectedBodySlideCandidateToAdd);
             SelectedBodySlideCandidateToAdd = null;
         }
 
@@ -333,12 +323,66 @@ namespace DBDStudio.ViewModels
             if (SelectedRenderedRule is null || candidate is null || string.IsNullOrWhiteSpace(candidate.Name))
                 return;
 
-            var existing = SelectedRenderedRule.Underlying.BodySlideCandidates
-                .FirstOrDefault(c => string.Equals(c.Name, candidate.Name, StringComparison.Ordinal));
-            if (existing is not null) {
-                SelectedRenderedRule.Underlying.BodySlideCandidates.Remove(existing);
-            }
+            RemoveCandidate(SelectedRenderedRule.Underlying.BodySlideCandidates, candidate);
             _addBodySlideCandidateCommand.RaiseCanExecuteChanged();
+        }
+
+        private static bool CanAddCandidate(ObservableCollection<Candidate> existingCandidates, Candidate? candidateToAdd)
+        {
+            return candidateToAdd is not null
+                && !string.IsNullOrWhiteSpace(candidateToAdd.Name)
+                && !existingCandidates.Any(candidate => string.Equals(candidate.Name, candidateToAdd.Name, StringComparison.Ordinal));
+        }
+
+        private static void AddCandidate(ObservableCollection<Candidate> existingCandidates, Candidate candidateToAdd)
+        {
+            existingCandidates.Add(new Candidate {
+                Name = candidateToAdd.Name,
+                IsExclusive = candidateToAdd.IsExclusive
+            });
+        }
+
+        private static void RemoveCandidate(ObservableCollection<Candidate> existingCandidates, Candidate candidateToRemove)
+        {
+            var existing = existingCandidates
+                .FirstOrDefault(candidate => string.Equals(candidate.Name, candidateToRemove.Name, StringComparison.Ordinal));
+            if (existing is not null) {
+                existingCandidates.Remove(existing);
+            }
+        }
+
+        private void RefreshAvailableTexturePacks()
+        {
+            _availableTexturePacks.Clear();
+            _availableTexturePacks.Add(new Candidate { Name = "Any", IsExclusive = false });
+
+            foreach (var texturePack in _texturePackService.TexturePacks) {
+                _availableTexturePacks.Add(new Candidate {
+                    Name = texturePack.Name,
+                    IsExclusive = false
+                });
+            }
+        }
+
+        private void RefreshAvailableBodySlidePresets()
+        {
+            _availableBodySlidePresets.Clear();
+            _availableBodySlidePresets.Add(new Candidate { Name = "Any", IsExclusive = false });
+
+            foreach (var preset in _bodySlideService.Presets) {
+                _availableBodySlidePresets.Add(new Candidate {
+                    Name = preset.Name,
+                    IsExclusive = false
+                });
+            }
+        }
+
+        private void RefreshAvailableRaceMenuPresets()
+        {
+            _availableRaceMenuPresets.Clear();
+            foreach (var preset in _raceMenuPresetService.Presets) {
+                _availableRaceMenuPresets.Add(preset.Name);
+            }
         }
 
         private void AttachRule(RuleConstruct renderedRule)
@@ -445,13 +489,8 @@ namespace DBDStudio.ViewModels
             _saveRuleCommand.RaiseCanExecuteChanged();
             _addTextureCandidateCommand.RaiseCanExecuteChanged();
             _addBodySlideCandidateCommand.RaiseCanExecuteChanged();
-            if (RemoveTextureCandidateCommand is RelayCommand<string> removeTexture) {
-                removeTexture.RaiseCanExecuteChanged();
-            }
-
-            if (RemoveBodySlideCandidateCommand is RelayCommand<string> removeBodySlide) {
-                removeBodySlide.RaiseCanExecuteChanged();
-            }
+            _removeTextureCandidateCommand.RaiseCanExecuteChanged();
+            _removeBodySlideCandidateCommand.RaiseCanExecuteChanged();
         }
     }
 }

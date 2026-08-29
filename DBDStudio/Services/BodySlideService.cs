@@ -34,7 +34,6 @@ namespace DBDStudio.Services
 
         private void ReInitializePresets(IEnumerable<BodySlidePreset> newPresets)
         {
-            var oldPresets = Presets.ToHashSet();
             Presets.Clear();
 
             newPresets

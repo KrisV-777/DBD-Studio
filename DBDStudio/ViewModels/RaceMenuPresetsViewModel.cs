@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using DBDStudio.Interfaces;
-using DBDStudio.Models;
 using DBDStudio.Models.Component;
+using DBDStudio.Utility;
 
 namespace DBDStudio.ViewModels
 {
@@ -33,16 +30,12 @@ namespace DBDStudio.ViewModels
 
         private void ApplyFilter()
         {
-            FilteredPresets.Clear();
-
-            var source = string.IsNullOrWhiteSpace(_searchText)
-                ? _raceMenuPresetService.Presets.AsEnumerable()
-                : _raceMenuPresetService.Presets.Where(p =>
-                    p.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                    p.JslotFile.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
-
-            foreach (var preset in source)
-                FilteredPresets.Add(preset);
+            CollectionFilter.ApplyTextFilter(
+                FilteredPresets,
+                _raceMenuPresetService.Presets,
+                _searchText,
+                preset => preset.Name,
+                preset => preset.JslotFile);
         }
     }
 }

@@ -11,8 +11,6 @@ namespace DBDStudio.Services
 {
     public sealed class RuleService : IRuleService, IPersistable
     {
-        private const string RulesDirectoryInfix = "SKSE/DBD/Rules/";
-
         private readonly ApplicationSettings _settings;
         public ObservableCollection<RuleConstruct> Rules { get; } = [];
 
@@ -40,27 +38,13 @@ namespace DBDStudio.Services
             // Reconcile the old packs with the newly discovered ones (all of which are primordial)
             // If an old pack is not present in the newly discovered packs, it is ephemeral and should be added back
             // If an old pack is present, then it was primordial before. Pick the more recently updated version
-            foreach (var oldRule in oldRules) {
-                var newRule = Rules.FirstOrDefault(rule => rule.Uid == oldRule.Uid);
-                // Case 1: the pack does not already exist => ephemeral pack, add it back to the list
-                if (newRule is null) {
-                    var newConstruct = new RuleConstruct(oldRule, isPrimordial: false);
-                    Rules.Add(newConstruct);
-                    continue;
-                }
-                // Case 2: the pack exists => primordial pack, take the more recently updated version
-                // Case 2.1: the pack was not changed since the last discovery => oldPack == newPack (no replacement needed)
-                // Case 2.2: the pack was changed since the last discovery but not exported => oldPack more recent (replace)
-                // Case 2.3: the pack was changed since the last discovery and exported => oldPack == newPack
-                // Case 2.4: the pack was changed outside of the app => unspecified
-                Debug.Assert(newRule.Primordial is not null);
-                Debug.Assert(newRule.Primordial.LastUpdatedUtc == newRule.Underlying.LastUpdatedUtc);
-                if (oldRule.IsMoreRecentThan(newRule.Primordial)) {
-                    var newConstruct = new RuleConstruct(oldRule, isPrimordial: true);
-                    Rules.Remove(newRule);
-                    Rules.Add(newConstruct);
-                }
-            }
+            ConstructCollectionReconciler.ReconcileByUid(
+                Rules,
+                oldRules,
+                construct => construct.Uid,
+                construct => construct.Underlying,
+                construct => construct.Primordial,
+                (component, isPrimordial) => new RuleConstruct(component, isPrimordial));
         }
 
         public RuleConstruct EmplaceNew(string? withName = null)
@@ -152,49 +136,12 @@ namespace DBDStudio.Services
 
         private RuleConstruct CreateNewRule(string? baseName = null)
         {
-            baseName = baseName is not null
-                ? System.Text.RegularExpressions.Regex.Replace(baseName, @"\s*\(\d+\)$", string.Empty)
-                : "New Rule";
-
-            var regex = new System.Text.RegularExpressions.Regex(
-                $@"^{System.Text.RegularExpressions.Regex.Escape(baseName)}\s\((\d+)\)$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            var hasBaseName = Rules.Any(existingRule =>
-                existingRule.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase));
-
-            var maxSuffix = Rules
-                .Select(existingRule => regex.Match(existingRule.Name))
-                .Where(match => match.Success)
-                .Select(match => int.Parse(match.Groups[1].Value))
-                .DefaultIfEmpty(hasBaseName ? 0 : -1)
-                .Max();
-
             return new RuleConstruct(new Rule {
-                Name = maxSuffix > -1 ? $"{baseName} ({maxSuffix + 1})" : baseName,
+                Name = UniqueNameGenerator.CreateUniqueName(
+                    baseName,
+                    "New Rule",
+                    Rules.Select(existingRule => existingRule.Name)),
             });
-        }
-
-        private IEnumerable<RuleConstruct> DiscoverExternalRules()
-        {
-            foreach (var ruleFile in DirectoryIterator.EnumerateProjectFiles([
-                         new DirectoryIterator.IteratorDetails(_settings.SkyrimDataFolder, 0),
-                         new DirectoryIterator.IteratorDetails(_settings.ModsFolder, 1),
-                     ], RulesDirectoryInfix, "*.json")) {
-                var primordial = TryReadRule(ruleFile);
-                if (primordial is null) {
-                    Debug.WriteLine($"Failed to read rule file '{ruleFile.FullName}'.");
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(primordial.Name)) {
-                    primordial.Name = Path.GetFileNameWithoutExtension(ruleFile.Name);
-                }
-
-                yield return new RuleConstruct(primordial, isPrimordial: true) {
-                    SourceFilePath = ruleFile.FullName
-                };
-            }
         }
 
         private static Rule? TryReadRule(FileInfo ruleFile)
@@ -226,15 +173,6 @@ namespace DBDStudio.Services
             JsonConfiguration.Mode = SerializationMode.Publish;
             var json = JsonSerializer.Serialize(rule, JsonConfiguration.Configuration);
             File.WriteAllText(outputPath, json);
-        }
-
-        private bool IsPathDiscoverable(string filePath)
-        {
-            return DirectoryIterator.EnumerateProjectFiles([
-                    new DirectoryIterator.IteratorDetails(_settings.SkyrimDataFolder, 0),
-                    new DirectoryIterator.IteratorDetails(_settings.ModsFolder, 1),
-                ], RulesDirectoryInfix, "*.json")
-                .Any(file => string.Equals(file.FullName, filePath, StringComparison.OrdinalIgnoreCase));
         }
 
         private static string EnsureJsonExtension(string filePath)
