@@ -22,8 +22,8 @@ namespace DBDStudio.ViewModels
 
         private RuleConstruct? _selectedRenderedRule;
         private string _raceMenuAssignmentWarning = string.Empty;
-        private string? _selectedTextureCandidateToAdd;
-        private string? _selectedBodySlideCandidateToAdd;
+        private Candidate? _selectedTextureCandidateToAdd;
+        private Candidate? _selectedBodySlideCandidateToAdd;
 
         private readonly RelayCommand _duplicateRuleCommand;
         private readonly RelayCommand _deleteRuleCommand;
@@ -33,8 +33,16 @@ namespace DBDStudio.ViewModels
         private readonly RelayCommand _addBodySlideCandidateCommand;
 
         public ObservableCollection<RuleConstruct> Rules { get; } = [];
-        public ObservableCollection<string> AvailableTexturePacks => [.. _texturePackService.TexturePacks.Select(p => p.Name)];
-        public ObservableCollection<string> AvailableBodySlidePresets => [.. _bodySlideService.Presets.Select(p => p.Name)];
+        public ObservableCollection<Candidate> AvailableTexturePacks => [
+            new Candidate { Name = "Any", IsExclusive = false },
+            .. _texturePackService.TexturePacks.Select(p => new Candidate {
+                Name = p.Name, IsExclusive = false
+            })];
+        public ObservableCollection<Candidate> AvailableBodySlidePresets => [
+            new Candidate { Name = "Any", IsExclusive = false },
+            .. _bodySlideService.Presets.Select(p => new Candidate {
+                Name = p.Name, IsExclusive = false
+            })];
         public ObservableCollection<string> AvailableRaceMenuPresets => [.. _raceMenuPresetService.Presets.Select(p => p.Name)];
         public ObservableCollection<ConditionType> AvailableConditionTypes { get; } = new(Enum.GetValues<ConditionType>());
 
@@ -55,8 +63,8 @@ namespace DBDStudio.ViewModels
                 OnPropertyChanged(nameof(SelectedRule));
                 OnPropertyChanged(nameof(SelectedRuleState));
 
-                SelectedTextureCandidateToAdd = null;
-                SelectedBodySlideCandidateToAdd = null;
+                SelectedTextureCandidateToAdd = AvailableTexturePacks.First();
+                SelectedBodySlideCandidateToAdd = AvailableBodySlidePresets.First();
 
                 UpdateRaceMenuWarning();
                 RefreshCommandStates();
@@ -67,7 +75,7 @@ namespace DBDStudio.ViewModels
 
         public ConstructState SelectedRuleState => SelectedRenderedRule?.State ?? ConstructState.None;
 
-        public string? SelectedTextureCandidateToAdd
+        public Candidate? SelectedTextureCandidateToAdd
         {
             get => _selectedTextureCandidateToAdd;
             set
@@ -77,7 +85,7 @@ namespace DBDStudio.ViewModels
             }
         }
 
-        public string? SelectedBodySlideCandidateToAdd
+        public Candidate? SelectedBodySlideCandidateToAdd
         {
             get => _selectedBodySlideCandidateToAdd;
             set
@@ -122,9 +130,11 @@ namespace DBDStudio.ViewModels
             _resetRuleCommand = new RelayCommand(ResetRule, () => SelectedRenderedRule?.Is(ConstructState.Modified) ?? false);
             _saveRuleCommand = new RelayCommand(SaveRule, () => SelectedRenderedRule?.Is(ConstructState.Modified) ?? false);
             _addTextureCandidateCommand = new RelayCommand(AddTextureCandidate, CanAddTextureCandidate);
-            RemoveTextureCandidateCommand = new RelayCommand<string>(RemoveTextureCandidate, candidate => SelectedRule is not null && !string.IsNullOrWhiteSpace(candidate));
+            RemoveTextureCandidateCommand = new RelayCommand<Candidate>(RemoveTextureCandidate, candidate =>
+                SelectedRule is not null && candidate is not null && !string.IsNullOrWhiteSpace(candidate.Name));
             _addBodySlideCandidateCommand = new RelayCommand(AddBodySlideCandidate, CanAddBodySlideCandidate);
-            RemoveBodySlideCandidateCommand = new RelayCommand<string>(RemoveBodySlideCandidate, candidate => SelectedRule is not null && !string.IsNullOrWhiteSpace(candidate));
+            RemoveBodySlideCandidateCommand = new RelayCommand<Candidate>(RemoveBodySlideCandidate, candidate =>
+                SelectedRule is not null && candidate is not null && !string.IsNullOrWhiteSpace(candidate.Name));
 
             _ruleService.Rules.CollectionChanged += OnRuleListChanged;
 
@@ -268,8 +278,9 @@ namespace DBDStudio.ViewModels
         private bool CanAddTextureCandidate()
         {
             return SelectedRule is not null
-                && !string.IsNullOrWhiteSpace(SelectedTextureCandidateToAdd)
-                && !SelectedRule.TextureCandidates.Contains(SelectedTextureCandidateToAdd, StringComparer.Ordinal);
+                && SelectedTextureCandidateToAdd is not null
+                && !string.IsNullOrWhiteSpace(SelectedTextureCandidateToAdd.Name)
+                && !SelectedRule.TextureCandidates.Any(c => string.Equals(c.Name, SelectedTextureCandidateToAdd.Name, StringComparison.Ordinal));
         }
 
         private void AddTextureCandidate()
@@ -277,24 +288,32 @@ namespace DBDStudio.ViewModels
             if (!CanAddTextureCandidate() || SelectedRenderedRule is null || SelectedTextureCandidateToAdd is null)
                 return;
 
-            SelectedRenderedRule.Underlying.TextureCandidates.Add(SelectedTextureCandidateToAdd);
+            SelectedRenderedRule.Underlying.TextureCandidates.Add(new Candidate {
+                Name = SelectedTextureCandidateToAdd.Name,
+                IsExclusive = SelectedTextureCandidateToAdd.IsExclusive
+            });
             SelectedTextureCandidateToAdd = null;
         }
 
-        private void RemoveTextureCandidate(string? candidate)
+        private void RemoveTextureCandidate(Candidate? candidate)
         {
-            if (SelectedRenderedRule is null || string.IsNullOrWhiteSpace(candidate))
+            if (SelectedRenderedRule is null || candidate is null || string.IsNullOrWhiteSpace(candidate.Name))
                 return;
 
-            SelectedRenderedRule.Underlying.TextureCandidates.Remove(candidate);
+            var existing = SelectedRenderedRule.Underlying.TextureCandidates
+                .FirstOrDefault(c => string.Equals(c.Name, candidate.Name, StringComparison.Ordinal));
+            if (existing is not null) {
+                SelectedRenderedRule.Underlying.TextureCandidates.Remove(existing);
+            }
             _addTextureCandidateCommand.RaiseCanExecuteChanged();
         }
 
         private bool CanAddBodySlideCandidate()
         {
             return SelectedRule is not null
-                && !string.IsNullOrWhiteSpace(SelectedBodySlideCandidateToAdd)
-                && !SelectedRule.BodySlideCandidates.Contains(SelectedBodySlideCandidateToAdd, StringComparer.Ordinal);
+                && SelectedBodySlideCandidateToAdd is not null
+                && !string.IsNullOrWhiteSpace(SelectedBodySlideCandidateToAdd.Name)
+                && !SelectedRule.BodySlideCandidates.Any(c => string.Equals(c.Name, SelectedBodySlideCandidateToAdd.Name, StringComparison.Ordinal));
         }
 
         private void AddBodySlideCandidate()
@@ -302,16 +321,23 @@ namespace DBDStudio.ViewModels
             if (!CanAddBodySlideCandidate() || SelectedRenderedRule is null || SelectedBodySlideCandidateToAdd is null)
                 return;
 
-            SelectedRenderedRule.Underlying.BodySlideCandidates.Add(SelectedBodySlideCandidateToAdd);
+            SelectedRenderedRule.Underlying.BodySlideCandidates.Add(new Candidate {
+                Name = SelectedBodySlideCandidateToAdd.Name,
+                IsExclusive = SelectedBodySlideCandidateToAdd.IsExclusive
+            });
             SelectedBodySlideCandidateToAdd = null;
         }
 
-        private void RemoveBodySlideCandidate(string? candidate)
+        private void RemoveBodySlideCandidate(Candidate? candidate)
         {
-            if (SelectedRenderedRule is null || string.IsNullOrWhiteSpace(candidate))
+            if (SelectedRenderedRule is null || candidate is null || string.IsNullOrWhiteSpace(candidate.Name))
                 return;
 
-            SelectedRenderedRule.Underlying.BodySlideCandidates.Remove(candidate);
+            var existing = SelectedRenderedRule.Underlying.BodySlideCandidates
+                .FirstOrDefault(c => string.Equals(c.Name, candidate.Name, StringComparison.Ordinal));
+            if (existing is not null) {
+                SelectedRenderedRule.Underlying.BodySlideCandidates.Remove(existing);
+            }
             _addBodySlideCandidateCommand.RaiseCanExecuteChanged();
         }
 

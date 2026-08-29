@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:fluent="using:FluentIcons.Avalonia"
     xmlns:vm="using:DBDStudio.ViewModels"
@@ -156,7 +156,8 @@
                                         Classes.ephemeral="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
                                         Classes.disk="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial}"
                                         Classes.diskedited="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-primordial-edited}">
-                                        <TextBlock Text="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=label}"
+                                        <TextBlock
+                                            Text="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=label}"
                                             Name="RuleStateLabel"
                                             Classes.construct-state="True"
                                             Classes.ephemeral="{Binding SelectedRuleState, Converter={StaticResource ConstructStateClassConverter}, ConverterParameter=is-ephemeral}"
@@ -174,7 +175,7 @@
                                 FontWeight="SemiBold"
                                 Classes="h2" />
                             <TextBox Text="{Binding SelectedRule.Name}"
-                                PlaceholderText="Descriptive rule name…" />
+                                PlaceholderText="New Rule" />
                         </StackPanel>
 
                         <StackPanel Spacing="6">
@@ -182,53 +183,10 @@
                                 FontWeight="SemiBold"
                                 Classes="default" />
 
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <ComboBox ItemsSource="{Binding AvailableTexturePacks}"
-                                    SelectedItem="{Binding SelectedTextureCandidateToAdd}"
-                                    HorizontalAlignment="Stretch"
-                                    MinWidth="220">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Name}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <Button Content="Add"
-                                    Command="{Binding AddTextureCandidateCommand}" />
-                            </StackPanel>
-
-                            <ItemsControl ItemsSource="{Binding SelectedRule.TextureCandidates}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border
-                                            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
-                                            CornerRadius="6"
-                                            Margin="0,0,6,6"
-                                            Padding="8,4">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                                <TextBlock Text="(Private)"
-                                                    VerticalAlignment="Center"
-                                                    Opacity="0.6"
-                                                    IsVisible="{Binding IsExclusive}" />
-                                                <Button
-                                                    Command="{Binding $parent[UserControl].DataContext.RemoveTextureCandidateCommand}"
-                                                    CommandParameter="{Binding}"
-                                                    Classes="icon"
-                                                    ToolTip.Tip="Remove"
-                                                    Foreground="#D13438">
-                                                    <fluent:SymbolIcon Symbol="Delete" />
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <controls:CandidateSelector
+                                AvailableCandidates="{Binding AvailableTexturePacks}"
+                                SelectedCandidates="{Binding SelectedRule.TextureCandidates}"
+                                HorizontalAlignment="Stretch" />
                         </StackPanel>
 
                         <StackPanel Spacing="6">
@@ -236,53 +194,10 @@
                                 FontWeight="SemiBold"
                                 Classes="default" />
 
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <ComboBox ItemsSource="{Binding AvailableBodySlidePresets}"
-                                    SelectedItem="{Binding SelectedBodySlideCandidateToAdd}"
-                                    HorizontalAlignment="Stretch"
-                                    MinWidth="220">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Name}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <Button Content="Add"
-                                    Command="{Binding AddBodySlideCandidateCommand}" />
-                            </StackPanel>
-
-                            <ItemsControl ItemsSource="{Binding SelectedRule.BodySlideCandidates}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border
-                                            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
-                                            CornerRadius="6"
-                                            Margin="0,0,6,6"
-                                            Padding="8,4">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                                <TextBlock Text="(Private)"
-                                                    VerticalAlignment="Center"
-                                                    Opacity="0.6"
-                                                    IsVisible="{Binding IsExclusive}" />
-                                                <Button
-                                                    Command="{Binding $parent[UserControl].DataContext.RemoveBodySlideCandidateCommand}"
-                                                    CommandParameter="{Binding}"
-                                                    Classes="icon"
-                                                    ToolTip.Tip="Remove"
-                                                    Foreground="#D13438">
-                                                    <fluent:SymbolIcon Symbol="Delete" />
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <controls:CandidateSelector
+                                AvailableCandidates="{Binding AvailableBodySlidePresets}"
+                                SelectedCandidates="{Binding SelectedRule.BodySlideCandidates}"
+                                HorizontalAlignment="Stretch" />
                         </StackPanel>
 
                         <StackPanel Spacing="6">
@@ -346,7 +261,8 @@
                             Classes="accent">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <fluent:SymbolIcon Symbol="Save" />
-                                <TextBlock Text="Save As" VerticalAlignment="Center" Classes="default" />
+                                <TextBlock Text="Save As" VerticalAlignment="Center"
+                                    Classes="default" />
                             </StackPanel>
                         </Button>
                     </StackPanel>

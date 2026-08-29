@@ -21,10 +21,10 @@ namespace DBDStudio.Models.Component
         #region Properties
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-        public ObservableCollection<string> TextureCandidates { get; } = [];
+        public ObservableCollection<Candidate> TextureCandidates { get; } = [];
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
-        public ObservableCollection<string> BodySlideCandidates { get; } = [];
+        public ObservableCollection<Candidate> BodySlideCandidates { get; } = [];
 
         public string? RaceMenuCandidate
         {
@@ -70,10 +70,10 @@ namespace DBDStudio.Models.Component
             };
 
             foreach (var candidate in TextureCandidates)
-                clone.TextureCandidates.Add(candidate);
+                clone.TextureCandidates.Add(new Candidate { Name = candidate.Name, IsExclusive = candidate.IsExclusive });
 
             foreach (var candidate in BodySlideCandidates)
-                clone.BodySlideCandidates.Add(candidate);
+                clone.BodySlideCandidates.Add(new Candidate { Name = candidate.Name, IsExclusive = candidate.IsExclusive });
 
             foreach (var condition in Conditions)
                 clone.Conditions.Add(condition.Copy());
@@ -95,11 +95,11 @@ namespace DBDStudio.Models.Component
 
                 TextureCandidates.Clear();
                 foreach (var candidate in sourceRule.TextureCandidates)
-                    TextureCandidates.Add(candidate);
+                    TextureCandidates.Add(new Candidate { Name = candidate.Name, IsExclusive = candidate.IsExclusive });
 
                 BodySlideCandidates.Clear();
                 foreach (var candidate in sourceRule.BodySlideCandidates)
-                    BodySlideCandidates.Add(candidate);
+                    BodySlideCandidates.Add(new Candidate { Name = candidate.Name, IsExclusive = candidate.IsExclusive });
 
                 Conditions.Clear();
                 foreach (var condition in sourceRule.Conditions)
