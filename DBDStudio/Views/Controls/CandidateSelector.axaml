@@ -77,20 +77,16 @@
                                     </Grid>
                                 </Button>
 
-                                <ToggleButton Grid.Column="1"
-                                    IsVisible="{Binding !IsRandom}"
+                                <CheckBox Grid.Column="1"
                                     IsChecked="{Binding IsExclusive}"
-                                    MinWidth="90"
+                                    IsVisible="{Binding !IsRandom}"
+                                    ToolTip.Tip="If checked, this candidate cannot be used for random/any selection."
                                     Margin="8,0,8,0"
+                                    MinWidth="90"
                                     Click="OnExclusiveToggleClick">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <fluent:SymbolIcon Symbol="LockClosed"
-                                            IsVisible="{Binding IsExclusive}" />
-                                        <fluent:SymbolIcon Symbol="Globe"
-                                            IsVisible="{Binding !IsExclusive}" />
-                                        <TextBlock Text="Exclusive" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </ToggleButton>
+
+                                    <TextBlock Text="Exclusive" VerticalAlignment="Center" />
+                                </CheckBox>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
