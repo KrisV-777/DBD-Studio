@@ -48,8 +48,8 @@ namespace DBDStudio.Models
             set => SetProperty(ref _raceMenuPresetsFolder, value);
         }
 
-        public static string BodySlidePresetsFolderDefault => "CalienteTools\\BodySlide\\SliderPresets";
-        public static string RaceMenuPresetsFolderDefault => "SKSE\\Plugins\\CharGen\\Presets";
+        public static string BodySlidePresetsFolderDefault => $"CalienteTools{Path.AltDirectorySeparatorChar}BodySlide{Path.AltDirectorySeparatorChar}SliderPresets";
+        public static string RaceMenuPresetsFolderDefault => $"SKSE{Path.AltDirectorySeparatorChar}Plugins{Path.AltDirectorySeparatorChar}CharGen{Path.AltDirectorySeparatorChar}Presets";
 
         public double BaseFontSize
         {
