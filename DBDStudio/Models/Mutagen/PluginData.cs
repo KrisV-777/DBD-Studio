@@ -121,6 +121,13 @@ namespace DBDStudio.Models.Mutagen
                 [FormType.Faction] = ExtractRecordsFromGroup(mod, mod.Factions),
                 [FormType.CombatStyle] = ExtractRecordsFromGroup(mod, mod.CombatStyles),
                 [FormType.Keyword] = ExtractRecordsFromGroup(mod, mod.Keywords),
+                [FormType.Global] = ExtractRecordsFromGroup(mod, mod.Globals),
+                [FormType.Weather] = ExtractRecordsFromGroup(mod, mod.Weathers),
+                [FormType.Location] = ExtractRecordsFromGroup(mod, mod.Locations),
+                [FormType.Worldspace] = ExtractRecordsFromGroup(mod, mod.Worldspaces),
+                [FormType.Class] = ExtractRecordsFromGroup(mod, mod.Classes),
+                [FormType.VoiceType] = ExtractRecordsFromGroup(mod, mod.VoiceTypes),
+                [FormType.Quest] = ExtractRecordsFromGroup(mod, mod.Quests),
                 [FormType.ActorRef] = ExtractRecordsFromGroup(mod, mod.EnumerateMajorRecords<IPlacedNpcGetter>())
             };
 

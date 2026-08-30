@@ -452,26 +452,26 @@ namespace DBDStudio.ViewModels
             }
 
             var hasReferenceCondition = SelectedRule.Conditions
-                .Where(c => c.ConditionType == ConditionType.IsReference)
-                .Any(c => c.Values
+                .Where(c => c.ConditionType == ConditionType.GetIsReference)
+                .Any(c => c.Arguments
                     .Where(v => v is ConditionValue.Form)
                     .Any(v => (v as ConditionValue.Form)!.Value?.FormReference.MaybeValid() ?? false));
             var hasNpcCondition = SelectedRule.Conditions
-                .Where(c => c.ConditionType == ConditionType.IsNPC)
-                .Any(c => c.Values
+                .Where(c => c.ConditionType == ConditionType.GetIsID)
+                .Any(c => c.Arguments
                     .Where(v => v is ConditionValue.Form)
                     .Any(v => (v as ConditionValue.Form)!.Value?.FormReference.MaybeValid() ?? false));
 
             if (!hasReferenceCondition && !hasNpcCondition) {
-                RaceMenuAssignmentWarning = "RaceMenu assignments require IsReference or IsNPC conditions.";
+                RaceMenuAssignmentWarning = "RaceMenu assignments require GetIsReference or IsNPC conditions.";
                 return;
             }
 
             var hasPlayerCondition = SelectedRule.Conditions
-                .Any(c => c.Values
+                .Any(c => c.Arguments
                     .Where(v => v is ConditionValue.Form)
                     .Any(v => (v as ConditionValue.Form)!.Value?.FormId is 0x14 or 0x7));
-            var hasSexCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.IsSex);
+            var hasSexCondition = SelectedRule.Conditions.Any(c => c.ConditionType == ConditionType.GetIsSex);
 
             if (hasPlayerCondition && !hasSexCondition) {
                 RaceMenuAssignmentWarning = "RaceMenu assignments need a IsSex condition to work with the player.";

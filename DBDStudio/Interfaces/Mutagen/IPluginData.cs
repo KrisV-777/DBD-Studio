@@ -22,6 +22,13 @@ namespace DBDStudio.Interfaces.Mutagen
         Faction,
         CombatStyle,
         Keyword,
+        Global,
+        Weather,
+        Location,
+        Worldspace,
+        Class,
+        VoiceType,
+        Quest,
     }
 
     public interface IPluginData : INotifyPropertyChanged

@@ -79,7 +79,7 @@ namespace DBDStudio.Models.Component.Condition
             }
         }
 
-        public sealed class Form : ConditionValue
+        public sealed class Form(FormType filteredFormType) : ConditionValue
         {
             private FormRecord? _value;
             public FormRecord? Value
@@ -87,7 +87,7 @@ namespace DBDStudio.Models.Component.Condition
                 get => _value;
                 set => SetProperty(ref _value, value);
             }
-            public FormType FilteredFormType { get; set; } = FormType.None;
+            public FormType FilteredFormType { get; set; } = filteredFormType;
         }
 
         public ConditionValue DeepClone()
@@ -98,7 +98,7 @@ namespace DBDStudio.Models.Component.Condition
                 Float it => new Float { Value = it.Value },
                 Boolean it => new Boolean { Value = it.Value },
                 Sex it => new Sex { Value = it.Value },
-                Form it => new Form { Value = it.Value, FilteredFormType = it.FilteredFormType },
+                Form it => new Form(it.FilteredFormType) { Value = it.Value, FilteredFormType = it.FilteredFormType },
                 _ => throw new ArgumentOutOfRangeException(nameof(ConditionValue), GetType(), null)
             };
         }

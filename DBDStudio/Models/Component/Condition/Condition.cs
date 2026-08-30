@@ -27,9 +27,10 @@ namespace DBDStudio.Models.Component.Condition
 
         #region Fields
 
-        private ConditionType _type = ConditionType.IsReference;
+        private ConditionType _type = ConditionType.GetIsReference;
         private Operator _operator = Operator.Equals;
         private Conjunction _conjunction = Conjunction.And;
+        private float _comparator = 1f;
 
         #endregion
 
@@ -61,7 +62,7 @@ namespace DBDStudio.Models.Component.Condition
         /// instead of "ClearAndAddAll" which is not supported by System.Text.Json. Will have to look for a better
         /// solution in the future.
         /// </remarks>
-        public ObservableCollection<ConditionValue> Values { get; set; } = [new ConditionValue.Form()];
+        public ObservableCollection<ConditionValue> Arguments { get; set; } = [];
 
         public Operator Operator
         {
@@ -78,6 +79,12 @@ namespace DBDStudio.Models.Component.Condition
         {
             get => OperatorSymbolsInternal.FirstOrDefault(pair => pair.Key == _operator).Value ?? "==";
             set => Operator = OperatorSymbolsInternal.FirstOrDefault(pair => pair.Value == value).Key;
+        }
+
+        public float? Comparator
+        {
+            get => _comparator;
+            set => SetProperty(ref _comparator, value ?? 1f);
         }
 
         public Conjunction Conjunction
@@ -114,9 +121,9 @@ namespace DBDStudio.Models.Component.Condition
                 _conjunction = _conjunction
             };
 
-            clone.Values.Clear();
-            foreach (var value in Values)
-                clone.Values.Add(value.DeepClone());
+            clone.Arguments.Clear();
+            foreach (var value in Arguments)
+                clone.Arguments.Add(value.DeepClone());
 
             return clone;
         }
@@ -128,26 +135,19 @@ namespace DBDStudio.Models.Component.Condition
         private void SyncValuesForType(ConditionType type, bool preserveCompatibleValues)
         {
             var nextValues = ConditionDefinition.GetValuesForType(type).ToArray();
-            var formTypes = ConditionDefinition.GetFormTypeForType(type).ToArray();
-
-            var currentValues = preserveCompatibleValues ? Values.ToArray() : [];
+            var currentValues = preserveCompatibleValues ? Arguments.ToArray() : [];
 
             for (var i = 0; i < nextValues.Length; i++) {
-                if (nextValues[i] is ConditionValue.Form formValue && i < formTypes.Length) {
-                    formValue.FilteredFormType = formTypes[i];
-                }
-
                 if (!preserveCompatibleValues || i >= currentValues.Length)
                     continue;
-
                 TryCopyValue(currentValues[i], nextValues[i]);
             }
 
-            Values.ForEach(value => value.PropertyChanged -= OnValuePropertyChanged);
-            Values.Clear();
+            Arguments.ForEach(value => value.PropertyChanged -= OnArgumentPropertyChanged);
+            Arguments.Clear();
             foreach (var value in nextValues) {
-                value.PropertyChanged += OnValuePropertyChanged;
-                Values.Add(value);
+                value.PropertyChanged += OnArgumentPropertyChanged;
+                Arguments.Add(value);
             }
         }
 
@@ -176,8 +176,8 @@ namespace DBDStudio.Models.Component.Condition
             }
         }
 
-        private void OnValuePropertyChanged(object? sender, PropertyChangedEventArgs e)
-            => OnPropertyChanged(nameof(Values));
+        private void OnArgumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+            => OnPropertyChanged(nameof(Arguments));
 
         #endregion
     }

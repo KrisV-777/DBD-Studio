@@ -17,11 +17,11 @@
         </DataTemplate>
 
         <DataTemplate DataType="rules:ConditionValue+Integer">
-            <TextBox Text="{Binding Value}" MinWidth="90" />
+            <NumericUpDown ShowButtonSpinner="False" Value="{Binding Value}" MinWidth="90" />
         </DataTemplate>
 
         <DataTemplate DataType="rules:ConditionValue+Float">
-            <TextBox Text="{Binding Value}" MinWidth="90" />
+            <NumericUpDown ShowButtonSpinner="False" Value="{Binding Value}" MinWidth="90" />
         </DataTemplate>
 
         <DataTemplate DataType="rules:ConditionValue+Boolean">
@@ -52,7 +52,7 @@
             GridLinesVisibility="Horizontal"
             MinHeight="140">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Type" Width="180">
+                <DataGridTemplateColumn Header="Type" MinWidth="210">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="rules:Condition">
                             <ComboBox
@@ -60,6 +60,22 @@
                                 SelectedItem="{Binding ConditionType}"
                                 HorizontalAlignment="Stretch"
                                 Margin="1" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Arguments" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="rules:Condition">
+                            <ItemsControl ItemsSource="{Binding Arguments}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Stretch"
+                                            Spacing="6" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -76,18 +92,13 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Values" Width="*">
+                <DataGridTemplateColumn Header="Value" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="rules:Condition">
-                            <ItemsControl ItemsSource="{Binding Values}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"
-                                            HorizontalAlignment="Stretch"
-                                            Spacing="6" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
+                            <NumericUpDown ShowButtonSpinner="False"
+                                Value="{Binding Comparator}"
+                                HorizontalAlignment="Stretch"
+                                Margin="1" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

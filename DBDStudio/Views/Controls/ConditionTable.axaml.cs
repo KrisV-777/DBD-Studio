@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -56,8 +57,9 @@ namespace DBDStudio.Views.Controls
                 return;
 
             ICondition condition = new Condition {
-                ConditionType = AvailableConditionTypes.Count > 0 ? AvailableConditionTypes[0] : ConditionType.IsReference,
+                ConditionType = AvailableConditionTypes.Count > 0 ? AvailableConditionTypes[0] : ConditionType.GetIsReference,
                 Operator = Operator.Equals,
+                Comparator = 0f,
                 Conjunction = Conjunction.And
             };
 

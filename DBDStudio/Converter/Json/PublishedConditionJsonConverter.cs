@@ -15,39 +15,16 @@ namespace DBDStudio.Converter.Json
         {
             Debug.Assert(JsonConfiguration.Mode == SerializationMode.Publish);
 
-            writer.WriteStartObject();
-
-            writer.WriteString("Type", value.ConditionType.ToString());
-            writer.WriteString("Operator", value.OperatorSymbol);
-            writer.WriteStartArray("Arguments");
-            foreach (var argument in value.Values) {
-                switch (argument) {
-                case ConditionValue.String str:
-                    writer.WriteStringValue(str.Value);
-                    break;
-                case ConditionValue.Integer i:
-                    writer.WriteNumberValue(i.Value);
-                    break;
-                case ConditionValue.Float f:
-                    writer.WriteNumberValue(f.Value);
-                    break;
-                case ConditionValue.Boolean b:
-                    writer.WriteBooleanValue(b.Value);
-                    break;
-                case ConditionValue.Sex s:
-                    writer.WriteStringValue(s.SelectedSex);
-                    break;
-                case ConditionValue.Form b:
-                    writer.WriteStringValue(b.Value?.FormReference.ToString() ?? string.Empty);
-                    break;
-                default:
-                    throw new NotSupportedException($"Unsupported argument type: {argument.GetType().FullName}");
-                }
-            }
-            writer.WriteEndArray();
-            writer.WriteString("Conjunction", value.ConjunctionLabel);
-
-            writer.WriteEndObject();
+            var argumentStr = string.Join(" ", value.Arguments.Select(v => v switch {
+                ConditionValue.String str => str.Value,
+                ConditionValue.Integer i => i.Value.ToString(),
+                ConditionValue.Float f => f.Value.ToString(),
+                ConditionValue.Boolean b => b.Value.ToString(),
+                ConditionValue.Sex s => s.SelectedSex,
+                ConditionValue.Form f => f.Value?.FormReference.ToString() ?? "null",
+                _ => throw new NotImplementedException(),
+            }));
+            writer.WriteStringValue($"{value.ConditionType} {argumentStr} {value.OperatorSymbol} {value.Comparator} {value.ConjunctionLabel}");
         }
     }
 }
