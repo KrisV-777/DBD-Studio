@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <ExcludeByFile>
+            **/*.axaml,
+            **/Program.cs,
+            **/*.axaml.cs,
+            **/Views/**/*.cs,
+            **/ViewModels/**/*.cs,
+            **/Interfaces/**/*.cs,
+            **/Collections/UniqueObservableCollection.cs,
+            **/Models/Mutagen/**/*.cs,
+            **/Models/Component/Texture*.cs,
+            **/Services/BodySlideService.cs,
+            **/Services/RaceMenuPresetService.cs,
+            **/Services/TexturePackService.cs,
+            **/Utility/ConstructCollectionReconciler.cs,
+            **/Utility/DirectoryIterator.cs,
+            **/Converter/PluginLoadStateClassConverter.cs,
+            **/Converter/Json/TextureMappingConverter.cs
+          </ExcludeByFile>
+          <Exclude>[DBDStudio.Tests*]*</Exclude>
+          <SkipAutoProps>true</SkipAutoProps>
+          <UseSourceLink>false</UseSourceLink>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
