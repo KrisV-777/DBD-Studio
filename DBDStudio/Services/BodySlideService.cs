@@ -38,6 +38,7 @@ namespace DBDStudio.Services
 
             newPresets
                 .Where(p => !string.IsNullOrWhiteSpace(p.Name) && File.Exists(p.SourceXml))
+                .DistinctBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                 .ForEach(p => Presets.Add(p));
         }
