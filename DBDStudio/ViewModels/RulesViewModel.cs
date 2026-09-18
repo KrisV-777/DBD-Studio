@@ -194,6 +194,31 @@ namespace DBDStudio.ViewModels
                 }
                 break;
 
+            case NotifyCollectionChangedAction.Replace:
+                if (e.OldItems is null || e.NewItems is null) {
+                    break;
+                }
+
+                var oldRule = e.OldItems.OfType<RuleConstruct>().FirstOrDefault();
+                var newRule = e.NewItems.OfType<RuleConstruct>().FirstOrDefault();
+                if (oldRule is null || newRule is null) {
+                    break;
+                }
+
+                var replaceIndex = Rules.IndexOf(oldRule);
+                if (replaceIndex < 0) {
+                    break;
+                }
+
+                var wasReplaceSelected = ReferenceEquals(SelectedRenderedRule, oldRule);
+                DetachRule(oldRule);
+                AttachRule(newRule);
+                Rules[replaceIndex] = newRule;
+                if (wasReplaceSelected) {
+                    SelectedRenderedRule = newRule;
+                }
+                break;
+
             case NotifyCollectionChangedAction.Reset:
                 var currentSelection = SelectedRenderedRule?.Uid;
                 foreach (var rule in Rules) {

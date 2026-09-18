@@ -27,24 +27,21 @@ namespace DBDStudio.Services
 
         public void ResetRuleList(IReadOnlyList<Rule>? rules = null)
         {
-            var oldRules = Rules
+            var mergedRules = Rules
                 .Select(rule => rule.Underlying)
                 .Concat(rules ?? [])
-                .DistinctBy(rule => rule.Uid)
+                .GroupBy(rule => rule.Uid)
+                .Select(group => group
+                    .OrderByDescending(rule => rule.LastUpdatedUtc)
+                    .First())
                 .ToArray();
 
             Rules.Clear();
 
-            // Reconcile the old packs with the newly discovered ones (all of which are primordial)
-            // If an old pack is not present in the newly discovered packs, it is ephemeral and should be added back
-            // If an old pack is present, then it was primordial before. Pick the more recently updated version
-            ConstructCollectionReconciler.ReconcileByUid(
-                Rules,
-                oldRules,
-                construct => construct.Uid,
-                construct => construct.Underlying,
-                construct => construct.Primordial,
-                (component, isPrimordial) => new RuleConstruct(component, isPrimordial));
+            foreach (var rule in mergedRules) {
+                var hasPublishedPath = !string.IsNullOrWhiteSpace(rule.LastPublishedPath);
+                Rules.Add(new RuleConstruct(rule, isPrimordial: hasPublishedPath));
+            }
         }
 
         public RuleConstruct EmplaceNew(string? withName = null)
@@ -76,8 +73,9 @@ namespace DBDStudio.Services
                 throw new InvalidOperationException("Cannot save an ephemeral rule.");
             }
 
-            var sourcePath = rule.SourceFilePath ?? throw new InvalidOperationException("Cannot save a rule without a source file path.");
-            var normalizedPath = EnsureJsonExtension(sourcePath);
+            var sourcePath = rule.Underlying.LastPublishedPath
+                ?? throw new InvalidOperationException("Cannot save a rule without a published source file path.");
+            var normalizedPath = NormalizePath(sourcePath);
             WriteRuleToDisk(rule.Underlying, normalizedPath);
 
             var replacement = CreateSavedRule(rule.Underlying, normalizedPath);
@@ -96,7 +94,7 @@ namespace DBDStudio.Services
                 return;
             }
 
-            var normalizedPath = EnsureJsonExtension(filePath);
+            var normalizedPath = NormalizePath(filePath);
             var sourceFileExisted = File.Exists(normalizedPath);
             WriteRuleToDisk(rule.Underlying, normalizedPath);
 
@@ -129,6 +127,8 @@ namespace DBDStudio.Services
         {
             var current = new Rule();
             current.Import(sourceRule);
+            current.RestoreLastUpdatedUtc(sourceRule.LastUpdatedUtc);
+            current.LastPublishedPath = sourcePath;
             return new RuleConstruct(current, isPrimordial: true) {
                 SourceFilePath = sourcePath
             };
@@ -146,15 +146,26 @@ namespace DBDStudio.Services
 
         private static void WriteRuleToDisk(Rule rule, string filePath)
         {
-            var outputPath = EnsureJsonExtension(filePath);
+            var outputPath = NormalizePath(filePath);
             var directory = Path.GetDirectoryName(outputPath);
             if (!string.IsNullOrWhiteSpace(directory)) {
                 Directory.CreateDirectory(directory);
             }
 
+            var exportedRule = new Rule();
+            exportedRule.Import(rule);
+            exportedRule.RestoreLastUpdatedUtc(rule.LastUpdatedUtc);
+            exportedRule.LastPublishedPath = null;
+
             var jsonConfig = JsonConfiguration.BuildJsonConfiguration(SerializationMode.Publish);
-            var json = JsonSerializer.Serialize(rule, jsonConfig);
+            var json = JsonSerializer.Serialize(exportedRule, jsonConfig);
             File.WriteAllText(outputPath, json);
+        }
+
+        private static string NormalizePath(string filePath)
+        {
+            var normalizedPath = EnsureJsonExtension(filePath);
+            return Path.GetFullPath(normalizedPath);
         }
 
         private static string EnsureJsonExtension(string filePath)

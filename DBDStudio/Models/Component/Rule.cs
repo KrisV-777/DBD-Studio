@@ -10,6 +10,7 @@ namespace DBDStudio.Models.Component
     public sealed class Rule : DBDComponent
     {
         private string? _raceMenuCandidate = null;
+        private string? _lastPublishedPath = null;
 
         public Rule()
         {
@@ -30,6 +31,13 @@ namespace DBDStudio.Models.Component
         {
             get => _raceMenuCandidate;
             set => SetProperty(ref _raceMenuCandidate, value);
+        }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? LastPublishedPath
+        {
+            get => _lastPublishedPath;
+            set => _lastPublishedPath = value;
         }
 
         [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
@@ -66,7 +74,8 @@ namespace DBDStudio.Models.Component
         {
             var clone = new Rule {
                 Name = Name,
-                RaceMenuCandidate = RaceMenuCandidate
+                RaceMenuCandidate = RaceMenuCandidate,
+                LastPublishedPath = LastPublishedPath
             };
 
             foreach (var candidate in TextureCandidates)
@@ -92,6 +101,7 @@ namespace DBDStudio.Models.Component
             try {
                 Name = sourceRule.Name;
                 RaceMenuCandidate = sourceRule.RaceMenuCandidate;
+                LastPublishedPath = sourceRule.LastPublishedPath;
 
                 TextureCandidates.Clear();
                 foreach (var candidate in sourceRule.TextureCandidates)

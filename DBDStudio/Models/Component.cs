@@ -28,7 +28,12 @@ namespace DBDStudio.Models
         /// Gets the date and time when the component was last updated (UTC).
         /// </summary>
         /// <remarks>This property is automatically updated whenever any other property of the component changes.</remarks>
-        public DateTimeOffset LastUpdatedUtc => _lastUpdatedUtc;
+        [JsonInclude]
+        public DateTimeOffset LastUpdatedUtc
+        {
+            get => _lastUpdatedUtc;
+            private set => _lastUpdatedUtc = value;
+        }
 
         /// <summary>
         /// Gets the date and time when the component was last updated, converted to local time.

@@ -8,17 +8,17 @@ namespace DBDStudio.Models.Component
     public sealed class RuleConstruct(Rule underlying, bool isPrimordial = false)
         : Construct<Rule>(underlying, isPrimordial)
     {
-        private string? _sourceFilePath;
-
         public string? SourceFilePath
         {
-            get => _sourceFilePath;
+            get => Underlying.LastPublishedPath;
             set
             {
-                if (!SetProperty(ref _sourceFilePath, value)) {
+                if (string.Equals(Underlying.LastPublishedPath, value, StringComparison.OrdinalIgnoreCase)) {
                     return;
                 }
 
+                Underlying.LastPublishedPath = value;
+                OnPropertyChanged();
                 RefreshStateCacheAndNotify();
             }
         }
@@ -27,13 +27,30 @@ namespace DBDStudio.Models.Component
         {
             get
             {
-                var hasValidSourceFile = !string.IsNullOrWhiteSpace(SourceFilePath)
-                    && File.Exists(SourceFilePath);
-                if (!hasValidSourceFile || Primordial is null) {
+                var sourcePath = SourceFilePath;
+                if (string.IsNullOrWhiteSpace(sourcePath) || Primordial is null) {
                     return ConstructState.Ephemeral;
                 }
 
-                return Underlying.IsMoreRecentThan(Primordial)
+                string fullPath;
+                try {
+                    fullPath = Path.GetFullPath(sourcePath);
+                } catch (Exception) {
+                    return ConstructState.Ephemeral;
+                }
+
+                if (!File.Exists(fullPath)) {
+                    return ConstructState.Ephemeral;
+                }
+
+                DateTimeOffset publishedLastUpdatedUtc;
+                try {
+                    publishedLastUpdatedUtc = File.GetLastWriteTimeUtc(fullPath);
+                } catch (Exception) {
+                    return ConstructState.Ephemeral;
+                }
+
+                return Underlying.LastUpdatedUtc > publishedLastUpdatedUtc
                     ? ConstructState.Modified
                     : ConstructState.Primordial;
             }
