@@ -1,9 +1,7 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using DBDStudio.Interfaces.Rules;
-using Noggog;
 
 namespace DBDStudio.Models.Component.Condition
 {
@@ -31,6 +29,7 @@ namespace DBDStudio.Models.Component.Condition
         private Operator _operator = Operator.Equals;
         private Conjunction _conjunction = Conjunction.And;
         private float _comparator = 1f;
+        private ObservableCollection<ConditionValue> _arguments = [];
 
         #endregion
 
@@ -54,15 +53,15 @@ namespace DBDStudio.Models.Component.Condition
         }
 
         /// <summary>
-        /// Gets or sets the list of values for this condition. The number and type of values depends on the ConditionType.
+        /// Gets the list of values for this condition. The number and type of values depends on the ConditionType.
         /// </summary>
-        /// <remarks>
-        /// TODO: Should be treated as Read-Only but serialization requires a setter to populate the collection.
-        /// Using JsonObjectCreationHandling.Populate causes the values to double, Id need a "ReplaceOneByOne" behavior
-        /// instead of "ClearAndAddAll" which is not supported by System.Text.Json. Will have to look for a better
-        /// solution in the future.
-        /// </remarks>
-        public ObservableCollection<ConditionValue> Arguments { get; set; } = [];
+        [JsonInclude]
+        [JsonObjectCreationHandling(JsonObjectCreationHandling.Replace)]
+        public ObservableCollection<ConditionValue> Arguments
+        {
+            get => _arguments;
+            private set => AssignArguments(value ?? []);
+        }
 
         public Operator Operator
         {
@@ -121,9 +120,7 @@ namespace DBDStudio.Models.Component.Condition
                 _conjunction = _conjunction
             };
 
-            clone.Arguments.Clear();
-            foreach (var value in Arguments)
-                clone.Arguments.Add(value.DeepClone());
+            clone.AssignArguments(Arguments.Select(value => value.DeepClone()));
 
             return clone;
         }
@@ -143,12 +140,23 @@ namespace DBDStudio.Models.Component.Condition
                 TryCopyValue(currentValues[i], nextValues[i]);
             }
 
-            Arguments.ForEach(value => value.PropertyChanged -= OnArgumentPropertyChanged);
-            Arguments.Clear();
-            foreach (var value in nextValues) {
-                value.PropertyChanged += OnArgumentPropertyChanged;
-                Arguments.Add(value);
+            AssignArguments(nextValues);
+        }
+
+        private void AssignArguments(IEnumerable<ConditionValue> values)
+        {
+            foreach (var existing in _arguments) {
+                existing.PropertyChanged -= OnArgumentPropertyChanged;
             }
+
+            var replacement = new ObservableCollection<ConditionValue>();
+            foreach (var value in values) {
+                value.PropertyChanged += OnArgumentPropertyChanged;
+                replacement.Add(value);
+            }
+
+            _arguments = replacement;
+            OnPropertyChanged(nameof(Arguments));
         }
 
         private static void TryCopyValue(ConditionValue source, ConditionValue target)

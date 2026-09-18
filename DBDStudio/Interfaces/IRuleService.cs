@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using DBDStudio.Models.Component;
 
 namespace DBDStudio.Interfaces

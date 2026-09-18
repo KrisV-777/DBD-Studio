@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Text.Json;
 using DBDStudio.Converter.Json;
 using DBDStudio.Interfaces;
@@ -103,7 +102,7 @@ namespace DBDStudio.Services
             var existingSourceIndex = sourceFileExisted
                 ? Rules
                     .Select((existingRule, index) => new { existingRule, index })
-                    .FirstOrDefault(entry => PathsEqual(entry.existingRule.SourceFilePath, normalizedPath))
+                    .FirstOrDefault(entry => PathsEqual(entry.existingRule.Underlying.LastPublishedPath, normalizedPath))
                     ?.index ?? -1
                 : -1;
 
@@ -129,9 +128,7 @@ namespace DBDStudio.Services
             current.Import(sourceRule);
             current.RestoreLastUpdatedUtc(sourceRule.LastUpdatedUtc);
             current.LastPublishedPath = sourcePath;
-            return new RuleConstruct(current, isPrimordial: true) {
-                SourceFilePath = sourcePath
-            };
+            return new RuleConstruct(current, isPrimordial: true);
         }
 
         private RuleConstruct CreateNewRule(string? baseName = null)

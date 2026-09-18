@@ -188,23 +188,13 @@ namespace DBDStudio.Views.Controls
 
             switch (e.Key) {
             case Key.Enter:
-
                 Commit();
-
                 e.Handled = true;
                 break;
 
             case Key.Escape:
-
                 CloseResults();
-
                 e.Handled = true;
-                break;
-            case Key.Down:
-                // TODO: Move selection down in results list if it's open.
-                break;
-            case Key.Up:
-                // TODO: Move selection up in results list if it's open.
                 break;
             }
         }

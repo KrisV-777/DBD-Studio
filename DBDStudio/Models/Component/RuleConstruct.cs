@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 using DBDStudio.Models;
 
 namespace DBDStudio.Models.Component
