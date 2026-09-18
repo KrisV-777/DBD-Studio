@@ -1,6 +1,6 @@
-$Project = "DBDStudio/DBDStudio.csproj"
+$Project = "DBDStudio.csproj"
 $Config  = "Release"
-$Out     = "dist"
+$Out     = ".release"
 
 $targets = @(
     @{ Rid = "win-x64";     Name = "windows-x64" }
@@ -59,4 +59,5 @@ foreach ($target in $targets) {
 }
 
 Write-Host "Done."
+
 

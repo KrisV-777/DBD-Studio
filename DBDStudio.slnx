@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="DBDStudio/DBDStudio.csproj" />
+    <Folder Name="/tests/">
+        <Project Path="tests/DBDStudio.Tests/DBDStudio.Tests.csproj" />
+    </Folder>
+    <Project Path="DBDStudio.csproj" />
 </Solution>
